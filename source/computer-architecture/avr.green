@@ -1,6 +1,13 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
+(define-syntax define-assembly-instruction
+    (syntax-rules ()
+        ((_ instr format cycles body body* ...) ; 
+         (quote instr))))
+
+
+         
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (jmp (k integer))
     (1 0 0 1 0 1 0 k k k k k 1 1 0 k k k k k k k k k k k k k k k k k)
@@ -16,9 +23,7 @@
 
 
 
-
-
-
+#|
 
 
 
@@ -148,3 +153,4 @@
 
 ;; parallel programming page 290
 
+|#
