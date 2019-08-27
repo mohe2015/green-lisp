@@ -1,6 +1,28 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
+(define-assembly-instruction ) ;; WORK ON THIS FIRST
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (define-pin 21 vcc)
 (define-pin 22 ground)
 (define-pin 47 (port a 4))
@@ -91,3 +113,28 @@
      eeprom-ready
      analog-comparator
      timer-1-compare-match-c
+    ;; ...
+
+
+;; external interrupts page 89
+
+;; a-bit timer with pwm and asynchronous operation page 92
+
+;; output compare modulator page 160
+
+;; serial peripheral interface p 162
+
+;; usart page 170
+
+;; two-wire serial interface page 197
+
+;; analog comparator page 227
+
+;; analog to digital converter page 230
+
+;; jtag interface and on-chip debug system page 246
+
+;; boot loader support - read-while-write self-programming page 273
+
+;; parallel programming page 290
+
