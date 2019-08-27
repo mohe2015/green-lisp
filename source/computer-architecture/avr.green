@@ -1,8 +1,18 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(define-assembly-instruction ) ;; WORK ON THIS FIRST
+;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
+(define-assembly-instruction (jmp (k integer))
+    (1 0 0 1 0 1 0 k k k k k 1 1 0 k k k k k k k k k k k k k k k k k)
+    3 ;; cycles
+    (define program-counter k))
 
+(define-assembly-instruction (ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
+    (1 1 1 0 k k k k d d d d k k k k)
+    1
+    (define (register d) k)
+    (define program-counter (+ program-counter 2)))
+    
 
 
 
