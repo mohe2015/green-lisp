@@ -1,10 +1,12 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(define-syntax define-assembly-instruction2
+(define program-counter 3)
+
+(define-syntax define-assembly-instruction
     (syntax-rules ()
         ((_ instruction instruction-format cycles body body* ...)
-         (format #t "~a~%" (quote instruction)))))
+         (format #t "~a ~a ~a ~a~%" (quote instruction) (quote instruction-format) (quote cycles) (quote (begin body body* ...))))))
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (jmp (k integer))
