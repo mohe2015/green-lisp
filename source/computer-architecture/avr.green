@@ -3,9 +3,18 @@
 
 (define-syntax define-assembly-instruction
     (syntax-rules ()
-        ((_ instr format cycles body body* ...) ; 
+        ((_ instr format cycles body body* ...)
          (quote instr))))
+         ;(format #t "~a~%" 'instr))))
 
+
+(define-syntax or
+  (lambda (x)
+    (syntax-case x ()
+      ((_) (syntax #f))
+      ((_ e) (syntax (format #t "~a~%" (quote e))))
+      ((_ e1 e2 e3 ...)
+       (syntax (let ((t e1)) (if t t (or e2 e3 ...))))))))
 
          
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
@@ -27,8 +36,19 @@
 
 
 
+(loop repeat 35 collect
+    (jmp #x8c))
 
+(ldi r24 #x80)
+(out DDRB r24)
+(out PORTB r24)
 
+(ldi r24 #xFF)
+(out DDRE r24)
+(out PORTE r24)
+
+(label end)
+(jmp end)))
 
 
 
