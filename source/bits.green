@@ -1,0 +1,20 @@
+;; https://en.wikibooks.org/wiki/Scheme_Programming/Input_and_Output
+(define (read-byte . opt)
+    (let ((c (apply read-char opt)))
+    (if (eof-object? c) c (char->integer c))))
+
+(define (write-byte int . opt)
+    (apply write-char (integer->char int) opt))
+
+(define (peek-byte . opt)
+    (let ((c (apply peek-char opt)))
+    (if (eof-object? c) c (char->integer c))))
+
+(define byte-ready? char-ready?)
+
+(define (test)
+    (let ((in (open-input-file "../binary.bin")))
+        (display (read-byte in))))
+
+;(peek-byte in)
+;(byte-ready? in)

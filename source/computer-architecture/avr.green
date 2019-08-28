@@ -1,8 +1,6 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(define program-counter 3)
-
 (define-syntax define-assembly-instruction
     (syntax-rules ()
         ((_ instruction instruction-format cycles body body* ...)
