@@ -13,16 +13,14 @@
 (define byte-ready? char-ready?)
 
 
-;(define (byte->bits byte)
-    
+(define (byte->bits byte)
+    (do ((i 7 (- i 1)))
+        ((= i -1))
+        (format #t "~a ~a~%" i (logbit? i byte))))
 
 (define (test)
     (let ((in (open-input-file "../binary.bin")))
-        (do ((i 0 (+ 1 i)))
-            ((= i 8))
-            (format #t "~a~%" i))))
-
-;     (display (read-byte in))))
+        (display (byte->bits (read-byte in)))))
         
 ;(peek-byte in)
 ;(byte-ready? in)
