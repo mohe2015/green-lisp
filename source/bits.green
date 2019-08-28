@@ -12,7 +12,6 @@
 
 (define byte-ready? char-ready?)
 
-
 (define (byte->bits byte)
     (do ((i 7 (- i 1)))
         ((= i -1))
@@ -24,3 +23,15 @@
         
 ;(peek-byte in)
 ;(byte-ready? in)
+
+;; http://www.r6rs.org/final/html/r6rs-lib/r6rs-lib-Z-H-7.html#node_chap_6
+(define-record-type binary-reader
+    (fields
+        (mutable index)))
+
+(define (read-bit binary-reader)
+
+    )
+
+;; http://www.r6rs.org/final/html/r6rs-lib/r6rs-lib-Z-H-9.html#node_sec_8.2.8
+;; (get-bytevector-all binary-input-port)
