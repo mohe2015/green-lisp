@@ -1,22 +1,11 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(define-syntax define-assembly-instruction
+(define-syntax define-assembly-instruction2
     (syntax-rules ()
-        ((_ instr format cycles body body* ...)
-         (quote instr))))
-         ;(format #t "~a~%" 'instr))))
+        ((_ instruction instruction-format cycles body body* ...)
+         (format #t "~a~%" (quote instruction)))))
 
-
-(define-syntax or
-  (lambda (x)
-    (syntax-case x ()
-      ((_) (syntax #f))
-      ((_ e) (syntax (format #t "~a~%" (quote e))))
-      ((_ e1 e2 e3 ...)
-       (syntax (let ((t e1)) (if t t (or e2 e3 ...))))))))
-
-         
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (jmp (k integer))
     (1 0 0 1 0 1 0 k k k k k 1 1 0 k k k k k k k k k k k k k k k k k)
@@ -35,7 +24,6 @@
 #|
 
 
-
 (loop repeat 35 collect
     (jmp #x8c))
 
@@ -52,6 +40,13 @@
 
 
 
+
+
+(define-syntax define-assembly-instruction
+  (lambda (x)
+    (syntax-case x ()
+      ((_ instr)
+         (syntax (format #t "~a~%" (quote instr)))))))
 
 
 
