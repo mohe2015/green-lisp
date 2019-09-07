@@ -30,7 +30,7 @@
         (mutable index)))
 
 (define (read-bit binary-reader)
-
+    nil
     )
 
 ;; http://www.r6rs.org/final/html/r6rs-lib/r6rs-lib-Z-H-9.html#node_sec_8.2.8
