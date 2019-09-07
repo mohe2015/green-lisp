@@ -1,8 +1,11 @@
 code/source:
-- source
+- source/**/*.green
 
 code/workflows:
-- .github/workflows
+- .github/workflows/*.yml
+
+code/github:
+- .github/**/*
 
 code/gitignore:
 - .gitignore
@@ -15,3 +18,6 @@ code/readme:
 
 code/binary:
 - binary.bin
+
+code/dockerfile:
+- Dockerfile
