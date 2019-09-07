@@ -80,6 +80,10 @@ An eco-friendly lisp
 * [https://en.wikipedia.org/wiki/Clojure https://en.wikipedia.org/wiki/Clojure] immutability
 * [https://en.wikipedia.org/wiki/Exception_handling https://en.wikipedia.org/wiki/Exception_handling]? [https://en.wikipedia.org/wiki/Software_transactional_memory https://en.wikipedia.org/wiki/Software_transactional_memory] ?
 * locality of data (for speedup?) [https://en.wikipedia.org/wiki/Partitioned_global_address_space https://en.wikipedia.org/wiki/Partitioned_global_address_space]?
+* https://crystal-lang.org/reference/guides/writing_shards.html
+* https://en.wikipedia.org/wiki/Language-based_security
+* Rust
+* Trust layers (you need to trust all lower layers)
 
 Interesting: [http://appinventor.mit.edu/ http://appinventor.mit.edu/]
 

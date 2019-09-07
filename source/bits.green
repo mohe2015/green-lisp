@@ -1,44 +1,17 @@
-;; Parts are from "Scheme Programming/Input and Output" licensed under "Creative Commons Attribution-ShareAlike License". https://en.wikibooks.org/w/index.php?title=Scheme_Programming/Input_and_Output&oldid=3421585. 
+;; http://www.gigamonkeys.com/book/files-and-file-io.html chapter 24
 
-(define (read-byte . opt)
-    (let ((c (apply read-char opt)))
-    (if (eof-object? c) c (char->integer c))))
+(defun file->bytes (filename)
+    (with-open-file (in filename :element-type '(unsigned-byte 8))
+        (loop for byte = (read-byte in nil) while byte collect byte)))
 
-(define (write-byte int . opt)
-    (apply write-char (integer->char int) opt))
+;; https://lisptips.com/post/44261316742/how-do-i-convert-an-integer-to-a-list-of-bits
+(defun byte->bits (byte)
+  (let ((bits '()))
+    (dotimes (index 8 bits)
+      (push (if (logbitp index byte) 1 0) bits))))
 
-(define (peek-byte . opt)
-    (let ((c (apply peek-char opt)))
-    (if (eof-object? c) c (char->integer c))))
+(defun bytes->bits (bytes)
+    (mapcar #'byte->bits bytes))
 
-(define byte-ready? char-ready?)
-
-(define (byte->bits byte)
-    (list
-        (logbit? 7 byte)
-        (logbit? 6 byte)
-        (logbit? 5 byte)
-        (logbit? 4 byte)
-        (logbit? 3 byte)
-        (logbit? 2 byte)
-        (logbit? 1 byte)
-        (logbit? 0 byte)))
-
-(define (bytes->bits bytes)
-    (map byte->bits bytes))
-
-(define (test)
-    (let ((in (open-input-file "../binary.bin")))
-        (display (byte->bits (read-byte in)))))
-
-;; http://www.r6rs.org/final/html/r6rs-lib/r6rs-lib-Z-H-7.html#node_chap_6
-(define-record-type binary-reader
-    (fields
-        (mutable index)))
-
-(define (read-bit binary-reader)
-    nil
-    )
-
-;; http://www.r6rs.org/final/html/r6rs-lib/r6rs-lib-Z-H-9.html#node_sec_8.2.8
-;; (get-bytevector-all binary-input-port)
+(defun file->bits (filename)
+    (bytes->bits (file->bytes filename)))

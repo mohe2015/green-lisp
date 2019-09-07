@@ -1,0 +1,23 @@
+code/source:
+- source/**/*.green
+
+code/workflows:
+- .github/workflows/*.yml
+
+code/github:
+- .github/**/*
+
+code/gitignore:
+- .gitignore
+
+code/license:
+- LICENSE
+
+code/readme:
+- README.md
+
+code/binary:
+- binary.bin
+
+code/dockerfile:
+- Dockerfile
