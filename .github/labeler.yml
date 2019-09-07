@@ -1,0 +1,17 @@
+code/source:
+- source
+
+code/workflows:
+- .github/workflows
+
+code/gitignore:
+- .gitignore
+
+code/license:
+- LICENSE
+
+code/readme:
+- README.md
+
+code/binary:
+- binary.bin
