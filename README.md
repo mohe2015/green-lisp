@@ -1,15 +1,10 @@
 # green-lisp
 An eco-friendly lisp
 
-# My own [https://en.wikipedia.org/wiki/Programming_language programming language]
-* Check all languages from [https://en.wikipedia.org/wiki/List_of_programming_languages https://en.wikipedia.org/wiki/List_of_programming_languages] – I’m at I now
-
 # Goals
-* it’s a Lisp
 * Code rewriting abilities (with types?, based on AST?): like optima: (chain sth (modal “hide”)) → (hide-modal sth)
 * Security: User system (functions have call permissions and can only be called by “users” with that permission). Remote procedure calls also work that way. Therefore almost no custom protocols are required. [https://en.wikipedia.org/wiki/E_(programming_language) https://en.wikipedia.org/wiki/E_(programming_language)]
 * Primary targets: [https://en.wikipedia.org/wiki/Computer_security Se][https://en.wikipedia.org/wiki/Computer_security curity], embedded, real-time
-* [https://en.wikipedia.org/wiki/Eiffel_(programming_language https://en.wikipedia.org/wiki/Eiffel_(programming_language][https://en.wikipedia.org/wiki/Eiffel_(programming_language) )] good design ideas
 * Fast (explicit concurrency (over multiple devices, etc.), prevent death-locks)
 * [https://en.wikipedia.org/wiki/Automated_theorem_proving Automated_theorem_proving]: [https://en.wikipedia.org/wiki/Formal_verification Formal_verification], [https://en.wikipedia.org/wiki/Coq https://en.wikipedia.org/wiki/Coq], ACL2
 * [https://en.wikipedia.org/wiki/Model–view–controller Model-view-controller]?
@@ -20,8 +15,6 @@ An eco-friendly lisp
 * [https://en.wikipedia.org/wiki/Design_by_contract Design_by_contract] (using a DSL)
 * Long variable/function/class/... names (e.g. counter instead of cnt)
 * [https://en.wikipedia.org/wiki/Type_system Type_system]: static, [https://en.wikipedia.org/wiki/Multiple_dispatch multiple dispatch], dynamic-dispatch, strongly typed, custom types (numbers with range, enums)
-* TODO look at haskell
-* [https://en.wikipedia.org/wiki/Type_safety Type_safety]
 * [https://en.wikipedia.org/wiki/Liskov_substitution_principle Liskov_substitution_principle]
 * [https://en.wikipedia.org/wiki/Computer_architecture Computer architecture]s: [https://en.wikipedia.org/wiki/Reconfigurable_computing Reconfigurable computing]
 * [https://en.wikipedia.org/wiki/Software Software][https://en.wikipedia.org/wiki/Software_design  design]: [https://en.wikipedia.org/wiki/Abstraction_(computer_science Abstraction], [https://en.wikipedia.org/wiki/Modularity Modularity], [https://en.wikipedia.org/wiki/Information Information][https://en.wikipedia.org/wiki/Information_hiding  hiding], [https://en.wikipedia.org/wiki/Fault_tolerance Fault tolerance], [https://en.wikipedia.org/wiki/Extensibility Extensibility], [https://en.wikipedia.org/wiki/Maintainability Maintainability], [https://en.wikipedia.org/wiki/Software_durability Software_durability], [https://en.wikipedia.org/wiki/Reusability Reusability], [https://en.wikipedia.org/wiki/Usability Usability], [https://en.wikipedia.org/wiki/Performance Performance], [https://en.wikipedia.org/wiki/Software_portability Software_portability], [https://en.wikipedia.org/wiki/Scalability Scalability]
@@ -30,41 +23,24 @@ An eco-friendly lisp
 * [https://en.wikipedia.org/wiki/Dependent_type https://en.wikipedia.org/wiki/Dependent_type]?
 * Graphical version? [https://en.wikipedia.org/wiki/Dataflow_programming https://en.wikipedia.org/wiki/Dataflow_programming]? (+ [https://en.wikipedia.org/wiki/Automatic_parallelization https://en.wikipedia.org/wiki/Automatic_parallelization])
 * [https://en.wikipedia.org/wiki/Actor_model https://en.wikipedia.org/wiki/Actor_model]?
-* Future / promise
-* multiple inheritance
-* atomic operations? / locking?
-* Undoing / redoing instead of operation confirmation
-* lisp like exception handling (maybe multiple choices but then how should you write libraries?)
 * Look at existing vulnerabilities and find out how they could be prevented by the language
 * TODO NEEDTOUNDERSTAND [https://en.wikipedia.org/wiki/Synchronous_programming_language https://en.wikipedia.org/wiki/Synchronous_programming_language]
 * call by…. Sharing?
 * Expression-language
 * [https://en.wikipedia.org/wiki/Erlang_(programming_language) https://en.wikipedia.org/wiki/Erlang_(programming_language)]
 * testing
-* hot swapping
 * [https://en.wikipedia.org/wiki/Mixins https://en.wikipedia.org/wiki/Mixins] ?
-* [https://en.wikipedia.org/wiki/Go_(programming_language) https://en.wikipedia.org/wiki/Go_(programming_language)]
 * Gui
 * [https://en.wikipedia.org/wiki/Definite_assignment_analysis https://en.wikipedia.org/wiki/Definite_assignment_analysis]
-* object database
-* distributed objects/calls
-* .green
 * If using semver enforce it using compiler
-* Good IDE, debugger, profiler, optimizer
-* common lisp object system (prevents design patterns)
 * permission system
-* code-completion
-* common lisp, scheme
 * cooperative multitaksing? (I dont think so)
-* time travelling debugger [https://elm-lang.org/news/time-travel-made-easy https://elm-lang.org/news/time-travel-made-easy]
 * defense in depth (running applications in container like things?)
 * everything should be machine-readable (contracts, rules, wikis, etc.)
-* [https://en.wikipedia.org/wiki/Clojure https://en.wikipedia.org/wiki/Clojure] immutability
 * [https://en.wikipedia.org/wiki/Exception_handling https://en.wikipedia.org/wiki/Exception_handling]? [https://en.wikipedia.org/wiki/Software_transactional_memory https://en.wikipedia.org/wiki/Software_transactional_memory] ?
 * locality of data (for speedup?) [https://en.wikipedia.org/wiki/Partitioned_global_address_space https://en.wikipedia.org/wiki/Partitioned_global_address_space]?
 * https://crystal-lang.org/reference/guides/writing_shards.html
 * https://en.wikipedia.org/wiki/Language-based_security
-* Rust
 * Trust layers (you need to trust all lower layers)
 
 Interesting: [http://appinventor.mit.edu/ http://appinventor.mit.edu/]
