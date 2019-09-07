@@ -1,4 +1,5 @@
-;; https://en.wikibooks.org/wiki/Scheme_Programming/Input_and_Output
+;; Parts are from "Scheme Programming/Input and Output" licensed under "Creative Commons Attribution-ShareAlike License". https://en.wikibooks.org/w/index.php?title=Scheme_Programming/Input_and_Output&oldid=3421585. 
+
 (define (read-byte . opt)
     (let ((c (apply read-char opt)))
     (if (eof-object? c) c (char->integer c))))
@@ -13,16 +14,22 @@
 (define byte-ready? char-ready?)
 
 (define (byte->bits byte)
-    (do ((i 7 (- i 1)))
-        ((= i -1))
-        (format #t "~a ~a~%" i (logbit? i byte))))
+    (list
+        (logbit? 7 byte)
+        (logbit? 6 byte)
+        (logbit? 5 byte)
+        (logbit? 4 byte)
+        (logbit? 3 byte)
+        (logbit? 2 byte)
+        (logbit? 1 byte)
+        (logbit? 0 byte)))
+
+(define (bytes->bits bytes)
+    (map byte->bits bytes))
 
 (define (test)
     (let ((in (open-input-file "../binary.bin")))
         (display (byte->bits (read-byte in)))))
-        
-;(peek-byte in)
-;(byte-ready? in)
 
 ;; http://www.r6rs.org/final/html/r6rs-lib/r6rs-lib-Z-H-7.html#node_chap_6
 (define-record-type binary-reader
