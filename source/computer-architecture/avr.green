@@ -1,10 +1,9 @@
+;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(define-syntax define-assembly-instruction
-    (syntax-rules ()
-        ((_ instruction instruction-format cycles body body* ...)
-         (format #t "~a ~a ~a ~a~%" (quote instruction) (quote instruction-format) (quote cycles) (quote (begin body body* ...))))))
+(defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
+    (sb-int:quasiquote (format t "~a ~a ~a ~a~%" (unquote instruction) (unquote instruction-format) (unquote cycles) (unquote body))))
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (jmp (k integer))
@@ -17,12 +16,8 @@
     1
     (define (register d) k)
     (define program-counter (+ program-counter 2)))
-    
-
-
 
 #|
-
 
 (loop repeat 35 collect
     (jmp #x8c))
