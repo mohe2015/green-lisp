@@ -24,16 +24,16 @@
     `(defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
        (let ,(mapcar (lambda (s) `(,s 0)) vars)
 	 ,@(loop for item in format collect
-		(cond ((eql item 0)
-		       `(unless (= 1 (read-bit bit-reader))
-			  (log +trace+ "fail-not-a-1")
-			  (return-from read-instruction nil)))
-		      ((eql item 1)
-		       `(unless (= 0 (read-bit bit-reader))
-			  (log +trace+ "fail-not-a-0")
-			  (return-from read-instruction nil)))
+		(cond ((or (eql item 0) (eql item 1))
+		       `(let ((bit (read-bit bit-reader)))
+			  (log +trace+ (format nil "readi ~a" bit))
+			  (unless (= ,item bit)
+			    (log +trace+ (format nil "fail-not-a-~a" ,item))
+			    (return-from read-instruction nil))))
 		      (t
-		       `(setf ,item (logior (ash ,item 1) (read-bit bit-reader))))))
+		       `(let ((bit (read-bit bit-reader)))
+			  (log +trace+ (format nil "read ~a" bit))
+			  (setf ,item (logior (ash ,item 1) bit))))))
 	 ,@body
 	 t))))
 
