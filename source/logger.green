@@ -2,7 +2,7 @@
 (defpackage :logger
   (:use :common-lisp)
   (:shadow :log)
-  (:export logger))
+  (:export :log :+trace+ :+debug+ :+info+ :+warning+ :+error+))
 (in-package :logger)
 
 (defconstant +trace+ 0)
