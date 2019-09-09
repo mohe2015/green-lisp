@@ -2,20 +2,24 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
+(defmacro read-format (format)
+  (let ((format (remove-if (lambda (s) (not (symbolp s))) (remove-duplicates format))))
+    `',format))
+
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
-    (sb-int:quasiquote (format t "~a ~a ~a ~a~%" (unquote instruction) (unquote instruction-format) (unquote cycles) (unquote body))))
+    `(format t "~a ~a ~a ~a~%" ',instruction ',instruction-format ',cycles ',body))
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
-(define-assembly-instruction (jmp (k integer))
+(define-assembly-instruction (jmp (k integer (and (<= 0 k) (< k 4000000))))
     (1 0 0 1 0 1 0 k k k k k 1 1 0 k k k k k k k k k k k k k k k k k)
     3 ;; cycles
-    (define program-counter k))
+  (define program-counter k))
 
 (define-assembly-instruction (ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
     (1 1 1 0 k k k k d d d d k k k k)
     1
-    (define (register d) k)
-    (define program-counter (+ program-counter 2)))
+  (define (register d) k)
+  (define program-counter (+ program-counter 2)))
 
 #|
 
@@ -32,21 +36,6 @@
 
 (label end)
 (jmp end)))
-
-
-
-
-
-(define-syntax define-assembly-instruction
-  (lambda (x)
-    (syntax-case x ()
-      ((_ instr)
-         (syntax (format #t "~a~%" (quote instr)))))))
-
-
-
-
-
 
 (define-pin 21 vcc)
 (define-pin 22 ground)

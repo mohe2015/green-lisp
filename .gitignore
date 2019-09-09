@@ -1,2 +1,3 @@
 .~lock.*#
 hidden
+*slime-repl sbcl*
