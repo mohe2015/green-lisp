@@ -2,24 +2,44 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(defmacro read-format (format)
-  (let ((format (remove-if (lambda (s) (not (symbolp s))) (remove-duplicates format))))
-    `',format))
+#|
+(load "/home/moritz/Documents/green-lisp/source/computer-architecture/avr.green")
+(defparameter *R* (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin"))
+(read-instruction 'jump *R*)
+|#
+
+(load "/home/moritz/Documents/green-lisp/source/bits.green")
+
+(defmacro read-format (name format &body body)
+  (let ((vars (remove-if (lambda (s) (not (symbolp s))) (remove-duplicates format))))
+    `(defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
+       (let ,(mapcar (lambda (s) `(,s 0)) vars)
+	 ,@(loop for item in format collect
+	       (cond ((eql item 0)
+		      `(unless (= 1 (read-bit bit-reader))
+			(return-from read-instruction nil)))
+		     ((eql item 1)
+		      `(unless (= 0 (read-bit bit-reader))
+			(return-from read-instruction nil)))
+		     (t
+		      `(setf ,item (logior (ash ,item 1) (read-bit bit-reader))))))
+	 ,@body
+	 t))))
 
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
-    `(format t "~a ~a ~a ~a~%" ',instruction ',instruction-format ',cycles ',body))
+  `(read-format ,instruction ,instruction-format ,@body))
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (jmp (k integer (and (<= 0 k) (< k 4000000))))
     (1 0 0 1 0 1 0 k k k k k 1 1 0 k k k k k k k k k k k k k k k k k)
     3 ;; cycles
-  (define program-counter k))
+  (setf program-counter k))
 
 (define-assembly-instruction (ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
     (1 1 1 0 k k k k d d d d k k k k)
     1
-  (define (register d) k)
-  (define program-counter (+ program-counter 2)))
+  (setf (register d) k)
+  (setf program-counter (+ program-counter 2)))
 
 #|
 
