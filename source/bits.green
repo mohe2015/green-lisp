@@ -1,6 +1,11 @@
 ;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;; http://www.gigamonkeys.com/book/files-and-file-io.html chapter 24
 
+(defpackage :bit-reader
+  (:use :common-lisp)
+  (:export :bit-reader :read-bit :file->bit-reader))
+(in-package :bit-reader)
+
 (defun file->bytes (filename)
   (with-open-file (in filename :element-type '(unsigned-byte 8))
     (loop for byte = (read-byte in nil) while byte collect byte)))

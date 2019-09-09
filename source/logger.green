@@ -1,0 +1,18 @@
+;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+(defpackage :logger
+  (:use :common-lisp)
+  (:shadow :log)
+  (:export logger))
+(in-package :logger)
+
+(defconstant +trace+ 0)
+(defconstant +debug+ 1)
+(defconstant +info+ 2)
+(defconstant +warning+ 3)
+(defconstant +error+ 4)
+
+(defparameter *LOG-LEVEL* +trace+)
+
+(defun log (level message)
+  (if (>= level *LOG-LEVEL*)
+      (print message)))

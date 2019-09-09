@@ -8,7 +8,14 @@
 (read-instruction 'jump *R*)
 |#
 
+(load "/home/moritz/Documents/green-lisp/source/logger.green")
 (load "/home/moritz/Documents/green-lisp/source/bits.green")
+
+(defpackage :avr
+  (:use :common-lisp)
+  (:import-from :bit-reader :bit-reader :read-bit :file->bit-reader)
+  (:import-from :logger :log))
+(in-package :avr)
 
 (defmacro read-format (name format &body body)
   (let ((vars (remove-if (lambda (s) (not (symbolp s))) (remove-duplicates format))))
@@ -27,19 +34,22 @@
 	 t))))
 
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
-  `(read-format ,instruction ,instruction-format ,@body))
+  `(read-format ,(car instruction) ,instruction-format ,@body))
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (jmp (k integer (and (<= 0 k) (< k 4000000))))
     (1 0 0 1 0 1 0 k k k k k 1 1 0 k k k k k k k k k k k k k k k k k)
     3 ;; cycles
-  (setf program-counter k))
+  (print k))
+  ;;(setf program-counter k))
 
 (define-assembly-instruction (ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
     (1 1 1 0 k k k k d d d d k k k k)
     1
-  (setf (register d) k)
-  (setf program-counter (+ program-counter 2)))
+  (print d)
+  (print k))
+;;(setf (register d) k)
+;;(setf program-counter (+ program-counter 2)))
 
 #|
 
