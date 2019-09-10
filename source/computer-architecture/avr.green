@@ -46,12 +46,13 @@
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 (define-assembly-instruction (:jmp (k integer (and (<= 0 k) (< k 4000000))))
-    (k k k k 1 1 0 k ;; TODO FIXME: bytes need to be reversed (little endian or so)
-       1 0 0 1 0 1 0 k
+    (1 0 0 1 0 1 0 k
+     k k k k 1 1 0 k ;; TODO FIXME: bytes need to be reversed (little endian or so)
+      
        k k k k k k k k
        k k k k k k k k)
     3 ;; cycles
-  (print k))
+  (log +trace+ (format nil "~x" (ash k 1))))
   ;;(setf program-counter k))
 
 (define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
