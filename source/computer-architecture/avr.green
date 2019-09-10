@@ -41,9 +41,12 @@
   (declare (ignore cycles))
   `(read-format ,(car instruction) ,instruction-format ,@body))
 
+(defgeneric read-instruction (name binary-reader)
+  (:documentation "Reads the instruction of the specified type from the binary reader."))
+
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
-(define-assembly-instruction (jmp (k integer (and (<= 0 k) (< k 4000000))))
-    (k k k k 1 1 0 k
+(define-assembly-instruction (:jmp (k integer (and (<= 0 k) (< k 4000000))))
+    (k k k k 1 1 0 k ;; TODO FIXME: bytes need to be reversed (little endian or so)
        1 0 0 1 0 1 0 k
        k k k k k k k k
        k k k k k k k k)
@@ -51,7 +54,7 @@
   (print k))
   ;;(setf program-counter k))
 
-(define-assembly-instruction (ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
+(define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
     (1 1 1 0 k k k k d d d d k k k k)
     1
   (print d)
