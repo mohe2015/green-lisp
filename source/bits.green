@@ -1,9 +1,24 @@
 ;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;; http://www.gigamonkeys.com/book/files-and-file-io.html chapter 24
 
-(defun file->bytes (filename)
+(defpackage :bit-reader
+  (:use :common-lisp)
+  (:export :bit-reader :read-bit :file->bit-reader :file->bytes))
+(in-package :bit-reader)
+
+(defun file->byte-pairs (filename)
   (with-open-file (in filename :element-type '(unsigned-byte 8))
-    (loop for byte = (read-byte in nil) while byte collect byte)))
+    (loop for byte = (list (read-byte in nil) (read-byte in nil)) while (and (car byte) (cdr byte)) collect byte)))
+
+(defun file->bytes (filename)
+  (apply
+   #'concatenate
+   (cons
+    'list
+    (mapcar
+     (lambda (i)
+       (list (cadr i) (car i)))
+     (file->byte-pairs filename)))))
 
 ;; https://lisptips.com/post/44261316742/how-do-i-convert-an-integer-to-a-list-of-bits
 (defun byte->bits (byte)
