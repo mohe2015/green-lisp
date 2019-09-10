@@ -13,10 +13,10 @@
 
 (defpackage :avr
   (:use :common-lisp)
-  (:import-from :bit-reader :bit-reader :read-bit :file->bit-reader)
+  (:import-from :bits :bit-reader :read-bit :file->bit-reader :bit-writer :write-bit)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
-  (:export :read-instruction))
+  (:export :read-instruction :write-instruction))
 (in-package :avr)
 
 (defmacro read-format (name format &body body)
@@ -37,9 +37,29 @@
 	 ,@body
 	 t))))
 
+(defgeneric write-instruction (name bit-writer &rest vars)
+  (:documentation "Write the specified instruction to the bit-writer."))
+
+(defmacro write-format (name format)
+  (let ((vars (remove-if (lambda (s) (not (symbolp s))) (remove-duplicates format))))
+    `(defmethod write-instruction ((name (eql ',name)) (bit-writer bit-writer) &rest parameters)
+       (destructuring-bind ,vars parameters
+	 ,@(loop for item in format collect
+		(cond ((or (eql item 0) (eql item 1))
+		       `(progn
+			  (write-bit bit-writer ,item)
+			  (log +trace+ (format nil "writei ~a" ,item))))
+		      (t
+		       `(let ((bit ,item))
+			  (log +trace+ (format nil "write ~a" bit))
+			  (write-bit bit-writer bit)
+			  (setf ,item (logior (ash ,item 1) bit))))))))))
+  
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
   (declare (ignore cycles))
-  `(read-format ,(car instruction) ,instruction-format ,@body))
+  `(progn
+     (read-format ,(car instruction) ,instruction-format ,@body)
+     (write-format ,(car instruction) ,instruction-format)))
 
 (defgeneric read-instruction (name binary-reader)
   (:documentation "Reads the instruction of the specified type from the binary reader."))
