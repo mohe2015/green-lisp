@@ -1,10 +1,11 @@
 ;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;; http://www.gigamonkeys.com/book/files-and-file-io.html chapter 24
 
-(defpackage :bit-reader
+(defpackage :bits
   (:use :common-lisp)
-  (:export :bit-reader :read-bit :file->bit-reader :file->bytes))
-(in-package :bit-reader)
+  (:export :bit-reader :read-bit :file->bit-reader :file->bytes
+	   :bit-writer :write-bit :bit-writer-bits))
+(in-package :bits)
 
 (defun file->byte-pairs (filename)
   (with-open-file (in filename :element-type '(unsigned-byte 8))
@@ -43,3 +44,13 @@
 
 (defmethod read-bit ((bit-reader bit-reader))
   (pop (bit-reader-bits bit-reader)))
+
+
+(defclass bit-writer ()
+  ((bits
+    :initarg :bits
+    :accessor bit-writer-bits
+    :initform '())))
+
+(defmethod write-bit ((bit-writer bit-writer) bit)
+  (push bit (bit-writer-bits bit-writer)))
