@@ -3,8 +3,8 @@
 
 (defpackage :bits
   (:use :common-lisp)
-  (:export :bit-reader :read-bit :file->bit-reader :file->bytes
-	   :bit-writer :write-bit :bit-writer-bits))
+  (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->bytes
+	   :bit-writer :write-bit :bit-writer->bytes :bit-writer->file))
 (in-package :bits)
 
 (defun file->byte-pairs (filename)
@@ -21,7 +21,6 @@
        (list (cadr i) (car i)))
      (file->byte-pairs filename)))))
 
-;; https://lisptips.com/post/44261316742/how-do-i-convert-an-integer-to-a-list-of-bits
 (defun byte->bits (byte)
   (let ((bits '()))
     (dotimes (index 8 bits)
@@ -54,3 +53,25 @@
 
 (defmethod write-bit ((bit-writer bit-writer) bit)
   (push bit (bit-writer-bits bit-writer)))
+
+(defun bits->bits-list (bits)
+  (loop for x from 0 to (- (length bits) 1) by 16 append
+       (list (loop for y from 8 to 15 collect (nth (+ x y) bits))
+	     (loop for y from 0 to 7 collect (nth (+ x y) bits)))))
+
+(defun bits->byte (bits)
+  (reduce #'(lambda (a b) (+ (ash a 1) b)) bits))
+
+(defun bits-list->bytes (bits-list)
+  (mapcar #'bits->byte bits-list))
+
+(defun bit-writer->bytes (bit-writer)
+  (bits-list->bytes (bits->bits-list (reverse (bit-writer-bits bit-writer)))))
+
+(defun bytes->file (bytes filename)
+  (with-open-file (out filename :element-type '(unsigned-byte 8) :direction :output :if-exists :supersede)
+    (loop for byte in bytes do
+	 (write-byte byte out))))
+
+(defun bit-writer->file (bit-writer filename)
+  (bytes->file (bit-writer->bytes bit-writer) filename))

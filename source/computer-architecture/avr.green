@@ -2,21 +2,15 @@
 ; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-#|
-(load "/home/moritz/Documents/green-lisp/source/computer-architecture/avr.green")
-(defparameter *R* (bit-reader:file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin"))
-(avr:read-instruction 'jmp *R*)
-|#
-
 (load "/home/moritz/Documents/green-lisp/source/logger.green")
 (load "/home/moritz/Documents/green-lisp/source/bits.green")
 
 (defpackage :avr
   (:use :common-lisp)
-  (:import-from :bits :bit-reader :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer-bits)
+  (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
-  (:export :read-instruction :write-instruction))
+  (:export :read-instruction :write-instruction :read-any-instruction))
 (in-package :avr)
 
 (defmacro read-format (name format &body body)
@@ -57,38 +51,45 @@
 			  (log +trace+ (format nil "write ~a" bit))
 			  (write-bit bit-writer bit))))))
 	    format))
-       (reverse (bit-writer-bits bit-writer))))) ;; TODO little endian
+       (bit-writer->bytes bit-writer))))
 
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
   (declare (ignore cycles))
   `(progn
+     (write-format ,(car instruction) ,instruction-format)
      (read-format ,(car instruction) ,instruction-format ,@body)
-     (write-format ,(car instruction) ,instruction-format)))
+     (lambda (bit-reader)
+       (read-instruction ,(car instruction) bit-reader))))
 
 (defgeneric read-instruction (name binary-reader)
   (:documentation "Reads the instruction of the specified type from the binary reader."))
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
-(define-assembly-instruction (:jmp (k integer (and (<= 0 k) (< k 4000000))))
-    (1 0 0 1 0 1 0 k
-     k k k k 1 1 0 k ;; TODO FIXME: bytes need to be reversed (little endian or so)
-      
-       k k k k k k k k
-       k k k k k k k k)
-    3 ;; cycles
-  (log +trace+ (format nil "~x" (ash k 1))))
-  ;;(setf program-counter k))
 
-(define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
-    (1 1 1 0 k k k k d d d d k k k k)
-    1
-  (print d)
-  (print k))
-;;(setf (register d) k)
-;;(setf program-counter (+ program-counter 2)))
+(defparameter +all-instructions+
+  (list
+   (define-assembly-instruction (:jmp (k integer (and (<= 0 k) (< k 4000000))))
+       (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
+       3 ;; cycles
+     (log +debug+ (format nil "jmp 0x~x~%" (ash k 1))))
+   ;;(setf program-counter k))
+   
+   (define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
+       (1 1 1 0 k k k k  d d d d k k k k)
+       1
+     (print d)
+     (print k))))
+  ;;(setf (register d) k)
+  ;;(setf program-counter (+ program-counter 2)))
 
+(defun read-any-instruction (bit-reader)
+  (loop for method in +all-instructions+ do
+       (let* ((new-bit-reader (make-instance 'bit-reader :bits (bit-reader-bits bit-reader)))
+	     (result (funcall method new-bit-reader)))
+	 (if result
+	     (return-from read-any-instruction new-bit-reader)))))
+       
 #|
-
 (loop repeat 35 collect
     (jmp #x8c))
 

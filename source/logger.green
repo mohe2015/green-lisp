@@ -11,8 +11,8 @@
 (defconstant +warning+ 3)
 (defconstant +error+ 4)
 
-(defparameter *LOG-LEVEL* +trace+)
+(defparameter *LOG-LEVEL* +debug+)
 
 (defun log (level message)
   (if (>= level *LOG-LEVEL*)
-      (print message)))
+      (princ message)))
