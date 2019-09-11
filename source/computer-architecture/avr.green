@@ -79,7 +79,32 @@
 	1
       ;;(setf (register d) k)
       ;;(setf program-counter (+ program-counter 2)))
-     (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))))
+      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
+
+    ;; eor
+
+    ;; out
+    (define-assembly-instruction (:out (a port (and (<= 0 a) (<= a 64))) (r register (and (<= 0 r) (<= r 31))))
+	(1 0 1 1 1 a a r  r r r r a a a a)
+	1
+      ;; (out a r)
+      ;; (setf program-counter (+ program-counter 2))
+      (log +debug+ (format nil "out 0x~x, r~d~%" a r)))
+
+    ;; rjmp
+
+    ;; st
+
+    ;; cpi
+
+    ;; cpc
+
+    ;; brne
+
+    ;; call
+
+
+    ))
 
 (defun read-any-instruction (bit-reader)
   (loop for method in +all-instructions+ do
