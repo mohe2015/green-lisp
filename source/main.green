@@ -10,9 +10,8 @@
 (in-package :main)
 
 (let ((o (make-instance 'bit-writer)))
-  (write-instruction :jmp o #x18e)
-  (write-instruction :jmp o #x18e)
-
+  (write-instruction :jmp o (ash #x18e -1))
+  (write-instruction :ldi o (- 27 16) #x13)
   
   (bit-writer->file o "test.bin"))
 

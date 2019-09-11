@@ -46,7 +46,7 @@
 			  (write-bit bit-writer ,item)
 			  (log +trace+ (format nil "writei ~a" ,item))))
 		      (t
-		       `(let* ((index ,(count-if (lambda (i) (eql i item)) item-list))
+		       `(let* ((index ,(- (count-if (lambda (i) (eql i item)) item-list) 1))
 			       (bit (if (logbitp index ,item) 1 0)))
 			  (log +trace+ (format nil "write ~a" bit))
 			  (write-bit bit-writer bit))))))
@@ -71,16 +71,15 @@
    (define-assembly-instruction (:jmp (k integer (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
        3 ;; cycles
+     ;;(setf program-counter k))
      (log +debug+ (format nil "jmp 0x~x~%" (ash k 1))))
-   ;;(setf program-counter k))
-   
-   (define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
+
+    (define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
-       1
-     (print d)
-     (print k))))
-  ;;(setf (register d) k)
-  ;;(setf program-counter (+ program-counter 2)))
+	1
+      ;;(setf (register d) k)
+      ;;(setf program-counter (+ program-counter 2)))
+     (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))))
 
 (defun read-any-instruction (bit-reader)
   (loop for method in +all-instructions+ do
