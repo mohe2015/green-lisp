@@ -1,7 +1,5 @@
 ;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 
-(load "/home/moritz/Documents/green-lisp/source/logger.green")
-(load "/home/moritz/Documents/green-lisp/source/bits.green")
 (load "/home/moritz/Documents/green-lisp/source/computer-architecture/avr.green")
 
 (defpackage :main
@@ -20,4 +18,11 @@
 
 
 (let ((i (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin")))
-  (read-any-instruction i)) ;; TODO find out which instruction that is
+  (read-any-instruction i)
+  (read-any-instruction i)
+  (read-any-instruction i)
+  (read-any-instruction i)
+  (read-any-instruction i)
+  (read-any-instruction i)
+  (read-any-instruction i)
+  (read-any-instruction i))

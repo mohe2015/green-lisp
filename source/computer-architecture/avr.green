@@ -66,12 +66,12 @@
 
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
 
-(defun get-all-instruction-reader-methods ()
+(defparameter +all-instructions+
   (list
    (define-assembly-instruction (:jmp (k integer (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
        3 ;; cycles
-     (log +debug+ (format nil "jmp 0x~x" (ash k 1))))
+     (log +debug+ (format nil "jmp 0x~x~%" (ash k 1))))
    ;;(setf program-counter k))
    
    (define-assembly-instruction (:ldi (d register (and (<= 16 d) (<= d 31))) (k integer (and (<= 0 k) (<= k 255))))
@@ -83,7 +83,7 @@
   ;;(setf program-counter (+ program-counter 2)))
 
 (defun read-any-instruction (bit-reader)
-  (loop for method in (get-all-instruction-reader-methods) do
+  (loop for method in +all-instructions+ do
        (let* ((new-bit-reader (make-instance 'bit-reader :bits (bit-reader-bits bit-reader)))
 	     (result (funcall method new-bit-reader)))
 	 (if result
