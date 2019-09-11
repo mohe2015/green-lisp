@@ -54,3 +54,8 @@
 
 (defmethod write-bit ((bit-writer bit-writer) bit)
   (push bit (bit-writer-bits bit-writer)))
+
+(defun bits->byte-list (bits)
+  (loop for x from 0 to (- (length bits) 1) by 16 append
+       (list (loop for y from 8 to 15 collect (nth (+ x y) bits))
+	     (loop for y from 0 to 7 collect (nth (+ x y) bits)))))
