@@ -6,9 +6,9 @@
 
 (defpackage :main
   (:use :common-lisp)
-  (:import-from :bits :bit-writer :bit-writer->bytes :bit-writer->file)
+  (:import-from :bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:shadowing-import-from :logger :log)
-  (:import-from :avr :write-instruction))
+  (:import-from :avr :read-instruction :write-instruction))
 (in-package :main)
 
 (let ((o (make-instance 'bit-writer)))
@@ -17,3 +17,7 @@
 
   
   (bit-writer->file o "test.bin"))
+
+
+(let ((i (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin")))
+  (read-instruction :jmp i)) ;; TODO find out which instruction that is

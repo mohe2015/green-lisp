@@ -21,7 +21,6 @@
        (list (cadr i) (car i)))
      (file->byte-pairs filename)))))
 
-;; https://lisptips.com/post/44261316742/how-do-i-convert-an-integer-to-a-list-of-bits
 (defun byte->bits (byte)
   (let ((bits '()))
     (dotimes (index 8 bits)
@@ -70,7 +69,7 @@
   (bits-list->bytes (bits->bits-list (reverse (bit-writer-bits bit-writer)))))
 
 (defun bytes->file (bytes filename)
-  (with-open-file (out filename :element-type '(unsigned-byte 8) :direction :output)
+  (with-open-file (out filename :element-type '(unsigned-byte 8) :direction :output :if-exists :supersede)
     (loop for byte in bytes do
 	 (write-byte byte out))))
 
