@@ -55,7 +55,13 @@
 (defmethod write-bit ((bit-writer bit-writer) bit)
   (push bit (bit-writer-bits bit-writer)))
 
-(defun bits->byte-list (bits)
+(defun bits->bits-list (bits)
   (loop for x from 0 to (- (length bits) 1) by 16 append
        (list (loop for y from 8 to 15 collect (nth (+ x y) bits))
 	     (loop for y from 0 to 7 collect (nth (+ x y) bits)))))
+
+(defun bits->byte (bits)
+  (reduce #'(lambda (a b) (+ (ash a 1) b)) bits))
+
+(defun bits-list->bytes (bits-list)
+  (mapcar #'bits->byte bits-list))
