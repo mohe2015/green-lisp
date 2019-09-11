@@ -7,10 +7,10 @@
 
 (defpackage :avr
   (:use :common-lisp)
-  (:import-from :bits :bit-reader :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
+  (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
-  (:export :read-instruction :write-instruction))
+  (:export :read-instruction :write-instruction :read-any-instruction))
 (in-package :avr)
 
 (defmacro read-format (name format &body body)
@@ -57,7 +57,9 @@
   (declare (ignore cycles))
   `(progn
      (write-format ,(car instruction) ,instruction-format)
-     (read-format ,(car instruction) ,instruction-format ,@body)))
+     (read-format ,(car instruction) ,instruction-format ,@body)
+     (lambda (bit-reader)
+       (read-instruction ,(car instruction) bit-reader))))
 
 (defgeneric read-instruction (name binary-reader)
   (:documentation "Reads the instruction of the specified type from the binary reader."))
@@ -76,14 +78,18 @@
        (1 1 1 0 k k k k  d d d d k k k k)
        1
      (print d)
-     (print k))
-
-   ))
+     (print k))))
   ;;(setf (register d) k)
   ;;(setf program-counter (+ program-counter 2)))
 
-  #|
-
+(defun read-any-instruction (bit-reader)
+  (loop for method in (get-all-instruction-reader-methods) do
+       (let* ((new-bit-reader (make-instance 'bit-reader :bits (bit-reader-bits bit-reader)))
+	     (result (funcall method new-bit-reader)))
+	 (if result
+	     (return-from read-any-instruction new-bit-reader)))))
+       
+#|
 (loop repeat 35 collect
     (jmp #x8c))
 

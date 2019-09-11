@@ -3,7 +3,7 @@
 
 (defpackage :bits
   (:use :common-lisp)
-  (:export :bit-reader :read-bit :file->bit-reader :file->bytes
+  (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->bytes
 	   :bit-writer :write-bit :bit-writer->bytes :bit-writer->file))
 (in-package :bits)
 
