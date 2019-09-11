@@ -1,0 +1,19 @@
+;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
+
+(load "/home/moritz/Documents/green-lisp/source/logger.green")
+(load "/home/moritz/Documents/green-lisp/source/bits.green")
+(load "/home/moritz/Documents/green-lisp/source/computer-architecture/avr.green")
+
+(defpackage :main
+  (:use :common-lisp)
+  (:import-from :bits :bit-writer :bit-writer->bytes :bit-writer->file)
+  (:shadowing-import-from :logger :log)
+  (:import-from :avr :write-instruction))
+(in-package :main)
+
+(let ((o (make-instance 'bit-writer)))
+  (write-instruction :jmp o #x18e)
+  (write-instruction :jmp o #x18e)
+
+  
+  (bit-writer->file o "test.bin"))
