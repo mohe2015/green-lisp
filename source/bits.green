@@ -4,7 +4,7 @@
 (defpackage :bits
   (:use :common-lisp)
   (:export :bit-reader :read-bit :file->bit-reader :file->bytes
-	   :bit-writer :write-bit :bit-writer-bits))
+	   :bit-writer :write-bit :bit-writer->bytes))
 (in-package :bits)
 
 (defun file->byte-pairs (filename)
@@ -65,3 +65,6 @@
 
 (defun bits-list->bytes (bits-list)
   (mapcar #'bits->byte bits-list))
+
+(defun bit-writer->bytes (bit-writer)
+  (bits-list->bytes (bits->bits-list (reverse (bit-writer-bits bit-writer)))))

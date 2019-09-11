@@ -13,7 +13,7 @@
 
 (defpackage :avr
   (:use :common-lisp)
-  (:import-from :bits :bit-reader :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer-bits)
+  (:import-from :bits :bit-reader :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
   (:export :read-instruction :write-instruction))
@@ -57,7 +57,7 @@
 			  (log +trace+ (format nil "write ~a" bit))
 			  (write-bit bit-writer bit))))))
 	    format))
-       (reverse (bit-writer-bits bit-writer))))) ;; TODO little endian
+       (bit-writer->bytes bit-writer))))
 
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
   (declare (ignore cycles))
