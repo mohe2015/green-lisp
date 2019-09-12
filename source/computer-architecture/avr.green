@@ -10,7 +10,8 @@
   (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
-  (:export :read-instruction :write-instruction :read-any-instruction))
+  (:export :read-instruction :write-instruction :read-any-instruction
+	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+))
 (in-package :avr)
 
 (defmacro read-format (name format &body body)
@@ -112,7 +113,12 @@
 	     (result (funcall method new-bit-reader)))
 	 (if result
 	     (return-from read-any-instruction new-bit-reader)))))
-       
+
+(defparameter +DDRB+ #x17) ; #x37
+(defparameter +PORTB+ #x18) ; #x38
+(defparameter +DDRE+ #x02) ; #x22
+(defparameter +PORTE+ #x03) ; #x23
+
 #|
 
 (define-pin 21 vcc)
