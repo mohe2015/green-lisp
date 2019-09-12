@@ -114,19 +114,6 @@
 	     (return-from read-any-instruction new-bit-reader)))))
        
 #|
-(loop repeat 35 collect
-    (jmp #x8c))
-
-(ldi r24 #x80)
-(out DDRB r24)
-(out PORTB r24)
-
-(ldi r24 #xFF)
-(out DDRE r24)
-(out PORTE r24)
-
-(label end)
-(jmp end)))
 
 (define-pin 21 vcc)
 (define-pin 22 ground)

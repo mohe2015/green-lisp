@@ -10,18 +10,24 @@
 (in-package :main)
 
 (let ((o (make-instance 'bit-writer)))
-  (write-instruction :jmp o (ash #x18e -1))
   (write-instruction :ldi o (- 27 16) #x13)
-  
+  (write-instruction :out o 3 #x15) ;; TODO fixme order and enforce types
+
+  (loop repeat 35 collect
+       (write-instruction :jmp o (ash #x8c -1)))
+
+  (write-instruction :ldi o (- 24 16) #|r|# #x80)
+  (write-instruction :out o 24 #|r|# DDRB)
+  (write-instruction :out o 24 #|r|# PORTB)
+
+  (write-instruction :ldi o (- 24 16) |#r#| #xFF)
+  (write-instruction :out o 24 #|r|# DDRE)
+  (write-instruction :out o 24 #|r|# PORTE)
+
+  (write-instruction :jmp o (ash #x1337 -1))
+
   (bit-writer->file o "test.bin"))
 
 
 (let ((i (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin")))
-  (read-any-instruction i)
-  (read-any-instruction i)
-  (read-any-instruction i)
-  (read-any-instruction i)
-  (read-any-instruction i)
-  (read-any-instruction i)
-  (read-any-instruction i)
-  (read-any-instruction i))
+  (loop repeat 30 do (read-any-instruction i)))
