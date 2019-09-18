@@ -11,7 +11,7 @@
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
   (:export :read-instruction :write-instruction :read-any-instruction
-	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+))
+	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+ :+DDRC+ :+PORTC+))
 (in-package :avr)
 
 (defmacro read-format (instruction format &body body)
@@ -120,6 +120,8 @@
 (defparameter +PORTB+ #x18) ; #x38
 (defparameter +DDRE+ #x02) ; #x22
 (defparameter +PORTE+ #x03) ; #x23
+(defparameter +DDRC+ #x14) ; #x34
+(defparameter +PORTC+ #x15) ; #x35
 
 #|
 
