@@ -1,3 +1,6 @@
+*.bin
+*.elf
+*.ihex
 .~lock.*#
 hidden
 *slime-repl sbcl*
