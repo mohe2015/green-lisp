@@ -30,6 +30,10 @@
 			     `(let ((bit (read-bit bit-reader)))
 				(log +trace+ (format nil "read ~a" bit))
 				(setf ,item (logior (ash ,item 1) bit))))))
+	 ,@(mapcar
+	    (lambda (item)
+	      `(setf ,(nth 0 item) ,(nth 2 item)))
+	    (cdr instruction))
 	 ,@body
 	 t))))
 
@@ -79,7 +83,7 @@
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
        3 ;; cycles
      ;;(setf program-counter k))
-     (log +debug+ (format nil "jmp 0x~x~%" (ash k 1))))
+     (log +debug+ (format nil "jmp 0x~x~%" k)))
 
     (define-assembly-instruction (:ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
