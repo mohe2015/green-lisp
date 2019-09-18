@@ -41,6 +41,10 @@
 	(args (mapcar #'car (cdr instruction))))
     `(defmethod write-instruction ((name (eql ',name)) (bit-writer bit-writer) &rest parameters)
        (destructuring-bind ,args parameters
+	 ,@(mapcar
+	    (lambda (item)
+	      `(setf ,(nth 0 item) ,(nth 3 item)))
+	    (cdr instruction))
 	 ,@(maplist
 	    (lambda (item-list)
 	      (let ((item (car item-list)))
