@@ -2,6 +2,7 @@
 *.elf
 *.ihex
 hidden
+ccl
 
 # -*- mode: gitignore; -*-
 *~
