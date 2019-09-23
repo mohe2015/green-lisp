@@ -24,7 +24,7 @@
 
 	   :instruction-size
 	   
-	   :label :rjmp
+	   :label :jmp :ldi :out :rjmp :brcc :adc
 
 	   ))
 (in-package :avr)

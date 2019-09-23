@@ -16,72 +16,76 @@
   (:import-from :bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:shadowing-import-from :logger :log)
   (:import-from :avr :read-instruction :write-instruction :read-any-instruction :instruction-size
-		:+DDRB+ :+PORTB+ :+DDRC+ :+PORTC+ :+DDRE+ :+PORTE+ :label :rjmp))
+		:+DDRB+ :+PORTB+ :+DDRC+ :+PORTC+ :+DDRE+ :+PORTE+
+
+		:label :jmp :ldi :out :rjmp :brcc :adc))
 (in-package :main)
 
 (defparameter *program*
   `(
     ,@(loop repeat 35 collect
-	 `(jmp #x8c))
+	   `(jmp :entry0))
 
-    ;; some general outputs
-    (ldi 24 #x80)
-    (out +DDRB+ 24) ;; TODO FIXME enforce types
-    (out +PORTB+ 24)
-    
-    (label :main)
-    ;; red
-    (ldi 24 #xF0)
-    (out +DDRE+ 24)
-    (out +PORTE+ 24)
-    
-    ;; green
-    (ldi 24 #x0F)
-    (out +DDRC+ 24)
-    (out +PORTC+ 24)
-    
-    ;; defun delay
-    ;; constant numbers
-    (ldi 20 #x00)
-    (ldi 21 #x01)
-    
-    (ldi 22 #x00)
-    (ldi 23 #x00)
-    (ldi 24 #x00)
-    
-    (label :target1)
-    (adc 22 21)
-    (adc 23 20)
-    (adc 24 20)
-    (brcc :target1) ;; :target
+      (label :entry0)
+      
+      ;; some general outputs
+      (ldi 24 #x80)
+      (out +DDRB+ 24) ;; TODO FIXME enforce types
+      (out +PORTB+ 24)
+      
+      (label :main)
+      ;; red
+      (ldi 24 #xF0)
+      (out +DDRE+ 24)
+      (out +PORTE+ 24)
+      
+      ;; green
+      (ldi 24 #x0F)
+      (out +DDRC+ 24)
+      (out +PORTC+ 24)
+      
+      ;; defun delay
+      ;; constant numbers
+      (ldi 20 #x00)
+      (ldi 21 #x01)
+      
+      (ldi 22 #x00)
+      (ldi 23 #x00)
+      (ldi 24 #x00)
+      
+      (label :target1)
+      (adc 22 21)
+      (adc 23 20)
+      (adc 24 20)
+      (brcc :target1) ;; :target
 
-    ;; red
-    (ldi 24 #x0F)
-    (out +DDRE+ 24)
-    (out +PORTE+ 24)
+      ;; red
+      (ldi 24 #x0F)
+      (out +DDRE+ 24)
+      (out +PORTE+ 24)
 
-    ;; green
-    (ldi 24 #xF0)
-    (out +DDRC+ 24)
-    (out +PORTC+ 24)  
+      ;; green
+      (ldi 24 #xF0)
+      (out +DDRC+ 24)
+      (out +PORTC+ 24)  
 
 
-    ;; defun delay
-    ;; constant numbers
-    (ldi 20 #x00)
-    (ldi 21 #x01)
-    
-    (ldi 22 #x00)
-    (ldi 23 #x00)
-    (ldi 24 #x00)
+      ;; defun delay
+      ;; constant numbers
+      (ldi 20 #x00)
+      (ldi 21 #x01)
+      
+      (ldi 22 #x00)
+      (ldi 23 #x00)
+      (ldi 24 #x00)
 
-    (label :target2)
-    (adc 22 21)
-    (adc 23 20)
-    (adc 24 20)
-    (brcc :target2)
+      (label :target2)
+      (adc 22 21)
+      (adc 23 20)
+      (adc 24 20)
+      (brcc :target2)
 
-    (rjmp :main)))
+      (rjmp :main)))
 
 (defparameter *labels* (make-hash-table))
 
@@ -100,9 +104,9 @@
 
 (loop for element in *program* do
      (unless (eq 'label (car element))
-       (if (eq 'rjmp (car element))
+       (if (or (eq 'rjmp (car element)) (eq 'jmp (car element)))
 	   (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*))
-	   (write-instruction (car element) *bit-writer* (cdr element)))))
+	   (apply #'write-instruction (cons (car element) (cons *bit-writer* (cdr element)))))))
 
 (bit-writer->file *bit-writer* "test.bin")
 
