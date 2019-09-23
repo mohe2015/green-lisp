@@ -39,7 +39,7 @@
   
   (write-instruction :ldi o 22 #x00)
   (write-instruction :ldi o 23 #x00)
-  (write-instruction :ldi o 24 #x00)
+  (write-instruction :ldi o 24 #xf0)
   
   ;;(label :target)
   (write-instruction :adc o 22 21)
@@ -67,8 +67,7 @@
   
   (write-instruction :ldi o 22 #x00)
   (write-instruction :ldi o 23 #x00)
-  (write-instruction :ldi o 24 #x00)
-  
+  (write-instruction :ldi o 24 #xf0)
   ;;(label :target)
   (write-instruction :adc o 22 21)
   (write-instruction :adc o 23 20)
