@@ -1,3 +1,3 @@
 FROM scratch
-ADD binary.bin /
-CMD ["/binary.bin"]
+#ADD binary.bin /
+#CMD ["/binary.bin"]
