@@ -102,11 +102,17 @@
 
 (maphash #'print-hash-entry *labels*)
 
-(loop for element in *program* do
-     (unless (eq 'label (car element))
-       (if (or (eq 'rjmp (car element)) (eq 'jmp (car element)) (eq 'brcc (car element)))
-	   (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*))
-	   (apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element))))))))
+(let ((offset 0))
+  (loop for element in *program* do
+       (unless (eq 'label (car element))
+	 (setf offset (+ offset (instruction-size (car element))))
+	 (cond ((or (eq 'jmp (car element)))
+		(write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*)))
+	       ((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
+		(write-instruction (car element) *bit-writer* (- (gethash (car (cdr element)) *labels*) offset)))
+	       (t
+		(apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element)))))))
+	 )))
 
 (bit-writer->file *bit-writer* "test.bin")
 

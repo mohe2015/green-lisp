@@ -121,12 +121,12 @@
      (log +debug+ (format nil "out 0x~x, r~d~%" a r)))
    
    ;; rjmp
-   (define-assembly-instruction (rjmp (k address k k (and (<= -2048 k) (<= k 2048))))
+   (define-assembly-instruction (rjmp (k address (ash k 1) (ash k -1) (and (<= -2048 k) (<= k 2048))))
        (1 1 0 0 k k k k  k k k k k k k k)
      2
      (log +debug+ (format nil "rjmp 0x~x~%" k)))
    
-   (define-assembly-instruction (brcc (k address k k (and (<= -64 k) (< k 64))))
+   (define-assembly-instruction (brcc (k address (ash k 1) (ash k -1) (and (<= -64 k) (< k 64))))
        (1 1 1 1 0 1 k k  k k k k k 0 0 0)
      (if (= 0 C) 2 1)
      (log +debug+ (format nil "brcc 0x~x~%" k)))
