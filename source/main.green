@@ -20,9 +20,68 @@
 (in-package :main)
 
 (defparameter *program*
-  '(
-    (avr:label :entry0)
-    (avr:rjmp :entry0)))
+  `(
+    ,@(loop repeat 35 collect
+	 `(jmp #x8c))
+
+    ;; some general outputs
+    (ldi 24 #x80)
+    (out +DDRB+ 24) ;; TODO FIXME enforce types
+    (out +PORTB+ 24)
+    
+    (label :main)
+    ;; red
+    (ldi 24 #xF0)
+    (out +DDRE+ 24)
+    (out +PORTE+ 24)
+    
+    ;; green
+    (ldi 24 #x0F)
+    (out +DDRC+ 24)
+    (out +PORTC+ 24)
+    
+    ;; defun delay
+    ;; constant numbers
+    (ldi 20 #x00)
+    (ldi 21 #x01)
+    
+    (ldi 22 #x00)
+    (ldi 23 #x00)
+    (ldi 24 #x00)
+    
+    (label :target1)
+    (adc 22 21)
+    (adc 23 20)
+    (adc 24 20)
+    (brcc :target1) ;; :target
+
+    ;; red
+    (ldi 24 #x0F)
+    (out +DDRE+ 24)
+    (out +PORTE+ 24)
+
+    ;; green
+    (ldi 24 #xF0)
+    (out +DDRC+ 24)
+    (out +PORTC+ 24)  
+
+
+    ;; defun delay
+    ;; constant numbers
+    (ldi 20 #x00)
+    (ldi 21 #x01)
+    
+    (ldi 22 #x00)
+    (ldi 23 #x00)
+    (ldi 24 #x00)
+
+    (label :target2)
+    (adc 22 21)
+    (adc 23 20)
+    (adc 24 20)
+    (brcc :target2)
+
+    (rjmp :main)))
 
 (defparameter *labels* (make-hash-table))
 
@@ -47,71 +106,6 @@
 
 (bit-writer->file *bit-writer* "test.bin")
 
-#|
-(let ((o (make-instance 'bit-writer)))
-  (loop repeat 35 collect
-       (write-instruction :jmp o #x8c))
-
-  ;; some general outputs
-  (write-instruction :ldi o 24 #x80)
-  (write-instruction :out o +DDRB+ 24) ;; TODO FIXME enforce types
-  (write-instruction :out o +PORTB+ 24)
-
-  (label :main)
-  ;; red
-  (write-instruction :ldi o 24 #xF0)
-  (write-instruction :out o +DDRE+ 24)
-  (write-instruction :out o +PORTE+ 24)
-
-  ;; green
-  (write-instruction :ldi o 24 #x0F)
-  (write-instruction :out o +DDRC+ 24)
-  (write-instruction :out o +PORTC+ 24)
-
-  ;; defun delay
-  ;; constant numbers
-  (write-instruction :ldi o 20 #x00)
-  (write-instruction :ldi o 21 #x01)
-  
-  (write-instruction :ldi o 22 #x00)
-  (write-instruction :ldi o 23 #x00)
-  (write-instruction :ldi o 24 #x00)
-  
-  (label :target1)
-  (write-instruction :adc o 22 21)
-  (write-instruction :adc o 23 20)
-  (write-instruction :adc o 24 20)
-  (write-instruction :brcc o :target1) ;; :target
-
-  ;; red
-  (write-instruction :ldi o 24 #x0F)
-  (write-instruction :out o +DDRE+ 24)
-  (write-instruction :out o +PORTE+ 24)
-
-  ;; green
-  (write-instruction :ldi o 24 #xF0)
-  (write-instruction :out o +DDRC+ 24)
-  (write-instruction :out o +PORTC+ 24)  
-
-
-  ;; defun delay
-  ;; constant numbers
-  (write-instruction :ldi o 20 #x00)
-  (write-instruction :ldi o 21 #x01)
-  
-  (write-instruction :ldi o 22 #x00)
-  (write-instruction :ldi o 23 #x00)
-  (write-instruction :ldi o 24 #x00)
-
-  (label :target2)
-  (write-instruction :adc o 22 21)
-  (write-instruction :adc o 23 20)
-  (write-instruction :adc o 24 20)
-  (write-instruction :brcc o :target2)
-
-  (write-instruction :rjmp o :main)
-  
-  (bit-writer->file o "test.bin"))
 
 ;;(let ((i (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin")))
 ;;  (loop repeat 30 do (read-any-instruction i)))
