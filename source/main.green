@@ -104,9 +104,9 @@
 
 (loop for element in *program* do
      (unless (eq 'label (car element))
-       (if (or (eq 'rjmp (car element)) (eq 'jmp (car element)))
+       (if (or (eq 'rjmp (car element)) (eq 'jmp (car element)) (eq 'brcc (car element)))
 	   (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*))
-	   (apply #'write-instruction (cons (car element) (cons *bit-writer* (cdr element)))))))
+	   (apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element))))))))
 
 (bit-writer->file *bit-writer* "test.bin")
 
@@ -115,4 +115,3 @@
 ;;  (loop repeat 30 do (read-any-instruction i)))
 
 (uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
-|#
