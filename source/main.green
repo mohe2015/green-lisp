@@ -15,35 +15,37 @@
   (:use :common-lisp)
   (:import-from :bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:shadowing-import-from :logger :log)
-  (:import-from :avr :read-instruction :write-instruction :read-any-instruction
-		:+DDRB+ :+PORTB+ :+DDRC+ :+PORTC+ :+DDRE+ :+PORTE+))
+  (:import-from :avr :read-instruction :write-instruction :read-any-instruction :instruction-size
+		:+DDRB+ :+PORTB+ :+DDRC+ :+PORTC+ :+DDRE+ :+PORTE+ :label :rjmp))
 (in-package :main)
-#|
-(defun label (label)
-  (make-instance 'label :label label))
 
-(defun rjmp (address)
-  (make-instance 'rjmp :address address))
+(defparameter *program*
+  '(
+    (avr:label :entry0)
+    (avr:rjmp :entry0)))
 
-(defparameter *PROGRAM*
-  (list
-   (label :entry0)
-   (rjmp :entry0)))
+(defparameter *labels* (make-hash-table))
 
 (let ((offset 0))
-  (loop for element 
-       (if (eq 'label (type-of element))
-	   (add-label label offset))
-       (setf (+ offset (size element)))))
+  (loop for element in *program* do
+       (if (eq 'label (car element))
+	   (setf (gethash (car (cdr element)) *labels*) offset)
+	   (setf offset (+ offset (instruction-size (car element)))))))
 
-(defmethod write-instruction ((instruction rjmp))
-    (write (get-label (address instruction))))
+(defparameter *bit-writer* (make-instance 'bit-writer))
 
-(loop for element
-     (write-instruction element))
-|#
+(defun print-hash-entry (key value)
+  (format t "The value associated with the key ~S is ~S~%" key value))
 
+(maphash #'print-hash-entry *labels*)
 
+(loop for element in *program* do
+     (unless (eq 'label (car element))
+       (if (eq 'rjmp (car element))
+	   (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*))
+	   (write-instruction (car element) *bit-writer* (cdr element)))))
+
+(bit-writer->file *bit-writer* "test.bin")
 
 #|
 (let ((o (make-instance 'bit-writer)))

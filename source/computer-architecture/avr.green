@@ -20,7 +20,13 @@
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :logger :log)
   (:export :read-instruction :write-instruction :read-any-instruction
-	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+ :+DDRC+ :+PORTC+))
+	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+ :+DDRC+ :+PORTC+
+
+	   :instruction-size
+	   
+	   :label :rjmp
+
+	   ))
 (in-package :avr)
 
 (defmacro read-format (instruction format &body body)
