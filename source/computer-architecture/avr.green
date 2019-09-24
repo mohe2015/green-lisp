@@ -139,9 +139,19 @@
        (1 1 1 1 1 0 0 d  d d d d 0 b b b b)
        1
      (log +debug+ (format nil "bld r~d, ~d~%" d b)))
-
    
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBC.html
+   (define-assembly-instruction (brbc (s bit s s (and (<= 0 s) (<= s 7)))
+				      (k address (ash k 1) (ash k -1) (and (<= -64 k) (<= k 63))))
+       (1 1 1 1 0 1 k k  k k k k k s s s)
+       (if (= 0 (getf (sreg s))) 2 1)
+     (log +debug+ (format nil "brbc ~d, 0x~x~%" s k)))
 
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBS.html
+   ;;(define-assembly-instruction (brbs (s bit s s (and (<= 0 s) (<= s 7)))
+		;;		      (
+
+							    
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
      3 ;; cycles
@@ -169,10 +179,6 @@
      2
      (log +debug+ (format nil "rjmp 0x~x~%" k)))
    
-   (define-assembly-instruction (brcc (k address (ash k 1) (ash k -1) (and (<= -64 k) (< k 64))))
-       (1 1 1 1 0 1 k k  k k k k k 0 0 0)
-     (if (= 0 C) 2 1)
-     (log +debug+ (format nil "brcc 0x~x~%" k)))
    
    
    ))
