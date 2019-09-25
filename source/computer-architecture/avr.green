@@ -148,10 +148,93 @@
      (log +debug+ (format nil "brbc ~d, 0x~x~%" s k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBS.html
-   ;;(define-assembly-instruction (brbs (s bit s s (and (<= 0 s) (<= s 7)))
-		;;		      (
+   (define-assembly-instruction (brbs (s bit s s (and (<= 0 s) (<= s 7)))
+				      (k address (ash k 1) (ash k -1) (and (<= -64 k) (<= k 63))))
+       (1 1 1 1 0 0 k k  k k k k k s s s)
+       (if (= 1 (getf (sreg s))) 2 1)
+     (log +debug+ (format nil "brbs ~d, 0x~x~%" s k)))
 
-							    
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRCC.html
+   (defmacro brcc (k)
+     `(brbc 0 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRCS.html
+   (defmacro brcs (k)
+     `(brbs 0 ,k))
+
+   (define-assembly-instruction (break)
+       (1 0 0 1 0 1 0 1  1 0 0 1 1 0 0 0)
+       1
+     (log +debug+ (format nil "break~%")))
+
+   (defmacro breq (k)
+     `(brbs 1 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRGE.html
+   (defmacro brge (k)
+     `(brbc 4 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRHC.html
+   (defmacro brhc (k)
+     `(brbc 5 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRHS.html
+   (defmacro brhs (k)
+     `(brbs 5 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRID.html
+   (defmacro brid (k)
+     `(brbc 7 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRIE.html
+   (defmacro brie (k)
+     `(brbs 7 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRLO.html
+   (defmacro brlo (k)
+     `(brbs 0 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRLT.html
+   (defmacro brlt (k)
+     `(brbs 4 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRMI.html
+   (defmacro brmi (k)
+     `(brbs 2 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRNE.html
+   (defmacro brne (k)
+     `(brbc 1 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRPL.html
+   (defmacro brpl (k)
+     `(brbc 2 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRSH.html
+   (defmacro brsh (k)
+     `(brbc 0 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRTC.html
+   (defmacro brtc (k)
+     `(brbc 6 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRTS.html
+   (defmacro brts (k)
+     `(brbs 6 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRVC.html
+   (defmacro brvc (k)
+     `(brbc 3 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRVS.html
+   (defmacro brvs (k)
+     `(brbs 3 ,k))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BSET.html
+   (define-assembly-instruction (bset)
+
+       )
+   
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
      3 ;; cycles
