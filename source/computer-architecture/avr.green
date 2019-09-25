@@ -231,10 +231,35 @@
      `(brbs 3 ,k))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BSET.html
-   (define-assembly-instruction (bset)
+   (define-assembly-instruction (bset (s bit s s (and (<= 0 s) (<= s 7))))
+       (1 0 0 1 0 1 0 0  0 s s s 1 0 0 0)
+       1
+     (log +debug+ (format nil "bset ~d~%" s)))
 
-       )
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BST.html
+   (define-assembly-instruction (bst (d register d d (and (<= 0 d) (<= d 31)))
+				     (b bit b b (and (<= 0 b) (<= b 7))))
+       (1 1 1 1 1 0 1 d  d d d d 0 b b b)
+       1
+     (log +debug+ (format nil "bst r~d, ~d~%" d b)))
+
+   (define-assembly-instruction (call (k address (ash k 1) (ash k -1) (and (<= 0 k) (<= k 64000))))
+       (1 0 0 1 0 1 0 k  k k k k 1 1 1 k  k k k k k k k k  k k k k k k k k)
+       4 ;; TODO FIXME THIS IS ONLY CORRECT FOR ATMEGA128
+     (log +debug+ (format nil "call 0x~x~%" k)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CBI.html
+   (define-assembly-instruction (cbi (a io-register a a (and (<= 0 a) (<= a 31)))
+				     (b bit b b (and (<= 0 b) (<= b 7))))
+       (1 0 0 1 1 0 0 0  a a a a a b b b)
+       2 ;; FIXME this can be different
+     (log +debug+ (format nil "cbi ~d, ~d~%" a b)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CBR.html
+   ;; TODO ANDI
+
    
+       
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
      3 ;; cycles
@@ -243,7 +268,7 @@
    
    (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
-     1
+       1
      ;;(setf (register d) k)
      ;;(setf program-counter (+ program-counter 2)))
      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
