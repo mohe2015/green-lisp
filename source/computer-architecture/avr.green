@@ -258,7 +258,9 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CBR.html
    ;; TODO ANDI
 
-   
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLC.html
+   (defmacro clc ()
+     `(bclr 0))
        
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
