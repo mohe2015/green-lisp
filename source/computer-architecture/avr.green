@@ -162,7 +162,7 @@
    (defmacro brcs (k)
      `(brbs 0 ,k))
 
-   (define-assembly-instruction (break)
+   (define-assembly-instruction (_break)
        (1 0 0 1 0 1 0 1  1 0 0 1 1 0 0 0)
        1
      (log +debug+ (format nil "break~%")))
@@ -261,7 +261,40 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLC.html
    (defmacro clc ()
      `(bclr 0))
-       
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLH.html
+   (defmacro clh ()
+     `(bclr 5))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLI.html
+   (defmacro cli ()
+     `(bclr 7))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLN.html
+   (defmacro cln ()
+     `(bclr 2))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLR.html
+   ;; TODO EOR Rd, Rd
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLS.html
+   (defmacro cls ()
+     `(bclr 4))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLT.html
+   (defmacro clt ()
+     `(bclr 6))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLV.html
+   (defmacro clv ()
+     `(bclr 3))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CLZ.html
+   (defmacro clz ()
+     `(bclr 1))
+
+   
+   
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
      3 ;; cycles
