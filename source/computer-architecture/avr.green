@@ -90,7 +90,7 @@
      (write-format ,instruction ,instruction-format)
      (read-format ,instruction ,instruction-format ,@body)
      (lambda (bit-reader)
-       (read-instruction ,(car instruction) bit-reader))))
+       (read-instruction ',(car instruction) bit-reader))))
 
 (defgeneric read-instruction (name binary-reader)
   (:documentation "Reads the instruction of the specified type from the binary reader."))
@@ -293,8 +293,55 @@
    (defmacro clz ()
      `(bclr 1))
 
-   
-   
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_COM.html
+   (define-assembly-instruction (com (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 1 0 d  d d d d 0 0 0 0)
+       1
+     (log +debug+ (format nil "com r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CP.html
+   (define-assembly-instruction (cp (d register d d (and (<= 0 d) (<= d 31)))
+				    (r register r r (and (<= 0 r) (<= r 31))))
+       (0 0 0 1 0 1 r d  d d d d r r r r)
+       1
+     (log +debug+ (format nil "cp r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CPC.html
+   (define-assembly-instruction (cpc (d register d d (and (<= 0 d) (<= d 31)))
+				     (r register r r (and (<= 0 r) (<= r 31))))
+       (0 0 0 0 0 1 r d  d d d d r r r r)
+       1
+     (log +debug+ (format nil "cpc r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CPI.html
+   (define-assembly-instruction (cpi (d register d d (and (<= 16 #| TODO FIXME |# d) (<= d 31)))
+				     (k constant k k (and (<= 0 k) (<= k 255))))
+       (0 0 1 1 k k k k d d d d k k k k)
+       1
+     (log +debug+ (format nil "cpi r~d, 0x~x~%" d k)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CPSE.html
+   (define-assembly-instruction (cpse (d register d d (and (<= 0 d) (<= d 31)))
+				      (r register r r (and (<= 0 r) (<= r 31))))
+       (0 0 0 1 0 0 r d  d d d d r r r r)
+       bruh ;; TODO
+     (log +debug+ (format nil "cpse r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_DEC.html
+   (define-assembly-instruction (dec (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 1 0 d  d d d d 1 0 1 0)
+       1
+     (log +debug+ (format nil "dec r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_EICALL.html
+   (define-assembly-instruction (eicall)
+       (1 0 0 1 0 1 0 1  0 0 0 1 1 0 0 1)
+       4
+     (log +debug+ (format nil "eicall~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_EIJMP.html
+   ;;(define-assembly-instruction (eijmp)o
+     
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
      3 ;; cycles
@@ -321,8 +368,7 @@
        (1 1 0 0 k k k k  k k k k k k k k)
      2
      (log +debug+ (format nil "rjmp 0x~x~%" k)))
-   
-   
+
    
    ))
 
