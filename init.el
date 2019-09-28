@@ -1,3 +1,10 @@
+;; enable line numbers
+(global-display-line-numbers-mode)
+
+;; show parens
+(show-paren-mode 1)
+(setq show-paren-delay 0)
+
 ;; MELPA
 (require 'package)
 (add-to-list 'package-archives (cons "melpa" "https://melpa.org/packages/") t)
@@ -5,22 +12,22 @@
 (package-initialize)
 ;(package-refresh-contents)
 
-;(package-install 'sly)
-;(package-install 'sly-asdf)
-;(package-install 'sly-named-readtables)
-;(package-install 'sly-repl-ansi-color)
-;(package-install 'sly-macrostep)
-;(package-install 'sly-quicklisp)
+(package-install 'sly)
+(package-install 'sly-asdf)
+(package-install 'sly-named-readtables)
+(package-install 'sly-repl-ansi-color)
+(package-install 'sly-macrostep)
+(package-install 'sly-quicklisp)
 
 (package-install 'dracula-theme)
 
-(add-to-list 'load-path "~/sly")
-(require 'sly-autoloads)
+;(add-to-list 'load-path "~/sly")
+;(require 'sly-autoloads)
 (setq inferior-lisp-program "sbcl")
 
 (require 'dracula-theme)
 
-;(sly)
+(sly)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -30,7 +37,7 @@
  '(custom-safe-themes
    (quote
     ("274fa62b00d732d093fc3f120aca1b31a6bb484492f31081c1814a858e25c72e" default)))
- '(package-selected-packages (quote (dracula-theme slime)))
+ '(package-selected-packages (quote (company dracula-theme slime)))
  '(safe-local-variable-values (quote ((Base . 10) (Syntax . ANSI-Common-Lisp)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

@@ -340,8 +340,27 @@
      (log +debug+ (format nil "eicall~%")))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_EIJMP.html
-   ;;(define-assembly-instruction (eijmp)o
-     
+   (define-assembly-instruction (eijmp)
+       (1 0 0 1 0 1 0 0  0 0 0 1 1 0 0 1)
+       2
+     (log +debug+ (format nil "eijmp~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ELPM.html
+   ;; FIXME The result of these combinations is undefined:
+   (define-assembly-instruction (elpm0)
+       (1 0 0 1 0 1 0 1  1 1 0 1 1 0 0 0)
+       3
+     (log +debug+ (format nil "elpm~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ELPM.html
+   (define-assembly-instruction (elpm (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 0 1 1 0)
+       3
+     (log +debug+ (format nil "elpm r~d~%" d)))
+
+   
+       
+   
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
      3 ;; cycles
