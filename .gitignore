@@ -1,6 +1,7 @@
 *.bin
 *.elf
 *.ihex
+*.fasl
 hidden
 ccl
 
