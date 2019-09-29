@@ -528,6 +528,21 @@
      ;;(setf (register d) k)
      ;;(setf program-counter (+ program-counter 2)))
      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDS.html
+   (define-assembly-instruction (lds (d register d d (and (<= 0 d) (<= d 31)))
+				     (k address k k (and (<= 0 k) (<= k 65535))))
+       (1 0 0 1 0 0 0 d  d d d d 0 0 0 0  k k k k k k k k  k k k k k k k k)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "lds r~d, 0x~x~%" d k)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDS_-_Load_direct_from_SRAM.html
+   (define-assembly-instruction (lds-sram (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
+					  (k address k k (and (<= #x40 k) (<= k #xBF))))
+       (1 0 1 0 0 k k k  d d d d k k k k)
+       1
+     (log +debug+ (format nil "lds-sram r~d, 0x~x~%" d k)))
+   
    
    ;; out
    (define-assembly-instruction (out (a port a a (and (<= 0 a) (<= a 64))) (r register r r (and (<= 0 r) (<= r 31))))
