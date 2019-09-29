@@ -399,13 +399,99 @@
      (log +debug+ (format nil "icall~%")))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_IJMP.html
-   
-       
+   (define-assembly-instruction (ijmp)
+       (1 0 0 1 0 1 0 0  0 0 0 0 1 0 0 1)
+       2
+     (log +debug+ (format nil "ijmp~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_IN.html
+   (define-assembly-instruction (in (d register d d (and (<= 0 d) (<= d 31)))
+				    (a io-register a a (and (<= 0 a) (<= a 64))))
+       (1 0 1 1 0 a a d  d d d d a a a a)
+       1
+     (log +debug+ (format nil "in r~d, 0x~x~%" d a)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_INC.html
+   (define-assembly-instruction (inc (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 1 0 d  d d d d 0 0 1 1)
+       1
+     (log +debug+ (format nil "inc r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_JMP.html
    (define-assembly-instruction (jmp (k address (ash k 1) (ash k -1) (and (<= 0 k) (< k 4000000))))
        (1 0 0 1 0 1 0 k  k k k k 1 1 0 k  k k k k k k k k  k k k k k k k k)
-     3 ;; cycles
+       3 ;; cycles
      ;;(setf program-counter k))
      (log +debug+ (format nil "jmp 0x~x~%" k)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ld (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 1 0 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, X" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ld+ (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 1 0 1)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, X+" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ld- (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 1 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, -X" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LAT.html
+   (define-assembly-instruction (lat (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 0 r  r r r r 0 1 1 1)
+       2
+     (log +debug+ (format nil "lat r~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LAS.html
+   (define-assembly-instruction (las (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 0 r  r r r r 0 1 0 1)
+       2
+     (log +debug+ (format nil "las r~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LAC.html
+   (define-assembly-instruction (lac (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 0 r  r r r r 0 1 1 0)
+       2
+     (log +debug+ (format nil "lac r~d~%" r)))
+   
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ldy (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 0 0 0 0 d  d d d d 1 0 0 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, Y" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ldy+ (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 0 0 1)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, Y+" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ld-y (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 0 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, -Y" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (lddy (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 0 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, -Y" d)))
+
+   
    
    (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
