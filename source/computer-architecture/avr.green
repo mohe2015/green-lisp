@@ -486,12 +486,41 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
    ;; The result of these combinations is undefined:
-   (define-assembly-instruction (lddy (d register d d (and (<= 0 d) (<= d 31))))
-       (1 0 0 1 0 0 0 d  d d d d 1 0 1 0)
+   (define-assembly-instruction (lddy (d register d d (and (<= 0 d) (<= d 31)))
+				      (q constant q q (and (<= 0 q) (<= q 63))))
+       (1 0 q 0 q q 0 d  d d d d 1 q q q)
        2 ;; TODO FIXME
-     (log +debug+ (format nil "ld r~d, -Y" d)))
+     (log +debug+ (format nil "ldd r~d, Y+~d" d q)))
 
    
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ldz (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 0 0 0 0 d  d d d d 1 0 0 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, Z" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ldz+ (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 0 0 1)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, Z+" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (ld-z (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 0 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ld r~d, -Z" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (lddz (d register d d (and (<= 0 d) (<= d 31)))
+				      (q constant q q (and (<= 0 q) (<= q 63))))
+       (1 0 q 0 q q 0 d  d d d d 1 q q q)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "ldd r~d, Z+~d" d q)))
    
    (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
