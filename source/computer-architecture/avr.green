@@ -542,6 +542,98 @@
        (1 0 1 0 0 k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "lds-sram r~d, 0x~x~%" d k)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LPM.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (lpm0)
+       (1 0 0 1 0 1 0 1  1 1 0 0 1 0 0 0)
+       3
+     (log +debug+ (format nil "lpm~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LPM.html
+   ;; The result of these combinations is undefined: 
+   (define-assembly-instruction (lpm (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 0 1 0 0)
+       3
+     (log +debug+ (format nil "lpm r~d, Z~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LPM.html
+   ;; The result of these combinations is undefined: 
+   (define-assembly-instruction (lpm (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 0 1 0 1)
+       3
+     (log +debug+ (format nil "lpm r~d, Z+~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LSL.html
+   ;; TODO Add Rd, Rd
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LSR.html
+   (define-assembly-instruction (lsr (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 1 0 d  d d d d 0 1 1 0)
+       1
+     (log +debug+ (format nil "lsr r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_MOV.html
+   (define-assembly-instruction (mov (d register d d (and (<= 0 d) (<= d 31)))
+				     (r register r r (and (<= 0 r) (<= r 31))))
+       (0 0 1 0 1 1 r d  d d d d r r r r)
+       1
+     (log +debug+ (format nil "mov r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_MOVW.html
+   (define-assembly-instruction (movw (d register (ash d 1) (ash d -1) (and (<= 0 d) (<= d 30) (evenp d)))
+				      (r register (ash r 1) (ash r -1) (and (<= 0 r) (<= r 30) (evenp r))))
+       (0 0 0 0 0 0 0 1  d d d d r r r r)
+       1
+     (log +debug+ (format nil "movw r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_MUL.html
+   (define-assembly-instruction (mul (d register d d (and (<= 0 d) (<= d 31)))
+				     (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 1 1 r d  d d d d r r r r)
+       2
+     (log +debug+ (format nil "mul r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_MULS.html
+   (define-assembly-instruction (muls (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
+				     (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 31))))
+       (0 0 0 0 0 0 1 0  d d d d r r r r)
+       2
+     (log +debug+ (format nil "muls r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_MULSU.html
+   (define-assembly-instruction (mulsu (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 23)))
+				       (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 23))))
+       (0 0 0 0 0 0 1 1  0 d d d 0 r r r)
+       2
+     (log +debug+ (format nil "mulsu r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_NEG.html
+   (define-assembly-instruction (neg (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 1 0 d  d d d d 0 0 0 1)
+       1
+     (log +debug+ (format nil "neg r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_NOP.html
+   (define-assembly-instruction (nop)
+       (0 0 0 0 0 0 0 0  0 0 0 0 0 0 0 0)
+       1
+     (log +debug+ (format nil "nop~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_OR.html
+   (define-assembly-instruction (_or (d register d d (and (<= 0 d) (<= d 31)))
+				    (r register r r (and (<= 0 r) (<= r 31))))
+       (0 0 1 0 1 0 r d  d d d d r r r r)
+       1
+     (log +debug+ (format nil "or r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ORI.html
+   (define-assembly-instruction (ori (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
+				     (k constant k k (and (<= 0 k) (<= k 255))))
+       (0 1 1 0 k k k k  d d d d k k k k)
+       1
+     (log +debug+ (format nil "ori r~d, 0x~x~%" d k)))
+
    
    
    ;; out
