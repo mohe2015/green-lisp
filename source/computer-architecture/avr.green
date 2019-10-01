@@ -751,6 +751,77 @@
        1 ;; TODO FIXME
      (log +debug+ (format nil "sbrs r~d, ~d~%" r b)))
 
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SEC.html
+   (defmacro sec ()
+     `(bset 0)) ;; TODO REPLACE 0
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SEH.html
+   (defmacro seh ()
+     `(bset 5))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SEI.html
+   (defmacro sei ()
+     `(bset 7))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SEN.html
+   (defmacro sen ()
+     `(bset 2))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SES.html
+   (defmacro ses ()
+     `(bset 4))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SET.html
+   (defmacro _set ()
+     `(bset 6))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SEV.html
+   (defmacro sev ()
+     `(bset 3))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SEZ.html
+   (defmacro sez ()
+     `(bset 1))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SER.html
+   (define-assembly-instruction (ser (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))))
+       (1 1 1 0 1 1 1 1  d d d d 1 1 1 1)
+       1
+     (log +debug+ (format nil "ser r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SLEEP.html
+   (define-assembly-instruction (_sleep)
+       (1 0 0 1 0 1 0 1  1 0 0 0 1 0 0 0)
+       1
+     (log +debug+ (format nil "sleep~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SPM.html
+   (define-assembly-instruction (spm)
+       (1 0 0 1 0 1 0 1  1 1 1 0 1 0 0 0)
+       1337 ;; TODO FIXME
+     (log +debug+ (format nil "spm~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ST.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (st (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 1 1 0 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st X, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ST.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (st+ (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 1 1 0 1)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st X+, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ST.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (st- (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 1 1 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st -X, R~d~%" r)))
+
    
    
    ))
