@@ -1,6 +1,10 @@
+quicklisp.lisp
+quicklisp.lisp.asc
 *.bin
 *.elf
 *.ihex
+*.fasl
+*.lx64fsl
 hidden
 ccl
 
