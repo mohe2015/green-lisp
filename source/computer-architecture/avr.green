@@ -633,8 +633,6 @@
        (0 1 1 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "ori r~d, 0x~x~%" d k)))
-
-   
    
    ;; out
    (define-assembly-instruction (out (a port a a (and (<= 0 a) (<= a 64))) (r register r r (and (<= 0 r) (<= r 31))))
@@ -643,6 +641,36 @@
      ;; (out a r)
      ;; (setf program-counter (+ program-counter 2))
      (log +debug+ (format nil "out 0x~x, r~d~%" a r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_POP.html
+   (define-assembly-instruction (_pop (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 0 d  d d d d 1 1 1 1)
+       2
+     (log +debug+ (format nil "pop r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_PUSH.html
+   (define-assembly-instruction (_push (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 0 1 d  d d d d 1 1 1 1)
+       2
+     (log +debug+ (format nil "push r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_RCALL.html
+   (define-assembly-instruction (rcall (k address (ash k 1) (ash k -1) (and (<= -2048 k) (<= k 2048)))) ;; TODO FIXME 4096?
+       (1 1 0 1 k k k k  k k k k k k k k)
+       3 ;; TODO FIXME
+     (log +debug+ (format nil "rcall 0x~x~%" k)))
+   
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_RET.html
+   (define-assembly-instruction (ret)
+       (1 0 0 1 0 1 0 1  0 0 0 0 1 0 0 0)
+       4 ;; TODO FIXME
+     (log +debug+ (format nil "ret~%")))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_RETI.html
+   (define-assembly-instruction (reti)
+       (1 0 0 1 0 1 0 1  0 0 0 1 1 0 0 0)
+       4 ;; TODO FIXME
+     (log +debug+ (format nil "reti~%")))
    
    ;; rjmp
    (define-assembly-instruction (rjmp (k address (ash k 1) (ash k -1) (and (<= -2048 k) (<= k 2048))))
@@ -650,6 +678,28 @@
      2
      (log +debug+ (format nil "rjmp 0x~x~%" k)))
 
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ROL.html
+   ;; SEE ADC Rd, Rd
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ROR.html
+   (define-assembly-instruction (ror (d register d d (and (<= 0 d) (<= d 31))))
+       (1 0 0 1 0 1 0 d  d d d d 0 1 1 1)
+       1
+     (log +debug+ (format nil "ror r~d~%" d)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBC.html
+   (define-assembly-instruction (sbc (d register d d (and (<= 0 d) (<= d 31)))
+				     (r register r r (and (<= 0 r) (<= r 31))))
+       (0 0 0 0 1 0 r d  d d d d r r r r)
+       1
+     (log +debug+ (format nil "sbc r~d, r~d~%" d r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBCI.html
+   (define-assembly-instruction (sbci (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
+				      (k constant k k (and (<= 0 k) (<= k 255))))
+       (0 1 0 0 k k k k  d d d d k k k k)
+       1
+     (log +debug+ (format nil "sbci r~d, 0x~x~%" d k)))
    
    ))
 
