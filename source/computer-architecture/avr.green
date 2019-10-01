@@ -822,7 +822,73 @@
        2 ;; TODO FIXME
      (log +debug+ (format nil "st -X, R~d~%" r)))
 
+
+
+
+
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (sty (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 0 0 0 1 r  r r r r 1 0 0 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st Y, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (sty+ (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 1 0 0 1)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st Y+, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (st-y (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 1 0 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st -Y, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (stdy (r register r r (and (<= 0 r) (<= r 31)))
+				      (q constant q q (and (<= 0 q) (<= q 63))))
+       (1 0 q 0 q q 1 r  r r r r 1 q q q)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "std Y+~d, R~d~%" q r)))
+
+
+
+
+
    
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (stz (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 0 0 0 1 r  r r r r 0 0 0 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st Z, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (stz+ (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 0 0 0 1)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st Z+, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (st-z (r register r r (and (<= 0 r) (<= r 31))))
+       (1 0 0 1 0 0 1 r  r r r r 0 0 1 0)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "st -Z, R~d~%" r)))
+
+   ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD_Z.html
+   ;; The result of these combinations is undefined:
+   (define-assembly-instruction (stdz (r register r r (and (<= 0 r) (<= r 31)))
+				      (q constant q q (and (<= 0 q) (<= q 63))))
+       (1 0 q 0 q q 1 r  r r r r 0 q q q)
+       2 ;; TODO FIXME
+     (log +debug+ (format nil "std Z+~d, R~d~%" q r)))
    
    ))
 
