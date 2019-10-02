@@ -38,6 +38,8 @@
 
 
     (label :entry0)
+
+    (bset 7) ;; TODO FIXME (sei) should also work
     
     (ldi 24 #x19)
     (out UBRR0L 24) ;; USART Baud Rate Register
