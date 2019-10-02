@@ -13,6 +13,11 @@
 
 (load "/home/moritz/Documents/green-lisp/source/logger.green")
 (load "/home/moritz/Documents/green-lisp/source/bits.green")
+(ql:quickload :cserial-port)
+
+;(cserial-port:open-serial "/dev/ttyACM0" :baud-rate 38400 :parity :even)
+;(cserial-port:close-serial #v1:0)
+;(cserial-port:write-serial-string "Test" #v1:0
 
 (defpackage :avr
   (:use :common-lisp)
@@ -953,12 +958,24 @@
 	 (if result
 	     (return-from read-any-instruction new-bit-reader)))))
 
-(defparameter +DDRB+ #x17) ; #x37
-(defparameter +PORTB+ #x18) ; #x38
-(defparameter +DDRE+ #x02) ; #x22
-(defparameter +PORTE+ #x03) ; #x23
-(defparameter +DDRC+ #x14) ; #x34
-(defparameter +PORTC+ #x15) ; #x35
+(defmacro define-register (name address)
+  `(defparameter ,name ,address))
+
+(defmacro define-registers (&rest registers)
+  `(progn
+     ,@(loop for register in registers collect
+	     `(defparameter ,(car register) ,(car (cdr register))))))
+
+(define-registers
+  (PINF #x00)
+  (PINE #x01)
+  (DDRE #x02)
+  (PORTE #x03)
+  (ADCL #x04)
+  (DDRC #x14)
+  (PORTC #x15)
+  (DDRB #x17)
+  (PORTB #x18))
 
 #|
 
