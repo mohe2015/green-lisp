@@ -44,10 +44,10 @@
     (label :entry0)
     
     (ldi 24 #x19)
-    (out +UBRRL+ 24) ;; USART Baud Rate Register
+    (out UBRR0L 24) ;; USART Baud Rate Register
 
     (ldi 24 #x98)
-    (out +UCSRB+ 24) ;; USART Control and Status Register B
+    (out +UCSR0B+ 24) ;; USART Control and Status Register B
     
     (label :loop)
     (jmp :loop)
