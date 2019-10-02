@@ -29,10 +29,10 @@
     
     (label :uart_interrupt)
 
-    (push 24)
+    (_push 24)
     (in 24 #x0c) ;; USART Data Register UDR
     (out #x0c 24)
-    (pop 24)
+    (_pop 24)
     (reti)
 
 
@@ -43,7 +43,7 @@
     (out UBRR0L 24) ;; USART Baud Rate Register
 
     (ldi 24 #x98)
-    (out +UCSR0B+ 24) ;; USART Control and Status Register B
+    (out UCSR0B 24) ;; USART Control and Status Register B
     
     (label :loop)
     (jmp :loop)
