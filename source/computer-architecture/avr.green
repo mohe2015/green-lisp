@@ -63,26 +63,27 @@
 	 ,(/ (length format) 8))
        
        (defmethod ,name ((bit-writer bit-writer) ,@args)
-	      ,@(mapcar
-		 (lambda (item)
-		   `(setf ,(nth 0 item) ,(nth 3 item)))
-		 (cdr instruction))
-	      ,@(maplist
-		 (lambda (item-list)
-		   (let ((item (car item-list)))
-		     (cond ((or (eql item 0) (eql item 1))
-			    `(progn
-			       (write-bit bit-writer ,item)
-			       (log +trace+ (format nil "writei ~a" ,item))))
-			   (t
-			    `(let* ((index ,(- (count-if (lambda (i) (eql i item)) item-list) 1))
-				    (bit (if (logbitp index ,item) 1 0)))
-			       (log +trace+ (format nil "write ~a" bit))
-			       (write-bit bit-writer bit))))))
-		 format)
-	      (bit-writer->bytes bit-writer))
-	    (defmethod write-instruction ((name (eql ',name)) &rest parameters)
-		(apply ',name parameters)))))
+	 ,@(mapcar
+	    (lambda (item)
+	      `(setf ,(nth 0 item) ,(nth 3 item)))
+	    (cdr instruction))
+	 ,@(maplist
+	    (lambda (item-list)
+	      (let ((item (car item-list)))
+		(cond ((or (eql item 0) (eql item 1))
+		       `(progn
+			  (write-bit bit-writer ,item)
+			  (log +trace+ (format nil "writei ~a" ,item))))
+		      (t
+		       `(let* ((index ,(- (count-if (lambda (i) (eql i item)) item-list) 1))
+			       (bit (if (logbitp index ,item) 1 0)))
+			  (log +trace+ (format nil "write ~a" bit))
+			  (write-bit bit-writer bit))))))
+	    format)
+	 (bit-writer->bytes bit-writer))
+       
+       (defmethod write-instruction ((name (eql ',name)) &rest parameters)
+	 (apply ',name parameters)))))
 
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
   (declare (ignore cycles))
