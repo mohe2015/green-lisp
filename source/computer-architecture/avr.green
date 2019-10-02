@@ -19,46 +19,45 @@
 ;(cserial-port:close-serial #v1:0)
 ;(cserial-port:write-serial-string "Test" #v1:0
 
+;; HACK to prevent "also exports" error
+(when (find-package :avr)
+  (do-symbols (symbol :avr)
+    (unexport symbol :avr)))
+
 (defpackage :avr
   (:use :common-lisp)
   (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
-  (:shadowing-import-from :logger :log)
-  (:export :read-instruction :write-instruction :read-any-instruction
-	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+ :+DDRC+ :+PORTC+
-
-	   :instruction-size
-	   
-	   :label :jmp :ldi :out :rjmp :brcc :adc
-
-	   ))
+  (:shadowing-import-from :logger :log))
 (in-package :avr)
 
+(export 'read-instruction)
 (defmacro read-format (instruction format &body body)
   (let ((name (car instruction))
 	(args (mapcar #'car (cdr instruction))))
-    `(progn (defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
-	      (let ,(mapcar (lambda (s) `(,s 0)) args)
-		,@(loop for item in format collect
-		       (cond ((or (eql item 0) (eql item 1))
-			      `(let ((bit (read-bit bit-reader)))
-				 (log +trace+ (format nil "readi ~a" bit))
-				 (unless (= ,item bit)
-				   (log +trace+ (format nil "fail-not-a-~a" ,item))
-				   (return-from read-instruction nil))))
-			     (t
-			      `(let ((bit (read-bit bit-reader)))
-				 (log +trace+ (format nil "read ~a" bit))
-				 (setf ,item (logior (ash ,item 1) bit))))))
-		,@(mapcar
-		   (lambda (item)
-		     `(setf ,(nth 0 item) ,(nth 2 item)))
-		   (cdr instruction))
-		,@body
-		t))
-	    )
-    ))
+    `(progn
+       (defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
+	 (let ,(mapcar (lambda (s) `(,s 0)) args)
+	   ,@(loop for item in format collect
+				      (cond ((or (eql item 0) (eql item 1))
+					     `(let ((bit (read-bit bit-reader)))
+						(log +trace+ (format nil "readi ~a" bit))
+						(unless (= ,item bit)
+						  (log +trace+ (format nil "fail-not-a-~a" ,item))
+						  (return-from read-instruction nil))))
+					    (t
+					     `(let ((bit (read-bit bit-reader)))
+						(log +trace+ (format nil "read ~a" bit))
+						(setf ,item (logior (ash ,item 1) bit))))))
+	   ,@(mapcar
+	      (lambda (item)
+		`(setf ,(nth 0 item) ,(nth 2 item)))
+	      (cdr instruction))
+	   ,@body
+	   t)))))
 
+(export 'instruction-size)
+(export 'write-instruction)
 (defmacro write-format (instruction format)
   (let ((name (car instruction))
 	(args (mapcar #'car (cdr instruction))))
@@ -67,6 +66,7 @@
        (defmethod instruction-size ((name (eql ',name)))
 	 ,(/ (length format) 8))
        
+       (export ',name)
        (defmethod ,name ((bit-writer bit-writer) ,@args)
 	 ,@(mapcar
 	    (lambda (item)
@@ -86,6 +86,7 @@
 			  (write-bit bit-writer bit))))))
 	    format)
 	 (bit-writer->bytes bit-writer))
+       
        
        (defmethod write-instruction ((name (eql ',name)) &rest parameters)
 	 (apply ',name parameters)))))
@@ -959,12 +960,12 @@
 	     (return-from read-any-instruction new-bit-reader)))))
 
 (defmacro define-register (name address)
-  `(defparameter ,name ,address))
+  `(export (defparameter ,name ,address)))
 
 (defmacro define-registers (&rest registers)
   `(progn
      ,@(loop for register in registers collect
-	     `(defparameter ,(car register) ,(car (cdr register))))))
+	     `(define-register ,(car register) ,(car (cdr register))))))
 
 (define-registers
   (PINF #x00)

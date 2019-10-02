@@ -12,13 +12,9 @@
 (load "/home/moritz/Documents/green-lisp/source/computer-architecture/avr.green")
 
 (defpackage :main
-  (:use :common-lisp)
+  (:use :common-lisp :avr)
   (:import-from :bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
-  (:shadowing-import-from :logger :log)
-  (:import-from :avr :read-instruction :write-instruction :read-any-instruction :instruction-size
-		:+DDRB+ :+PORTB+ :+DDRC+ :+PORTC+ :+DDRE+ :+PORTE+
-
-		:label :jmp :ldi :out :rjmp :brcc :adc))
+  (:shadowing-import-from :logger :log))
 (in-package :main)
 
 (defparameter *program*
