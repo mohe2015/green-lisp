@@ -12,23 +12,45 @@
 (load "/home/moritz/Documents/green-lisp/source/computer-architecture/avr.green")
 
 (defpackage :main
-  (:use :common-lisp)
+  (:use :common-lisp :avr)
   (:import-from :bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
-  (:shadowing-import-from :logger :log)
-  (:import-from :avr :read-instruction :write-instruction :read-any-instruction :instruction-size
-		:+DDRB+ :+PORTB+ :+DDRC+ :+PORTC+ :+DDRE+ :+PORTE+
-
-		:label :jmp :ldi :out :rjmp :brcc :adc))
+  (:shadowing-import-from :logger :log))
 (in-package :main)
 
 (defparameter *program*
   `(
-    ,@(loop repeat 35 collect
-	   `(jmp :entry0))
+    ,@(loop repeat 18 collect
+	    `(jmp :entry0))
+    
+    (jmp :uart_interrupt)
+    
+    ,@(loop repeat 16 collect
+	    `(jmp :entry0))    
+    
+    (label :uart_interrupt)
 
-      (label :entry0)
-      
-      ;; some general outputs
+    (_push 24)
+    (in 24 #x0c) ;; USART Data Register UDR
+    (out #x0c 24)
+    (_pop 24)
+    (reti)
+
+
+
+    (label :entry0)
+
+    (bset 7) ;; TODO FIXME (sei) should also work
+    
+    (ldi 24 #x19)
+    (out UBRR0L 24) ;; USART Baud Rate Register
+
+    (ldi 24 #x98)
+    (out UCSR0B 24) ;; USART Control and Status Register B
+    
+    (label :loop)
+    (jmp :loop)
+    
+#|      ;; some general outputs
       (ldi 24 #x80)
       (out +DDRB+ 24) ;; TODO FIXME enforce types
       (out +PORTB+ 24)
@@ -85,7 +107,9 @@
       (adc 24 20)
       (brcc :target2)
 
-      (rjmp :main)))
+    (rjmp :main)))|#
+
+    ))
 
 (defparameter *labels* (make-hash-table))
 

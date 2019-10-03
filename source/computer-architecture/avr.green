@@ -13,47 +13,51 @@
 
 (load "/home/moritz/Documents/green-lisp/source/logger.green")
 (load "/home/moritz/Documents/green-lisp/source/bits.green")
+(ql:quickload :cserial-port)
+
+;(cserial-port:open-serial "/dev/ttyACM0" :baud-rate 38400 :parity :even)
+;(cserial-port:close-serial #v1:0)
+;(cserial-port:write-serial-string "Test" #v1:0
+
+;; HACK to prevent "also exports" error
+(when (find-package :avr)
+  (do-symbols (symbol :avr)
+    (unexport symbol :avr)))
 
 (defpackage :avr
   (:use :common-lisp)
   (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
-  (:shadowing-import-from :logger :log)
-  (:export :read-instruction :write-instruction :read-any-instruction
-	   :+DDRB+ :+PORTB+ :+DDRE+ :+PORTE+ :+DDRC+ :+PORTC+
-
-	   :instruction-size
-	   
-	   :label :jmp :ldi :out :rjmp :brcc :adc
-
-	   ))
+  (:shadowing-import-from :logger :log))
 (in-package :avr)
 
+(export 'read-instruction)
 (defmacro read-format (instruction format &body body)
   (let ((name (car instruction))
 	(args (mapcar #'car (cdr instruction))))
-    `(progn (defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
-	      (let ,(mapcar (lambda (s) `(,s 0)) args)
-		,@(loop for item in format collect
-		       (cond ((or (eql item 0) (eql item 1))
-			      `(let ((bit (read-bit bit-reader)))
-				 (log +trace+ (format nil "readi ~a" bit))
-				 (unless (= ,item bit)
-				   (log +trace+ (format nil "fail-not-a-~a" ,item))
-				   (return-from read-instruction nil))))
-			     (t
-			      `(let ((bit (read-bit bit-reader)))
-				 (log +trace+ (format nil "read ~a" bit))
-				 (setf ,item (logior (ash ,item 1) bit))))))
-		,@(mapcar
-		   (lambda (item)
-		     `(setf ,(nth 0 item) ,(nth 2 item)))
-		   (cdr instruction))
-		,@body
-		t))
-	    )
-    ))
+    `(progn
+       (defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
+	 (let ,(mapcar (lambda (s) `(,s 0)) args)
+	   ,@(loop for item in format collect
+				      (cond ((or (eql item 0) (eql item 1))
+					     `(let ((bit (read-bit bit-reader)))
+						(log +trace+ (format nil "readi ~a" bit))
+						(unless (= ,item bit)
+						  (log +trace+ (format nil "fail-not-a-~a" ,item))
+						  (return-from read-instruction nil))))
+					    (t
+					     `(let ((bit (read-bit bit-reader)))
+						(log +trace+ (format nil "read ~a" bit))
+						(setf ,item (logior (ash ,item 1) bit))))))
+	   ,@(mapcar
+	      (lambda (item)
+		`(setf ,(nth 0 item) ,(nth 2 item)))
+	      (cdr instruction))
+	   ,@body
+	   t)))))
 
+(export 'instruction-size)
+(export 'write-instruction)
 (defmacro write-format (instruction format)
   (let ((name (car instruction))
 	(args (mapcar #'car (cdr instruction))))
@@ -62,27 +66,30 @@
        (defmethod instruction-size ((name (eql ',name)))
 	 ,(/ (length format) 8))
        
+       (export ',name)
        (defmethod ,name ((bit-writer bit-writer) ,@args)
-	      ,@(mapcar
-		 (lambda (item)
-		   `(setf ,(nth 0 item) ,(nth 3 item)))
-		 (cdr instruction))
-	      ,@(maplist
-		 (lambda (item-list)
-		   (let ((item (car item-list)))
-		     (cond ((or (eql item 0) (eql item 1))
-			    `(progn
-			       (write-bit bit-writer ,item)
-			       (log +trace+ (format nil "writei ~a" ,item))))
-			   (t
-			    `(let* ((index ,(- (count-if (lambda (i) (eql i item)) item-list) 1))
-				    (bit (if (logbitp index ,item) 1 0)))
-			       (log +trace+ (format nil "write ~a" bit))
-			       (write-bit bit-writer bit))))))
-		 format)
-	      (bit-writer->bytes bit-writer))
-	    (defmethod write-instruction ((name (eql ',name)) &rest parameters)
-		(apply ',name parameters)))))
+	 ,@(mapcar
+	    (lambda (item)
+	      `(setf ,(nth 0 item) ,(nth 3 item)))
+	    (cdr instruction))
+	 ,@(maplist
+	    (lambda (item-list)
+	      (let ((item (car item-list)))
+		(cond ((or (eql item 0) (eql item 1))
+		       `(progn
+			  (write-bit bit-writer ,item)
+			  (log +trace+ (format nil "writei ~a" ,item))))
+		      (t
+		       `(let* ((index ,(- (count-if (lambda (i) (eql i item)) item-list) 1))
+			       (bit (if (logbitp index ,item) 1 0)))
+			  (log +trace+ (format nil "write ~a" bit))
+			  (write-bit bit-writer bit))))))
+	    format)
+	 (bit-writer->bytes bit-writer))
+       
+       
+       (defmethod write-instruction ((name (eql ',name)) &rest parameters)
+	 (apply ',name parameters)))))
 
 (defmacro define-assembly-instruction (instruction instruction-format cycles &body body)
   (declare (ignore cycles))
@@ -952,12 +959,83 @@
 	 (if result
 	     (return-from read-any-instruction new-bit-reader)))))
 
-(defparameter +DDRB+ #x17) ; #x37
-(defparameter +PORTB+ #x18) ; #x38
-(defparameter +DDRE+ #x02) ; #x22
-(defparameter +PORTE+ #x03) ; #x23
-(defparameter +DDRC+ #x14) ; #x34
-(defparameter +PORTC+ #x15) ; #x35
+(defmacro define-register (name address)
+  `(export (defparameter ,name ,address)))
+
+(defmacro define-registers (&rest registers)
+  `(progn
+     ,@(loop for register in registers collect
+	     `(define-register ,(car register) ,(car (cdr register))))))
+
+(define-registers
+  (PINF #x00)
+  (PINE #x01)
+  (DDRE #x02)
+  (PORTE #x03)
+  (ADCL #x04)
+  (ADCH #x05)
+  (ADCSRA #x06)
+  (ADMUX #x07)
+  (ACSR #x08)
+  (UBRR0L #x09)
+  (UCSR0B #x0a)
+  (UCSR0A #x0b)
+  (UDR0 #x0c)
+  (SPCR #x0d)
+  (SPSR #x0e)
+  (SPDR #x0f)
+  (PIND #x10)
+  (DDRD #x11)
+  (PORTD #x12)
+  (PINC #x13)
+  (DDRC #x14)
+  (PORTC #x15)
+  (PINB #x16)
+  (DDRB #x17)
+  (PORTB #x18)
+  (PINA #x19)
+  (DDRA #x1a)
+  (PORTA #x1b)
+  (EECR #x1c)
+  (EEDR #x1d)
+  (EEARL #x1e)
+  (EEARH #x1f)
+  (SFIOR #x20)
+  (WDTCR #x21)
+  (OCDR #x22)
+  (OCR2 #x23)
+  (TCNT2 #x24)
+  (TCCR2 #x25)
+  (ICR1L #x26)
+  (ICR1H #x27)
+  (OCR1BL #x28)
+  (OCR1BH #x29)
+  (OCR1AL #x2a)
+  (ORC1AH #x2b)
+  (TCNT1L #x2c)
+  (TCNT1H #x2d)
+  (TCCR1B #x2e)
+  (TCCR1A #x2f)
+  (ASSR #x30)
+  (OCR0 #x31)
+  (TCNT0 #x32)
+  (TCCR0 #x33)
+  (MCUCSR #x34)
+  (MCUCR #x35)
+  (TIFR #x36)
+  (TIMSK #x37)
+  (EIFR #x38)
+  (EIMSK #x39)
+  (EICRB #x3a)
+  (RAMPZ #x3b)
+  (XDIV #x3c)
+  (SPL #x3d)
+  (SPH #x3e)
+  (SREG #x3f)
+  
+
+
+  )
 
 #|
 

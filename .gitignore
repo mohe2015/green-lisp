@@ -1,5 +1,6 @@
 quicklisp.lisp
 quicklisp.lisp.asc
+*.out
 *.bin
 *.elf
 *.ihex
