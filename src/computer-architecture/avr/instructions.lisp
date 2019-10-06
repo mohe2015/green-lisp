@@ -3,13 +3,13 @@
     (unexport symbol :green-lisp.avr.instructions)))
 
 (defpackage :green-lisp.avr.instructions
-  (:use :common-lisp :cserial-port :green-lisp.bits :green-lisp.logger)
+  (:use :common-lisp :cserial-port :green-lisp.bits :green-lisp.logger :green-lisp.avr.architecture)
   (:import-from :green-lisp.bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :green-lisp.logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :green-lisp.logger :log))
 (in-package :green-lisp.avr.instructions)
 
-
+(setf *on-package-variance* '(:warn () :error ()))
 
 (export 'read-instruction)
 (defmacro read-format (instruction format &body body)
@@ -40,12 +40,13 @@
 (export 'write-instruction)
 (defmacro write-format (instruction format)
   (let ((name (car instruction))
-	(args (mapcar #'car (cdr instruction))))
+	(args (mapcar (lambda (e) (subseq e 0 2)) (cdr instruction))))
     `(progn
        ;; TODO hash-map?
        (defmethod instruction-size ((name (eql ',name)))
 	 ,(/ (length format) 8))
-       
+
+       ;; TODO check preconditions of parameters
        (export ',name)
        (defmethod ,name ((bit-writer bit-writer) ,@args)
 	 ,@(mapcar
@@ -509,7 +510,7 @@
        2 ;; TODO FIXME
      (log +debug+ (format nil "ldd r~d, Z+~d" d q)))
    
-   (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
+   (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-register k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
        1
      ;;(setf (register d) k)
@@ -622,7 +623,7 @@
      (log +debug+ (format nil "ori r~d, 0x~x~%" d k)))
    
    ;; out
-   (define-assembly-instruction (out (a port a a (and (<= 0 a) (<= a 64))) (r register r r (and (<= 0 r) (<= r 31))))
+   (define-assembly-instruction (out (a io-register a a (and (<= 0 a) (<= a 64))) (r register r r (and (<= 0 r) (<= r 31))))
        (1 0 1 1 1 a a r  r r r r a a a a)
        1
      ;; (out a r)

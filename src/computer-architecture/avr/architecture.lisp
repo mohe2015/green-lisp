@@ -27,29 +27,49 @@
   (:shadowing-import-from :green-lisp.logger :log))
 (in-package :green-lisp.avr.architecture)
 
+(setf *on-package-variance* '(:warn () :error ()))
+
 (defclass io-register ()
   ((name :initarg :name
 	 :reader register-name)
    (data-memory-address :initarg :data-memory-address ;; this is the big address
 			:reader register-data-memory-address)))
+(export 'io-register)
 
 (defclass register (io-register)
   ())
+(export 'register)
 
 (defclass avr-architecture ()
   ())
+(export 'avr-architecture)
 
 (defclass simulated-avr-architecture (avr-architecture)
   ((registers :initarg :registers
 	      :reader registers)))
+(export 'simulated-avr-architecture)
 
-(defmacro define-register (name address)
-  `(export (defparameter ,name ,address)))
+(defclass register-pair ()
+  ())
+(export 'register-pair)
+
+(defclass address ()
+  ())
+(export 'address)
+
+(defclass constant ()
+  ())
+(export 'constant)
+
+(defmacro define-register (name address type)
+  `(let ((register (make-instance ',type :name ',name :data-memory-address ,address)))
+     (export (defparameter ,name register))
+     register))
 
 (defmacro define-registers (&rest registers)
-  `(progn
-     ,@(loop for register in registers collect
-	     `(define-register ,(car register) ,(car (cdr register))))))
+  `(make-instance 'simulated-avr-architecture :registers (list
+		  ,@(loop for register in registers collect
+			  `(define-register ,(nth 0 register) ,(nth 1 register) ,(nth 2 register))))))
 
 (define-registers
   (R0     #x00 register)
