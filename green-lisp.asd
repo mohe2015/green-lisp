@@ -7,7 +7,8 @@
                 :components
                 ((:file "logger")
 		 (:file "bits")
-		 (:file "computer-architecture/avr")
+		 (:file "computer-architecture/avr/architecture")
+		 (:file "computer-architecture/avr/instructions")
 		 (:file "main")
 		 )))
   :description "An eco-friendly lisp"

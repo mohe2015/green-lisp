@@ -9,7 +9,7 @@
 ;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 (defpackage green-lisp
-  (:use :cl :green-lisp.avr)
+  (:use :cl :green-lisp.avr.instructions :green-lisp.avr.architecture)
   (:import-from :green-lisp.bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:shadowing-import-from :green-lisp.logger :log))
 (in-package :green-lisp)
@@ -141,4 +141,4 @@
 ;;(let ((i (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin")))
 ;;  (loop repeat 30 do (read-any-instruction i)))
 
-(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
+;;(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
