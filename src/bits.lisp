@@ -9,11 +9,11 @@
 ;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 ;; http://www.gigamonkeys.com/book/files-and-file-io.html chapter 24
 
-(defpackage :bits
+(defpackage :green-lisp.bits
   (:use :common-lisp)
   (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->bytes
 	   :bit-writer :write-bit :bit-writer->bytes :bit-writer->file))
-(in-package :bits)
+(in-package :green-lisp.bits)
 
 (defun file->byte-pairs (filename)
   (with-open-file (in filename :element-type '(unsigned-byte 8))

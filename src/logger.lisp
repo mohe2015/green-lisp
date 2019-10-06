@@ -8,11 +8,11 @@
 ;;;;
 ;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-(defpackage :logger
+(defpackage :green-lisp.logger
   (:use :common-lisp)
   (:shadow :log)
   (:export :log :+trace+ :+debug+ :+info+ :+warning+ :+error+))
-(in-package :logger)
+(in-package :green-lisp.logger)
 
 (defconstant +trace+ 0)
 (defconstant +debug+ 1)

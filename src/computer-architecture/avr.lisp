@@ -11,25 +11,21 @@
 ;; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
 ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
 
-(load "/home/moritz/Documents/green-lisp/source/logger.green")
-(load "/home/moritz/Documents/green-lisp/source/bits.green")
-(ql:quickload :cserial-port)
-
 ;;(cserial-port:open-serial "/dev/ttyACM0" :baud-rate 38400 :parity :even)
 
 ;;(cserial-port:write-serial-string "Test" #v1:0
 
 ;; HACK to prevent "also exports" error
-(when (find-package :avr)
-  (do-symbols (symbol :avr)
-    (unexport symbol :avr)))
+(when (find-package :green-lisp.avr)
+  (do-symbols (symbol :green-lisp.avr)
+    (unexport symbol :green-lisp.avr)))
 
-(defpackage :avr
-  (:use :common-lisp)
-  (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
-  (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
-  (:shadowing-import-from :logger :log))
-(in-package :avr)
+(defpackage :green-lisp.avr
+  (:use :common-lisp :cserial-port :green-lisp.bits :green-lisp.logger)
+  (:import-from :green-lisp.bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
+  (:import-from :green-lisp.logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
+  (:shadowing-import-from :green-lisp.logger :log))
+(in-package :green-lisp.avr)
 
 (defclass register ()
   ((name :initarg :name

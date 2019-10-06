@@ -4,6 +4,12 @@
 
 ## Installation
 
+mkdir ~/.config/common-lisp
+nano ~/.config/common-lisp/source-registry.conf
+(:source-registry
+  (:tree (:home "Documents/green-lisp"))
+  :inherit-configuration)
+
 ## Author
 
 * Moritz Hedtke (Moritz.Hedtke@t-online.de)
