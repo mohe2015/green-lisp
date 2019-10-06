@@ -128,9 +128,9 @@
     (unless (eq 'label (car element))
       (setf offset (+ offset (instruction-size (car element))))
       (cond ((or (eq 'jmp (car element)))
-	     (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*)))
+	     (write-instruction (car element) *bit-writer* (make-instance 'address :value (gethash (car (cdr element)) *labels*))))
 	    ((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
-	     (write-instruction (car element) *bit-writer* (- (gethash (car (cdr element)) *labels*) offset)))
+	     (write-instruction (car element) *bit-writer* (make-instance 'address :value (- (gethash (car (cdr element)) *labels*) offset))))
 	    (t
 	     (apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element)))))))
       )))

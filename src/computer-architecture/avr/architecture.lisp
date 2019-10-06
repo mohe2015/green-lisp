@@ -54,7 +54,9 @@
 (export 'register-pair)
 
 (defclass address ()
-  ())
+  ((value :type integer
+	  :initarg :value
+	  :reader value)))
 (export 'address)
 
 (defclass constant ()
