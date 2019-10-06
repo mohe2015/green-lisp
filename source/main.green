@@ -50,62 +50,62 @@
     (label :loop)
     (jmp :loop)
     
-#|      ;; some general outputs
-      (ldi 24 #x80)
-      (out +DDRB+ 24) ;; TODO FIXME enforce types
-      (out +PORTB+ 24)
-      
-      (label :main)
-      ;; red
-      (ldi 24 #xF0)
-      (out +DDRE+ 24)
-      (out +PORTE+ 24)
-      
-      ;; green
-      (ldi 24 #x0F)
-      (out +DDRC+ 24)
-      (out +PORTC+ 24)
-      
-      ;; defun delay
-      ;; constant numbers
-      (ldi 20 #x00)
-      (ldi 21 #x01)
-      
-      (ldi 22 #x00)
-      (ldi 23 #x00)
-      (ldi 24 #x00)
-      
-      (label :target1)
-      (adc 22 21)
-      (adc 23 20)
-      (adc 24 20)
-      (brcc :target1) ;; :target
+    #|      ;; some general outputs
+    (ldi 24 #x80)
+    (out +DDRB+ 24) ;; TODO FIXME enforce types
+    (out +PORTB+ 24)
+    
+    (label :main)
+    ;; red
+    (ldi 24 #xF0)
+    (out +DDRE+ 24)
+    (out +PORTE+ 24)
+    
+    ;; green
+    (ldi 24 #x0F)
+    (out +DDRC+ 24)
+    (out +PORTC+ 24)
+    
+    ;; defun delay
+    ;; constant numbers
+    (ldi 20 #x00)
+    (ldi 21 #x01)
+    
+    (ldi 22 #x00)
+    (ldi 23 #x00)
+    (ldi 24 #x00)
+    
+    (label :target1)
+    (adc 22 21)
+    (adc 23 20)
+    (adc 24 20)
+    (brcc :target1) ;; :target
 
-      ;; red
-      (ldi 24 #x0F)
-      (out +DDRE+ 24)
-      (out +PORTE+ 24)
+    ;; red
+    (ldi 24 #x0F)
+    (out +DDRE+ 24)
+    (out +PORTE+ 24)
 
-      ;; green
-      (ldi 24 #xF0)
-      (out +DDRC+ 24)
-      (out +PORTC+ 24)  
+    ;; green
+    (ldi 24 #xF0)
+    (out +DDRC+ 24)
+    (out +PORTC+ 24)  
 
 
-      ;; defun delay
-      ;; constant numbers
-      (ldi 20 #x00)
-      (ldi 21 #x01)
-      
-      (ldi 22 #x00)
-      (ldi 23 #x00)
-      (ldi 24 #x00)
+    ;; defun delay
+    ;; constant numbers
+    (ldi 20 #x00)
+    (ldi 21 #x01)
+    
+    (ldi 22 #x00)
+    (ldi 23 #x00)
+    (ldi 24 #x00)
 
-      (label :target2)
-      (adc 22 21)
-      (adc 23 20)
-      (adc 24 20)
-      (brcc :target2)
+    (label :target2)
+    (adc 22 21)
+    (adc 23 20)
+    (adc 24 20)
+    (brcc :target2)
 
     (rjmp :main)))|#
 
@@ -115,9 +115,9 @@
 
 (let ((offset 0))
   (loop for element in *program* do
-       (if (eq 'label (car element))
-	   (setf (gethash (car (cdr element)) *labels*) offset)
-	   (setf offset (+ offset (instruction-size (car element)))))))
+    (if (eq 'label (car element))
+	(setf (gethash (car (cdr element)) *labels*) offset)
+	(setf offset (+ offset (instruction-size (car element)))))))
 
 (defparameter *bit-writer* (make-instance 'bit-writer))
 
@@ -128,15 +128,15 @@
 
 (let ((offset 0))
   (loop for element in *program* do
-       (unless (eq 'label (car element))
-	 (setf offset (+ offset (instruction-size (car element))))
-	 (cond ((or (eq 'jmp (car element)))
-		(write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*)))
-	       ((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
-		(write-instruction (car element) *bit-writer* (- (gethash (car (cdr element)) *labels*) offset)))
-	       (t
-		(apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element)))))))
-	 )))
+    (unless (eq 'label (car element))
+      (setf offset (+ offset (instruction-size (car element))))
+      (cond ((or (eq 'jmp (car element)))
+	     (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*)))
+	    ((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
+	     (write-instruction (car element) *bit-writer* (- (gethash (car (cdr element)) *labels*) offset)))
+	    (t
+	     (apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element)))))))
+      )))
 
 (bit-writer->file *bit-writer* "test.bin")
 
