@@ -16,7 +16,7 @@
 (ql:quickload :cserial-port)
 
 ;;(cserial-port:open-serial "/dev/ttyACM0" :baud-rate 38400 :parity :even)
-;;(cserial-port:close-serial #v1:0)
+
 ;;(cserial-port:write-serial-string "Test" #v1:0
 
 ;; HACK to prevent "also exports" error
@@ -549,8 +549,8 @@
    (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
        1
-     (setf (register d) k)
-     (setf program-counter (+ program-counter 1)) ;; the program counter addresses words
+     ;;(setf (register d) k)
+     ;;(setf program-counter (+ program-counter 1)) ;; the program counter addresses words
      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDS.html
