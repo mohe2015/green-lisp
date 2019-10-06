@@ -26,10 +26,10 @@
     
     (label :uart_interrupt)
 
-    (_push 24)
-    (in 24 #x0c) ;; USART Data Register UDR
-    (out #x0c 24)
-    (_pop 24)
+    (_push R24)
+    (in R24 #x0c) ;; USART Data Register UDR
+    (out #x0c R24)
+    (_pop R24)
     (reti)
 
 
@@ -38,11 +38,11 @@
 
     (bset 7) ;; TODO FIXME (sei) should also work
     
-    (ldi 24 #x19)
-    (out UBRR0L 24) ;; USART Baud Rate Register
+    (ldi R24 #x19)
+    (out UBRR0L R24) ;; USART Baud Rate Register
 
-    (ldi 24 #x98)
-    (out UCSR0B 24) ;; USART Control and Status Register B
+    (ldi R24 #x98)
+    (out UCSR0B R24) ;; USART Control and Status Register B
     
     (label :loop)
     (jmp :loop)

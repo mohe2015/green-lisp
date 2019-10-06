@@ -58,6 +58,7 @@
 	  :initarg :value
 	  :reader value)))
 (export 'address)
+(export 'value)
 
 (defclass constant ()
   ())
