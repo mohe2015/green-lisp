@@ -29,7 +29,14 @@
 
 (setf *on-package-variance* '(:warn () :error ()))
 
-(defclass io-register ()
+(defclass argument ()
+  ())
+
+(defmethod value ((argument argument) origin-class)
+  (internal-value argument))
+(export 'value)
+
+(defclass io-register (argument)
   ((name :initarg :name
 	 :reader register-name)
    (data-memory-address :initarg :data-memory-address ;; this is the big address
@@ -40,6 +47,20 @@
   ())
 (export 'register)
 
+(defclass register-pair (argument)
+  ())
+(export 'register-pair)
+
+(defclass address (argument)
+  ((internal-value :type integer
+	  :initarg :internal-value
+	  :reader internal-value)))
+(export 'address)
+
+(defclass constant (argument)
+  ())
+(export 'constant)
+
 (defclass avr-architecture ()
   ())
 (export 'avr-architecture)
@@ -48,21 +69,6 @@
   ((registers :initarg :registers
 	      :reader registers)))
 (export 'simulated-avr-architecture)
-
-(defclass register-pair ()
-  ())
-(export 'register-pair)
-
-(defclass address ()
-  ((value :type integer
-	  :initarg :value
-	  :reader value)))
-(export 'address)
-(export 'value)
-
-(defclass constant ()
-  ())
-(export 'constant)
 
 (defmacro define-register (name address type)
   `(let ((register (make-instance ',type :name ',name :data-memory-address ,address)))
