@@ -65,10 +65,6 @@
 	  :reader internal-value)))
 (export 'address)
 
-(defclass constant (argument)
-  ())
-(export 'constant)
-
 (defclass avr-architecture ()
   ())
 (export 'avr-architecture)

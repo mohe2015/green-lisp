@@ -102,7 +102,7 @@
        1
      (log +debug+ (format nil "add r~d, r~d~%" d r)))
 
-   (define-assembly-instruction (adiw (d register-pair d d (or (= d 24) (= d 26) (= d 28) (= d 30))) (k constant k k (and (<= 0 k) (<= k 63))))
+   (define-assembly-instruction (adiw (d register-pair d d (or (= d 24) (= d 26) (= d 28) (= d 30))) (k integer k k (and (<= 0 k) (<= k 63))))
        (1 0 0 1 0 1 1 0  k k d d k k k k)
        2
      (log +debug+ (format nil "adiw r~d, 0x~x~%" d k)))
@@ -112,7 +112,7 @@
        1
      (log +debug+ (format nil "and r~d, r~d~%" d r)))
 
-   (define-assembly-instruction (andi (d register d d (and (<= 0 d) (<= d 31))) (k constant k k (and (<= 0 k) (<= k 255))))
+   (define-assembly-instruction (andi (d register d d (and (<= 0 d) (<= d 31))) (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 1 1 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "andi r~d, 0x~x~%" d k)))
@@ -307,7 +307,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CPI.html
    (define-assembly-instruction (cpi (d register d d (and (<= 16 #| TODO FIXME |# d) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 255))))
+				     (k integer k k (and (<= 0 k) (<= k 255))))
        (0 0 1 1 k k k k d d d d k k k k)
        1
      (log +debug+ (format nil "cpi r~d, 0x~x~%" d k)))
@@ -479,7 +479,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (lddy (d register d d (and (<= 0 d) (<= d 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 0 d  d d d d 1 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "ldd r~d, Y+~d" d q)))
@@ -509,12 +509,12 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD_Z.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (lddz (d register d d (and (<= 0 d) (<= d 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 0 d  d d d d 1 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "ldd r~d, Z+~d" d q)))
    
-   (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-register k k (and (<= 0 k) (<= k 255))))
+   (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k integer k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
        1
      ;;(setf (register d) k)
@@ -621,7 +621,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ORI.html
    (define-assembly-instruction (ori (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 255))))
+				     (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 1 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "ori r~d, 0x~x~%" d k)))
@@ -688,7 +688,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBCI.html
    (define-assembly-instruction (sbci (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				      (k constant k k (and (<= 0 k) (<= k 255))))
+				      (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 0 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "sbci r~d, 0x~x~%" d k)))
@@ -717,14 +717,14 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBIW.html
    (define-assembly-instruction (sbiw (d register (+ (ash d 1) 24) (ash (- d 24) -1) (or (= d 24) (= d 26) (= d 28) (= d 30)))
-				      (k constant k k (and (<= 0 k) (<= k 63))))
+				      (k integer k k (and (<= 0 k) (<= k 63))))
        (1 0 0 1 0 1 1 1  k k d d k k k k)
        2
      (log +debug+ (format nil "sbiw p~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBR.html
    (define-assembly-instruction (sbr (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 255))))
+				     (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 1 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "sbr r~d, 0x~x~%" d k)))
@@ -843,7 +843,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (stdy (r register r r (and (<= 0 r) (<= r 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 1 r  r r r r 1 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "std Y+~d, R~d~%" q r)))
@@ -877,7 +877,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD_Z.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (stdz (r register r r (and (<= 0 r) (<= r 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 1 r  r r r r 0 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "std Z+~d, R~d~%" q r)))
@@ -885,14 +885,14 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STS.html
    (define-assembly-instruction (sts (d register d d (and (<= 0 r) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 65535))))
+				     (k integer k k (and (<= 0 k) (<= k 65535))))
        (1 0 0 1 0 0 1 d  d d d d 0 0 0 0  k k k k k k k k  k k k k k k k k)
        2
      (log +debug+ (format nil "sts 0x~x, r~d~%" k d)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STS_-_Store_Direct_to_SRAM.html
    (define-assembly-instruction (sts2 (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 31)))
-				      (k constant (+ k #x40) (- k #x40) (and (<= #x40 k) (<= k #xbf))))
+				      (k integer (+ k #x40) (- k #x40) (and (<= #x40 k) (<= k #xbf))))
        (1 0 1 0 1 k k k  r r r r k k k k)
        1
      (log +debug+ (format nil "sts 0x~x, r~d~%" k r)))
@@ -906,7 +906,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SUBI.html
    (define-assembly-instruction (subi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				      (k constant k k (and (<= 0 k) (<= k 255))))
+				      (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 0 1 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "subi r~d, 0x~x~%" d k)))
