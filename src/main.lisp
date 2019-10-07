@@ -27,8 +27,8 @@
     (label :uart_interrupt)
 
     (_push R24)
-    (in R24 #x0c) ;; USART Data Register UDR
-    (out #x0c R24)
+    (in R24 UDR0) ;; USART Data Register UDR
+    (out UDR0 R24)
     (_pop R24)
     (reti)
 
