@@ -9,7 +9,7 @@
 ;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 (defpackage green-lisp
-  (:use :cl :green-lisp.avr)
+  (:use :cl :green-lisp.avr.instructions :green-lisp.avr.architecture)
   (:import-from :green-lisp.bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:shadowing-import-from :green-lisp.logger :log))
 (in-package :green-lisp)
@@ -26,10 +26,10 @@
     
     (label :uart_interrupt)
 
-    (_push 24)
-    (in 24 #x0c) ;; USART Data Register UDR
-    (out #x0c 24)
-    (_pop 24)
+    (_push R24)
+    (in R24 UDR0) ;; USART Data Register UDR
+    (out UDR0 R24)
+    (_pop R24)
     (reti)
 
 
@@ -38,11 +38,11 @@
 
     (bset 7) ;; TODO FIXME (sei) should also work
     
-    (ldi 24 #x19)
-    (out UBRR0L 24) ;; USART Baud Rate Register
+    (ldi R24 #x19)
+    (out UBRR0L R24) ;; USART Baud Rate Register
 
-    (ldi 24 #x98)
-    (out UCSR0B 24) ;; USART Control and Status Register B
+    (ldi R24 #x98)
+    (out UCSR0B R24) ;; USART Control and Status Register B
     
     (label :loop)
     (jmp :loop)
@@ -128,9 +128,9 @@
     (unless (eq 'label (car element))
       (setf offset (+ offset (instruction-size (car element))))
       (cond ((or (eq 'jmp (car element)))
-	     (write-instruction (car element) *bit-writer* (gethash (car (cdr element)) *labels*)))
+	     (write-instruction (car element) *bit-writer* (make-instance 'address :internal-value (gethash (car (cdr element)) *labels*))))
 	    ((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
-	     (write-instruction (car element) *bit-writer* (- (gethash (car (cdr element)) *labels*) offset)))
+	     (write-instruction (car element) *bit-writer* (make-instance 'address :internal-value (- (gethash (car (cdr element)) *labels*) offset))))
 	    (t
 	     (apply #'write-instruction (cons (car element) (cons *bit-writer* (mapcar #'eval (cdr element)))))))
       )))
@@ -141,4 +141,4 @@
 ;;(let ((i (file->bit-reader #P"/home/moritz/Documents/green-lisp/binary.bin")))
 ;;  (loop repeat 30 do (read-any-instruction i)))
 
-(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
+;;(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
