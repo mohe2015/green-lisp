@@ -522,8 +522,8 @@
        (1 1 1 0 k k k k  d d d d k k k k)
        1
      ;; m == machine
-     (setf (register m d) k)
-     (setf (program-counter m) (+ (program-counter m) 1)) ;; the program counter addresses words
+     (setf (register *m* d) k)
+     (setf (program-counter *m*) (+ (program-counter *m*) 1)) ;; the program counter addresses words
      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDS.html
