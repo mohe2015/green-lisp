@@ -40,7 +40,9 @@
   ((name :initarg :name
 	 :reader register-name)
    (data-memory-address :initarg :data-memory-address ;; this is the big address
-			:reader register-data-memory-address)))
+			:reader register-data-memory-address)
+   (contents :initarg 0
+	     :accessor register-contents)))
 (export 'io-register)
 
 (defclass register (io-register)
@@ -70,8 +72,16 @@
 (export 'avr-architecture)
 
 (defclass simulated-avr-architecture (avr-architecture)
-  ((registers :initarg :registers
+  ((program-counter :initarg 0
+		    :accessor program-counter)
+   (registers :initarg :registers
 	      :reader registers)))
+(defmethod register ((avr-architecture simulated-avr-architecture) (register register))
+  register)
+(defmethod setf-register ((avr-architecture simulated-avr-architecture) (register register) value)
+  (setf (register-contents register) value)) 
+(defsetf register setf-register)
+
 (export 'simulated-avr-architecture)
 
 (defmacro define-register (name address type)
