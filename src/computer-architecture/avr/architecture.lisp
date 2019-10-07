@@ -47,6 +47,11 @@
   ())
 (export 'register)
 
+(defmethod value ((argument io-register) origin-class)
+  (ecase origin-class
+    ('register (register-data-memory-address argument))
+    ('io-register (- (register-data-memory-address argument) #x20))))
+
 (defclass register-pair (argument)
   ())
 (export 'register-pair)

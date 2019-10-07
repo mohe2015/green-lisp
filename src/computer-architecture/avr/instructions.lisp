@@ -51,7 +51,7 @@
        (defmethod ,name ((bit-writer bit-writer) ,@args)
 	 ,@(mapcar
 	    (lambda (item)
-	      `(setf ,(nth 0 item) (value ,(nth 0 item))))
+	      `(setf ,(nth 0 item) (value ,(nth 0 item) ',(nth 1 item))))
 	    (cdr instruction))
 	 ,@(mapcar
 	    (lambda (item)
