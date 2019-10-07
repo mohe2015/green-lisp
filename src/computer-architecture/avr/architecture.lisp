@@ -52,6 +52,9 @@
     ('register (register-data-memory-address argument))
     ('io-register (- (register-data-memory-address argument) #x20))))
 
+(defmethod value ((argument integer) (origin-class (eql 'integer)))
+  argument)
+
 (defclass register-pair (argument)
   ())
 (export 'register-pair)

@@ -122,25 +122,25 @@
        1
      (log +debug+ (format nil "asr r~d~%" d)))
 
-   (define-assembly-instruction (bclr (s bit s s (and (<= 0 s) (<= s 7))))
+   (define-assembly-instruction (bclr (s integer s s (and (<= 0 s) (<= s 7))))
        (1 0 0 1 0 1 0 0  1 s s s 1 0 0 0)
        1
      (log +debug+ (format nil "bclr ~d~%" s)))
 
-   (define-assembly-instruction (bld (d register d d (and (<= 0 d) (<= d 31))) (b bit b b (and (<= 0 b) (<= b 7))))
+   (define-assembly-instruction (bld (d register d d (and (<= 0 d) (<= d 31))) (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 0 0 d  d d d d 0 b b b b)
        1
      (log +debug+ (format nil "bld r~d, ~d~%" d b)))
    
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBC.html
-   (define-assembly-instruction (brbc (s bit s s (and (<= 0 s) (<= s 7)))
+   (define-assembly-instruction (brbc (s integer s s (and (<= 0 s) (<= s 7)))
 				      (k address (ash k 1) (ash k -1) (and (<= -64 k) (<= k 63))))
        (1 1 1 1 0 1 k k  k k k k k s s s)
        (if (= 0 (getf (sreg s))) 2 1)
      (log +debug+ (format nil "brbc ~d, 0x~x~%" s k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBS.html
-   (define-assembly-instruction (brbs (s bit s s (and (<= 0 s) (<= s 7)))
+   (define-assembly-instruction (brbs (s integer s s (and (<= 0 s) (<= s 7)))
 				      (k address (ash k 1) (ash k -1) (and (<= -64 k) (<= k 63))))
        (1 1 1 1 0 0 k k  k k k k k s s s)
        (if (= 1 (getf (sreg s))) 2 1)
@@ -223,14 +223,14 @@
      `(brbs 3 ,k))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BSET.html
-   (define-assembly-instruction (bset (s bit s s (and (<= 0 s) (<= s 7))))
+   (define-assembly-instruction (bset (s integer s s (and (<= 0 s) (<= s 7))))
        (1 0 0 1 0 1 0 0  0 s s s 1 0 0 0)
        1
      (log +debug+ (format nil "bset ~d~%" s)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BST.html
    (define-assembly-instruction (bst (d register d d (and (<= 0 d) (<= d 31)))
-				     (b bit b b (and (<= 0 b) (<= b 7))))
+				     (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 0 1 d  d d d d 0 b b b)
        1
      (log +debug+ (format nil "bst r~d, ~d~%" d b)))
@@ -242,7 +242,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CBI.html
    (define-assembly-instruction (cbi (a io-register a a (and (<= 0 a) (<= a 31)))
-				     (b bit b b (and (<= 0 b) (<= b 7))))
+				     (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 0 0  a a a a a b b b)
        2 ;; FIXME this can be different
      (log +debug+ (format nil "cbi ~d, ~d~%" a b)))
@@ -695,14 +695,14 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBI.html
    (define-assembly-instruction (sbi (a io-register a a (and (<= 0 a) (<= a 31)))
-				     (b bit b b (and (<= 0 b) (<= b 7))))
+				     (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 1 0  a a a a a b b b)
        2 ;; TODO FIXME
      (log +debug+ (format nil "sbi 0x~x, ~d~%" a b)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBIC.html
    (define-assembly-instruction (sbic (a io-register a a (and (<= 0 a) (<= a 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 0 1  a a a a a b b b)
        1 ;; TODO FIXME I HATE SKIP
      (log +debug+ (format nil "sbic 0x~x, ~d~%" a b)))
@@ -710,7 +710,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBIS.html
    (define-assembly-instruction (sbis (a io-register a a (and (<= 0 a) (<= a 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 1 1  a a a a a b b b)
        1 ;; TODO FIXME I HATE SKIP
      (log +debug+ (format nil "sbis 0x~x, ~d~%" a b)))   
@@ -731,14 +731,14 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBRC.html
    (define-assembly-instruction (sbrc (r register r r (and (<= 0 r) (<= r 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 1 0 r  r r r r 0 b b b)
        1 ;; TODO FIXME
      (log +debug+ (format nil "sbrc r~d, ~d~%" r b)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBRS.html
    (define-assembly-instruction (sbrs (r register r r (and (<= 0 r) (<= r 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 1 1 r  r r r r 0 b b b)
        1 ;; TODO FIXME
      (log +debug+ (format nil "sbrs r~d, ~d~%" r b)))
