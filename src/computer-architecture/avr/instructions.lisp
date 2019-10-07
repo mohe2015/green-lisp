@@ -1,35 +1,15 @@
-;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
-;;;; green-lisp - an eco-friendly lisp
-;;;; Copyright (C) 2019 Moritz Hedtke <Moritz.Hedtke@t-online.de>
-;;;;
-;;;; This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-;;;;
-;;;; This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
-;;;;
-;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+(when (find-package :green-lisp.avr.instructions)
+  (do-symbols (symbol :green-lisp.avr.instructions)
+    (unexport symbol :green-lisp.avr.instructions)))
 
-; atmega128 http://ww1.microchip.com/downloads/en/DeviceDoc/doc2467.pdf
-; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_instruction_list.html
+(defpackage :green-lisp.avr.instructions
+  (:use :common-lisp :cserial-port :green-lisp.bits :green-lisp.logger :green-lisp.avr.architecture)
+  (:import-from :green-lisp.bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
+  (:import-from :green-lisp.logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
+  (:shadowing-import-from :green-lisp.logger :log))
+(in-package :green-lisp.avr.instructions)
 
-(load "/home/moritz/Documents/green-lisp/source/logger.green")
-(load "/home/moritz/Documents/green-lisp/source/bits.green")
-(ql:quickload :cserial-port)
-
-;(cserial-port:open-serial "/dev/ttyACM0" :baud-rate 38400 :parity :even)
-;(cserial-port:close-serial #v1:0)
-;(cserial-port:write-serial-string "Test" #v1:0
-
-;; HACK to prevent "also exports" error
-(when (find-package :avr)
-  (do-symbols (symbol :avr)
-    (unexport symbol :avr)))
-
-(defpackage :avr
-  (:use :common-lisp)
-  (:import-from :bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
-  (:import-from :logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
-  (:shadowing-import-from :logger :log))
-(in-package :avr)
+(setf *on-package-variance* '(:warn () :error ()))
 
 (export 'read-instruction)
 (defmacro read-format (instruction format &body body)
@@ -60,14 +40,19 @@
 (export 'write-instruction)
 (defmacro write-format (instruction format)
   (let ((name (car instruction))
-	(args (mapcar #'car (cdr instruction))))
+	(args (mapcar (lambda (e) (subseq e 0 2)) (cdr instruction))))
     `(progn
        ;; TODO hash-map?
        (defmethod instruction-size ((name (eql ',name)))
 	 ,(/ (length format) 8))
-       
+
+       ;; TODO check preconditions of parameters
        (export ',name)
        (defmethod ,name ((bit-writer bit-writer) ,@args)
+	 ,@(mapcar
+	    (lambda (item)
+	      `(setf ,(nth 0 item) (value ,(nth 0 item) ',(nth 1 item))))
+	    (cdr instruction))
 	 ,@(mapcar
 	    (lambda (item)
 	      `(setf ,(nth 0 item) ,(nth 3 item)))
@@ -117,7 +102,7 @@
        1
      (log +debug+ (format nil "add r~d, r~d~%" d r)))
 
-   (define-assembly-instruction (adiw (d register-pair d d (or (= d 24) (= d 26) (= d 28) (= d 30))) (k constant k k (and (<= 0 k) (<= k 63))))
+   (define-assembly-instruction (adiw (d register-pair d d (or (= d 24) (= d 26) (= d 28) (= d 30))) (k integer k k (and (<= 0 k) (<= k 63))))
        (1 0 0 1 0 1 1 0  k k d d k k k k)
        2
      (log +debug+ (format nil "adiw r~d, 0x~x~%" d k)))
@@ -127,7 +112,7 @@
        1
      (log +debug+ (format nil "and r~d, r~d~%" d r)))
 
-   (define-assembly-instruction (andi (d register d d (and (<= 0 d) (<= d 31))) (k constant k k (and (<= 0 k) (<= k 255))))
+   (define-assembly-instruction (andi (d register d d (and (<= 0 d) (<= d 31))) (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 1 1 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "andi r~d, 0x~x~%" d k)))
@@ -137,25 +122,25 @@
        1
      (log +debug+ (format nil "asr r~d~%" d)))
 
-   (define-assembly-instruction (bclr (s bit s s (and (<= 0 s) (<= s 7))))
+   (define-assembly-instruction (bclr (s integer s s (and (<= 0 s) (<= s 7))))
        (1 0 0 1 0 1 0 0  1 s s s 1 0 0 0)
        1
      (log +debug+ (format nil "bclr ~d~%" s)))
 
-   (define-assembly-instruction (bld (d register d d (and (<= 0 d) (<= d 31))) (b bit b b (and (<= 0 b) (<= b 7))))
+   (define-assembly-instruction (bld (d register d d (and (<= 0 d) (<= d 31))) (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 0 0 d  d d d d 0 b b b b)
        1
      (log +debug+ (format nil "bld r~d, ~d~%" d b)))
    
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBC.html
-   (define-assembly-instruction (brbc (s bit s s (and (<= 0 s) (<= s 7)))
+   (define-assembly-instruction (brbc (s integer s s (and (<= 0 s) (<= s 7)))
 				      (k address (ash k 1) (ash k -1) (and (<= -64 k) (<= k 63))))
        (1 1 1 1 0 1 k k  k k k k k s s s)
        (if (= 0 (getf (sreg s))) 2 1)
      (log +debug+ (format nil "brbc ~d, 0x~x~%" s k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BRBS.html
-   (define-assembly-instruction (brbs (s bit s s (and (<= 0 s) (<= s 7)))
+   (define-assembly-instruction (brbs (s integer s s (and (<= 0 s) (<= s 7)))
 				      (k address (ash k 1) (ash k -1) (and (<= -64 k) (<= k 63))))
        (1 1 1 1 0 0 k k  k k k k k s s s)
        (if (= 1 (getf (sreg s))) 2 1)
@@ -238,14 +223,14 @@
      `(brbs 3 ,k))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BSET.html
-   (define-assembly-instruction (bset (s bit s s (and (<= 0 s) (<= s 7))))
+   (define-assembly-instruction (bset (s integer s s (and (<= 0 s) (<= s 7))))
        (1 0 0 1 0 1 0 0  0 s s s 1 0 0 0)
        1
      (log +debug+ (format nil "bset ~d~%" s)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_BST.html
    (define-assembly-instruction (bst (d register d d (and (<= 0 d) (<= d 31)))
-				     (b bit b b (and (<= 0 b) (<= b 7))))
+				     (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 0 1 d  d d d d 0 b b b)
        1
      (log +debug+ (format nil "bst r~d, ~d~%" d b)))
@@ -257,7 +242,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CBI.html
    (define-assembly-instruction (cbi (a io-register a a (and (<= 0 a) (<= a 31)))
-				     (b bit b b (and (<= 0 b) (<= b 7))))
+				     (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 0 0  a a a a a b b b)
        2 ;; FIXME this can be different
      (log +debug+ (format nil "cbi ~d, ~d~%" a b)))
@@ -322,7 +307,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_CPI.html
    (define-assembly-instruction (cpi (d register d d (and (<= 16 #| TODO FIXME |# d) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 255))))
+				     (k integer k k (and (<= 0 k) (<= k 255))))
        (0 0 1 1 k k k k d d d d k k k k)
        1
      (log +debug+ (format nil "cpi r~d, 0x~x~%" d k)))
@@ -368,7 +353,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ELPM.html
    (define-assembly-instruction (elpm+ (d register d d (and (<= 0 d) (<= d 31))))
        (1 0 0 1 0 0 0 d  d d d d 0 1 1 1)
-     3
+       3
      (log +debug+ (format nil "elpm+ r~d~%" d)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_EOR.html
@@ -394,7 +379,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_FMULSU.html
    (define-assembly-instruction (fmulsu (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 23)))
-				       (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 23))))
+					(r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 23))))
        (0 0 0 0 0 0 1 1  1 d d d 1 r r r)
        2
      (log +debug+ (format nil "fmulsu r~d, r~d~%" d r)))
@@ -494,7 +479,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (lddy (d register d d (and (<= 0 d) (<= d 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 0 d  d d d d 1 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "ldd r~d, Y+~d" d q)))
@@ -524,16 +509,16 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDD_Z.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (lddz (d register d d (and (<= 0 d) (<= d 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 0 d  d d d d 1 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "ldd r~d, Z+~d" d q)))
    
-   (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k io-address k k (and (<= 0 k) (<= k 255))))
+   (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k integer k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
        1
      ;;(setf (register d) k)
-     ;;(setf program-counter (+ program-counter 2)))
+     ;;(setf program-counter (+ program-counter 1)) ;; the program counter addresses words
      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDS.html
@@ -603,7 +588,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_MULS.html
    (define-assembly-instruction (muls (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				     (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 31))))
+				      (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 31))))
        (0 0 0 0 0 0 1 0  d d d d r r r r)
        2
      (log +debug+ (format nil "muls r~d, r~d~%" d r)))
@@ -629,22 +614,22 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_OR.html
    (define-assembly-instruction (_or (d register d d (and (<= 0 d) (<= d 31)))
-				    (r register r r (and (<= 0 r) (<= r 31))))
+				     (r register r r (and (<= 0 r) (<= r 31))))
        (0 0 1 0 1 0 r d  d d d d r r r r)
        1
      (log +debug+ (format nil "or r~d, r~d~%" d r)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ORI.html
    (define-assembly-instruction (ori (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 255))))
+				     (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 1 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "ori r~d, 0x~x~%" d k)))
    
    ;; out
-   (define-assembly-instruction (out (a port a a (and (<= 0 a) (<= a 64))) (r register r r (and (<= 0 r) (<= r 31))))
+   (define-assembly-instruction (out (a io-register a a (and (<= 0 a) (<= a 64))) (r register r r (and (<= 0 r) (<= r 31))))
        (1 0 1 1 1 a a r  r r r r a a a a)
-     1
+       1
      ;; (out a r)
      ;; (setf program-counter (+ program-counter 2))
      (log +debug+ (format nil "out 0x~x, r~d~%" a r)))
@@ -682,7 +667,7 @@
    ;; rjmp
    (define-assembly-instruction (rjmp (k address (ash k 1) (ash k -1) (and (<= -2048 k) (<= k 2048))))
        (1 1 0 0 k k k k  k k k k k k k k)
-     2
+       2
      (log +debug+ (format nil "rjmp 0x~x~%" k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_ROL.html
@@ -703,21 +688,21 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBCI.html
    (define-assembly-instruction (sbci (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				      (k constant k k (and (<= 0 k) (<= k 255))))
+				      (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 0 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "sbci r~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBI.html
    (define-assembly-instruction (sbi (a io-register a a (and (<= 0 a) (<= a 31)))
-				     (b bit b b (and (<= 0 b) (<= b 7))))
+				     (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 1 0  a a a a a b b b)
        2 ;; TODO FIXME
      (log +debug+ (format nil "sbi 0x~x, ~d~%" a b)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBIC.html
    (define-assembly-instruction (sbic (a io-register a a (and (<= 0 a) (<= a 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 0 1  a a a a a b b b)
        1 ;; TODO FIXME I HATE SKIP
      (log +debug+ (format nil "sbic 0x~x, ~d~%" a b)))
@@ -725,35 +710,35 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBIS.html
    (define-assembly-instruction (sbis (a io-register a a (and (<= 0 a) (<= a 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 0 0 1 1 0 1 1  a a a a a b b b)
        1 ;; TODO FIXME I HATE SKIP
      (log +debug+ (format nil "sbis 0x~x, ~d~%" a b)))   
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBIW.html
    (define-assembly-instruction (sbiw (d register (+ (ash d 1) 24) (ash (- d 24) -1) (or (= d 24) (= d 26) (= d 28) (= d 30)))
-				      (k constant k k (and (<= 0 k) (<= k 63))))
+				      (k integer k k (and (<= 0 k) (<= k 63))))
        (1 0 0 1 0 1 1 1  k k d d k k k k)
        2
      (log +debug+ (format nil "sbiw p~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBR.html
    (define-assembly-instruction (sbr (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 255))))
+				     (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 1 0 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "sbr r~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBRC.html
    (define-assembly-instruction (sbrc (r register r r (and (<= 0 r) (<= r 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 1 0 r  r r r r 0 b b b)
        1 ;; TODO FIXME
      (log +debug+ (format nil "sbrc r~d, ~d~%" r b)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SBRS.html
    (define-assembly-instruction (sbrs (r register r r (and (<= 0 r) (<= r 31)))
-				      (b bit b b (and (<= 0 b) (<= b 7))))
+				      (b integer b b (and (<= 0 b) (<= b 7))))
        (1 1 1 1 1 1 1 r  r r r r 0 b b b)
        1 ;; TODO FIXME
      (log +debug+ (format nil "sbrs r~d, ~d~%" r b)))
@@ -858,7 +843,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (stdy (r register r r (and (<= 0 r) (<= r 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 1 r  r r r r 1 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "std Y+~d, R~d~%" q r)))
@@ -892,7 +877,7 @@
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STD_Z.html
    ;; The result of these combinations is undefined:
    (define-assembly-instruction (stdz (r register r r (and (<= 0 r) (<= r 31)))
-				      (q constant q q (and (<= 0 q) (<= q 63))))
+				      (q integer q q (and (<= 0 q) (<= q 63))))
        (1 0 q 0 q q 1 r  r r r r 0 q q q)
        2 ;; TODO FIXME
      (log +debug+ (format nil "std Z+~d, R~d~%" q r)))
@@ -900,14 +885,14 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STS.html
    (define-assembly-instruction (sts (d register d d (and (<= 0 r) (<= d 31)))
-				     (k constant k k (and (<= 0 k) (<= k 65535))))
+				     (k integer k k (and (<= 0 k) (<= k 65535))))
        (1 0 0 1 0 0 1 d  d d d d 0 0 0 0  k k k k k k k k  k k k k k k k k)
        2
      (log +debug+ (format nil "sts 0x~x, r~d~%" k d)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_STS_-_Store_Direct_to_SRAM.html
    (define-assembly-instruction (sts2 (r register (+ r 16) (- r 16) (and (<= 16 r) (<= r 31)))
-				      (k constant (+ k #x40) (- k #x40) (and (<= #x40 k) (<= k #xbf))))
+				      (k integer (+ k #x40) (- k #x40) (and (<= #x40 k) (<= k #xbf))))
        (1 0 1 0 1 k k k  r r r r k k k k)
        1
      (log +debug+ (format nil "sts 0x~x, r~d~%" k r)))
@@ -921,7 +906,7 @@
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_SUBI.html
    (define-assembly-instruction (subi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31)))
-				      (k constant k k (and (<= 0 k) (<= k 255))))
+				      (k integer k k (and (<= 0 k) (<= k 255))))
        (0 1 0 1 k k k k  d d d d k k k k)
        1
      (log +debug+ (format nil "subi r~d, 0x~x~%" d k)))
@@ -954,204 +939,7 @@
 
 (defun read-any-instruction (bit-reader)
   (loop for method in +all-instructions+ do
-       (let* ((new-bit-reader (make-instance 'bit-reader :bits (bit-reader-bits bit-reader)))
-	     (result (funcall method new-bit-reader)))
-	 (if result
-	     (return-from read-any-instruction new-bit-reader)))))
-
-(defmacro define-register (name address)
-  `(export (defparameter ,name ,address)))
-
-(defmacro define-registers (&rest registers)
-  `(progn
-     ,@(loop for register in registers collect
-	     `(define-register ,(car register) ,(car (cdr register))))))
-
-(define-registers
-  (PINF #x00)
-  (PINE #x01)
-  (DDRE #x02)
-  (PORTE #x03)
-  (ADCL #x04)
-  (ADCH #x05)
-  (ADCSRA #x06)
-  (ADMUX #x07)
-  (ACSR #x08)
-  (UBRR0L #x09)
-  (UCSR0B #x0a)
-  (UCSR0A #x0b)
-  (UDR0 #x0c)
-  (SPCR #x0d)
-  (SPSR #x0e)
-  (SPDR #x0f)
-  (PIND #x10)
-  (DDRD #x11)
-  (PORTD #x12)
-  (PINC #x13)
-  (DDRC #x14)
-  (PORTC #x15)
-  (PINB #x16)
-  (DDRB #x17)
-  (PORTB #x18)
-  (PINA #x19)
-  (DDRA #x1a)
-  (PORTA #x1b)
-  (EECR #x1c)
-  (EEDR #x1d)
-  (EEARL #x1e)
-  (EEARH #x1f)
-  (SFIOR #x20)
-  (WDTCR #x21)
-  (OCDR #x22)
-  (OCR2 #x23)
-  (TCNT2 #x24)
-  (TCCR2 #x25)
-  (ICR1L #x26)
-  (ICR1H #x27)
-  (OCR1BL #x28)
-  (OCR1BH #x29)
-  (OCR1AL #x2a)
-  (ORC1AH #x2b)
-  (TCNT1L #x2c)
-  (TCNT1H #x2d)
-  (TCCR1B #x2e)
-  (TCCR1A #x2f)
-  (ASSR #x30)
-  (OCR0 #x31)
-  (TCNT0 #x32)
-  (TCCR0 #x33)
-  (MCUCSR #x34)
-  (MCUCR #x35)
-  (TIFR #x36)
-  (TIMSK #x37)
-  (EIFR #x38)
-  (EIMSK #x39)
-  (EICRB #x3a)
-  (RAMPZ #x3b)
-  (XDIV #x3c)
-  (SPL #x3d)
-  (SPH #x3e)
-  (SREG #x3f)
-  
-
-
-  )
-
-#|
-
-(define-pin 21 vcc)
-(define-pin 22 ground)
-(define-pin 47 (port a 4))
-(define-pin 48 (port a 3))
-(define-pin 49 (port a 2))
-(define-pin 50 (port a 1))
-(define-pin 51 (port a 0))
-; ... page 5
-
-; 32 registers
-(define-register (status-register 7) global-interrupt-enable)
-(define-register (status-register 6) bit-copy-storage)
-(define-register (status-register 5) half-carry-flag)
-(define-register (status-register 4) sign-bit)
-(define-register (status-register 3) twos-complement-overflow-flag)
-(define-register (status-register 2) negative-flag)
-(define-register (status-register 1) zero-flag)
-(define-register (status-register 0) carry-flag)
-(define-register (register #x00 r0))
-(define-register (register #x01 r1))
-(define-register (register #x02 r2))
-; ... X Y Z register
-(define-register (stack-pointer sph))
-(define-register (stack-pointer spl))
-
-;; RAMPZ
-
-(define-flash 128000)
-
-(define-eeprom 4096)
-;; EEARH EEARL EEDR EECR
-
-(define-sram 4096)
-
-(define-external-sram)
-
-(define-memory-locations (registers 32) (io-memory 64) (extended-io-memory 160) (internal-data-sram 4096))
-
-(define-real-time-counter ) ;
-
-(define-timers ) ; TODO page 35
-
-(define-usarts ); 
-
-(define-two-wire-serial-interface ) ;
-
-(define-analog-digital-converter ) ;
-
-(define-watchdog-timer ) ;
-
-(define-spi-serial-port ) ;
-
-(define-jtag-interface ) ; page 48
-
-(define-sleep-modes (idle power-down power-save adc-noise-reduction standby extended-standby)) ;; TODO page 44
-
-(define-reset) ; page 49
-
-(define-qtouch-library ) ;;
-
- ;; page 59
-(define-interrupt-vector #x0000 reset)
-(define-interrupt-vector #x0002 int0)
-
-(define-interrupt-vectors
-    (reset
-     external-interrupt-0
-     external-interrupt-1
-     external-interrupt-2
-     external-interrupt-3
-     external-interrupt-4
-     external-interrupt-5
-     external-interrupt-6
-     external-interrupt-7
-     timer-2-compare-match
-     timer-2-overflow
-     timer-1-capture-event
-     timer-1-compare-match-a
-     timer-1-compare-match-b
-     timer-1-overflow
-     timer-0-compare-match
-     timer-0-overflow
-     serial-transfer-complete
-     usart-0-receive-complete
-     usart-0-data-register-empty
-     usart-0-transfer-complete
-     adc-conversion-complete
-     eeprom-ready
-     analog-comparator
-     timer-1-compare-match-c
-    ;; ...
-
-
-;; external interrupts page 89
-
-;; a-bit timer with pwm and asynchronous operation page 92
-
-;; output compare modulator page 160
-
-;; serial peripheral interface p 162
-
-;; usart page 170
-
-;; two-wire serial interface page 197
-
-;; analog comparator page 227
-
-;; analog to digital converter page 230
-
-;; jtag interface and on-chip debug system page 246
-
-;; boot loader support - read-while-write self-programming page 273
-
-;; parallel programming page 290
-
-|#
+    (let* ((new-bit-reader (make-instance 'bit-reader :bits (bit-reader-bits bit-reader)))
+	   (result (funcall method new-bit-reader)))
+      (if result
+	  (return-from read-any-instruction new-bit-reader)))))
