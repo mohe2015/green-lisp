@@ -1,3 +1,4 @@
+
 ;;;; -*- Mode: Lisp; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; green-lisp - an eco-friendly lisp
 ;;;; Copyright (C) 2019 Moritz Hedtke <Moritz.Hedtke@t-online.de>
@@ -31,26 +32,27 @@
 (defparameter UDRE0 5)
 (defparameter RXC0 7)
 
+(defmacro pop-and-transmit ()
+  (let ((gen-label (intern (symbol-name (gensym)) :keyword)))
+    ``((label ,,gen-label)
+       (sbis UCSR0A UDRE0)
+       (rjmp ,,gen-label)
+       (_pop R31)
+       (out UDR0 R31))))
+
+(defmacro receive-and-push ()
+  (let ((gen-label (intern (symbol-name (gensym)) :keyword)))
+    ``((label ,,gen-label)
+       (sbis UCSR0A RXC0)
+       (rjmp ,,gen-label)
+       (in R31 UDR0)
+       (_push R31))))
+
 ;; AAAH The stack is not initialized
 (defparameter *program*
   `(
     ,@(loop repeat 35 collect
 	    `(jmp :entry0))
-
-    (label :pop_and_transmit)
-    (sbis UCSR0A UDRE0)
-    (rjmp :pop_and_transmit)
-    (_pop R31)
-    (out UDR0 R31)
-    (ret)
-
-    (label :receive_and_push)
-    (sbis UCSR0A RXC0)
-    (rjmp :receive_and_push)
-    (in R31 UDR0)
-    (out PORTE R31)
-    (_push R31)
-    (ret)
     
     (label :entry0)
     ;; stack pointer init
@@ -74,169 +76,11 @@
     (ldi R31 #xff)
     (out PORTE R31)
 
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-    (call :receive_and_push)
-
-    (_pop R31)
-    (_pop R30)
-    (_pop R29)
-    (_pop R28)
-    (_pop R27)
-    (_pop R26)
-    (_pop R25)
-    (_pop R24)
-    (_pop R23)
-    (_pop R22)
-    (_pop R21)
-    (_pop R20)
-    (_pop R19)
-    (_pop R18)
-    (_pop R17)
-    (_pop R16)
-    (_pop R15)
-    (_pop R14)
-    (_pop R13)
-    (_pop R12)
-    (_pop R11)
-    (_pop R10)
-    (_pop R9)
-    (_pop R8)
-    (_pop R7)
-    (_pop R6)
-    (_pop R5)
-    (_pop R4)
-    (_pop R3)
-    (_pop R2)
-    (_pop R1)
-    
-    ;;(_pop R0)
-    ;;(out SPH R0)
-
-    ;;(_pop R0)
-    ;;(out SPL R0)
-
-    (_pop R0)
-    (out SREG R0)
-
-    (_pop R0)
-
-    (ldi R13 17)
-
-    (_push R0)
-    
-    (in R0 SREG)
-    (_push R0)
-
-    ;;(in R0 SPL)
-    ;;(_push R0)
-    
-    ;;(in R0 SPH)
-    ;;(_push R0)
-    
-    (_push R1)
-    (_push R2)
-    (_push R3)
-    (_push R4)
-    (_push R5)
-    (_push R6)
-    (_push R7)
-    (_push R8)
-    (_push R9)
-    (_push R10)
-    (_push R11)
-    (_push R12)
-    (_push R13)
-    (_push R14)
-    (_push R15)
-    (_push R16)
-    (_push R17)
-    (_push R18)
-    (_push R19)
-    (_push R20)
-    (_push R21)
-    (_push R22)
-    (_push R23)
-    (_push R24)
-    (_push R25)
-    (_push R26)
-    (_push R27)
-    (_push R28)
-    (_push R29)
-    (_push R30)
-    (_push R31)
-
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    (call :pop_and_transmit)
-    
     (label :end)
+    
+    ,@(receive-and-push)
+    ,@(pop-and-transmit)
+    
     (rjmp :end)))
   
 (bit-writer->file (compile-asm *program*) "test.bin")
@@ -246,22 +90,7 @@
   (let ((serial (serial-connect)))
     (sleep 3)
     (serial-write serial (print (random 256))) ;; R0
-    (sleep 0.1)
-    (serial-write serial (print 0))  ;; SREG
-    ;;(serial-write serial 0)  ;; SPL
-    ;;(serial-write serial 16) ;; SPH
-    (loop repeat 31 do
-      (sleep 0.1)
-      (serial-write serial (print (random 256)))) ;; R1 - R31
-
-    (loop repeat 31 do
-      (print (serial-read serial))) ;; R31 - R1
-    
-    ;;(print (serial-read serial)) ;; SPH
-    ;;(print (serial-read serial)) ;; SPL
-    (print (serial-read serial)) ;; SREG
     (print (serial-read serial)) ;; R0
-    
     (serial-close serial)))
 
 ;; (random 256)
