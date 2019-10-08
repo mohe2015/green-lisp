@@ -77,6 +77,7 @@
     (call :receive_and_push)
     (call :receive_and_push)
     (call :receive_and_push)
+    (call :receive_and_push)
 
     (call :receive_and_push)
     (call :receive_and_push)
@@ -142,17 +143,31 @@
     (_pop R3)
     (_pop R2)
     (_pop R1)
+    
     (_pop R0)
-    (_pop SPH)
-    (_pop SPL)
-    (_pop SREG)
+    (out SPH R0)
+
+    (_pop R0)
+    (out SPL R0)
+
+    (_pop R0)
+    (out SREG R0)
+
+    (_pop R0)
 
     (ldi R13 17)
 
-    (_push SREG)
-    (_push SPL)
-    (_push SPH)
     (_push R0)
+    
+    (in R0 SREG)
+    (_push R0)
+
+    (in R0 SPL)
+    (_push R0)
+    
+    (in R0 SPH)
+    (_push R0)
+    
     (_push R1)
     (_push R2)
     (_push R3)
@@ -222,6 +237,7 @@
     (call :pop_and_transmit)
     (call :pop_and_transmit)
     (call :pop_and_transmit)
+    (call :pop_and_transmit)
     
     (label :end)
     (rjmp :end)))
@@ -231,19 +247,21 @@
 (defun main ()
   (uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
   (let ((serial (serial-connect)))
-    (sleep 1)
+    (sleep 3)
+    (serial-write serial (print (random 256))) ;; R0
     (serial-write serial 0)  ;; SREG
     (serial-write serial 0)  ;; SPL
     (serial-write serial 16) ;; SPH
-    (loop repeat 32 do
-      (serial-write serial (print (random 256)))) ;; R0 - R31
+    (loop repeat 31 do
+      (serial-write serial (print (random 256)))) ;; R1 - R31
 
-    (loop repeat 32 do
-      (print (serial-read serial))) ;; R31 - R0
+    (loop repeat 31 do
+      (print (serial-read serial))) ;; R31 - R1
     
     (print (serial-read serial)) ;; SPH
     (print (serial-read serial)) ;; SPL
     (print (serial-read serial)) ;; SREG
+    (print (serial-read serial)) ;; R0
     
     (serial-close serial)))
 

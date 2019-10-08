@@ -36,6 +36,9 @@ struct serial* serial_connect() {
 
   serial->newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
   serial->newtio.c_cc[VMIN] = 1;   /* blocking read until 1 char received */
+  
+  cfsetispeed(&serial->newtio, B38400);
+  cfsetospeed(&serial->newtio, B38400);
 
   tcflush(serial->fd, TCIFLUSH);
   tcsetattr(serial->fd, TCSANOW, &serial->newtio);
@@ -55,6 +58,7 @@ int serial_read(struct serial* serial) {
  
 bool serial_write(struct serial* serial, uint8_t c) {
   ssize_t writeLen = write(serial->fd, &c, 1);
+  tcdrain();
   return writeLen == 1;
 }
 
