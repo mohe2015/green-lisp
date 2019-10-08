@@ -58,7 +58,7 @@ int serial_read(struct serial* serial) {
  
 bool serial_write(struct serial* serial, uint8_t c) {
   ssize_t writeLen = write(serial->fd, &c, 1);
-  tcdrain();
+  tcdrain(serial->fd);
   return writeLen == 1;
 }
 
