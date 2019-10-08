@@ -1,15 +1,12 @@
 #include <termios.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <strings.h>
 #include <string.h>
 
-int main(void) {
+void connect() {
 	struct termios oldtio, newtio;
 	int fd = open("/dev/serial/by-id/usb-16c0_092e-if00", O_RDWR | O_NOCTTY);
         if (fd < 0) {
