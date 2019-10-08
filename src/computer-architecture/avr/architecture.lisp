@@ -94,6 +94,7 @@
 			  `(define-register ,(nth 0 register) ,(nth 1 register) ,(nth 2 register))))))
 
 (define-registers
+    ;; TODO Registers should also be accessible by (r 1) (r 2) ...
   (R0     #x00 register)
   (R1     #x01 register)
   (R2     #x02 register)
