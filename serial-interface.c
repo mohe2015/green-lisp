@@ -5,55 +5,61 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 
-void connect() {
-	struct termios oldtio, newtio;
-	int fd = open("/dev/serial/by-id/usb-16c0_092e-if00", O_RDWR | O_NOCTTY);
-        if (fd < 0) {
-            perror("device not found");
-            exit(-1);
-        }
-	tcgetattr(fd, &oldtio); /* save current port settings */
+struct serial {
+        int fd;
+        struct termios oldtio;
+        struct termios newtio;
+};
 
-    memset(&newtio, 0, sizeof(newtio));
+struct serial* serial_connect() {
+	struct serial* serial = calloc(1, sizeof(struct serial));
+	serial->fd = open("/dev/serial/by-id/usb-16c0_092e-if00", O_RDWR | O_NOCTTY);
+    if (serial->fd < 0) {
+        perror("device not found");
+        exit(-1);
+    }
+	tcgetattr(serial->fd, &serial->oldtio); /* save current port settings */
 
     // TODO autodetect from /dev/tty device properties
     //if (xbeeInUse) {
     //    newtio.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD;
     //} else {
-        newtio.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD | PARENB;
+    serial->newtio.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD | PARENB;
     //}
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = 0;
+    serial->newtio.c_iflag = IGNPAR;
+    serial->newtio.c_oflag = 0;
 
     /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
+    serial->newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN] = 1;   /* blocking read until 1 char received */
+    serial->newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
+    serial->newtio.c_cc[VMIN] = 1;   /* blocking read until 1 char received */
 
-    tcflush(fd, TCIFLUSH);
-    tcsetattr(fd, TCSANOW, &newtio);
+    tcflush(serial->fd, TCIFLUSH);
+    tcsetattr(serial->fd, TCSANOW, &serial->newtio);
 
-
-	while (1) {
-uint8_t buf;
-        ssize_t readLen = read(fd, &buf, 1);
-	if (readLen == 1) {	
-		printf("%c", buf);
-	}
+    return serial;
 }
+ 
+ int serial_read(struct serial* serial) {
+    uint8_t c;
+    ssize_t readLen = read(serial->fd, &c, 1);
+    if (readLen == 1) {	
+        return c;
+    } else {
+        return -1;
+    }
+ }
+ 
+ bool serial_write(struct serial* serial, char c) {
+    ssize_t writeLen = write(serial->fd, &c, 1);
+    return writeLen == 1;
+ }
 
-//write(fd, &b, 1);
-
-
-
-
-
-
- tcdrain(fd);
-    tcsetattr(fd, TCSANOW, &oldtio);
-    close(fd);
-
+void serial_close(struct serial* serial) {
+    tcdrain(serial->fd);
+    tcsetattr(serial->fd, TCSANOW, &serial->oldtio);
+    close(serial->fd);
 }
-
