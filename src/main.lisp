@@ -161,7 +161,7 @@
 
     (_pop R0)
 
-    (ldi R13 17)
+    (ldi R0 #x13)
 
     (_push R0)
 
@@ -252,23 +252,31 @@
 (defun main ()
   (uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/serial/by-id/usb-16c0_092e-if00 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
   (let ((serial (serial-connect)))
-    (sleep 3)
-    (serial-write serial (print (random 256))) ;; R0
-    (sleep 0.1)
-    (serial-write serial (print 0))  ;; SREG
+    (sleep 1)
+    (let ((r0-value (random 256)))
+      (format t "r0 ~x | " r0-value)
+      (serial-write serial r0-value)) ;; R0
+    (serial-write serial 0)  ;; SREG
     ;;(serial-write serial 0)  ;; SPL
     ;;(serial-write serial 16) ;; SPH
     (loop repeat 31 do
-      (sleep 0.1)
-      (serial-write serial (print (random 256)))) ;; R1 - R31
+      (let ((register-value (random 256)))
+	(format t "r ~x | " register-value)
+	(serial-write serial register-value))) ;; R1 - R31
 
+    (format t "~%")
+    
     (loop repeat 31 do
-      (print (serial-read serial))) ;; R31 - R1
+      (let ((register-value (serial-read serial)))
+	(format t "r ~x | " register-value))) ;; R31 - R1
 
     ;;(print (serial-read serial)) ;; SPH
     ;;(print (serial-read serial)) ;; SPL
-    (print (serial-read serial)) ;; SREG
-    (print (serial-read serial)) ;; R0
+    (let ((sreg-value (serial-read serial)))
+      (format t "sreg ~x | " sreg-value)) ;; SREG
+    (let ((r0-value (serial-read serial)))
+      (format t "r0 ~x~%" r0-value));; R0
+
     (serial-close serial)))
 
 ;; (random 256)
