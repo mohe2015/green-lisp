@@ -24,9 +24,9 @@ struct serial* serial_connect() {
 
   // TODO autodetect from /dev/tty device properties
   //if (xbeeInUse) {
-  //    newtio.c_cflag = B38400 | CRTSCTS | CS8 | CLOCAL | CREAD;
+  //    newtio.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD;
   //} else {
-  serial->newtio.c_cflag = B38400 | CRTSCTS | CS8 | CLOCAL | CREAD | PARENB;
+  serial->newtio.c_cflag = B9600 | CRTSCTS | CS8 | CLOCAL | CREAD | PARENB;
   //}
   serial->newtio.c_iflag = IGNPAR;
   serial->newtio.c_oflag = 0;
@@ -37,8 +37,8 @@ struct serial* serial_connect() {
   serial->newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
   serial->newtio.c_cc[VMIN] = 1;   /* blocking read until 1 char received */
   
-  cfsetispeed(&serial->newtio, B38400);
-  cfsetospeed(&serial->newtio, B38400);
+  cfsetispeed(&serial->newtio, B9600);
+  cfsetospeed(&serial->newtio, B9600);
 
   tcflush(serial->fd, TCIFLUSH);
   tcsetattr(serial->fd, TCSANOW, &serial->newtio);
