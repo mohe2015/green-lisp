@@ -103,3 +103,5 @@
     (print (serial-read serial))
     (print (serial-write serial #xf0))
     (serial-close serial)))
+
+;; (random 256)
