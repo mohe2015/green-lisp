@@ -28,6 +28,7 @@
 (defparameter UDRE0 5)
 (defparameter RXC0 7)
 
+;; AAAH The stack is not initialized
 (defparameter *program*
   `(
     ,@(loop repeat 35 collect
@@ -46,6 +47,11 @@
     (ret)
     
     (label :entry0)
+    ;; stack pointer init
+    (ldi R24 16)
+    (out SPH R24)
+    (ldi R24 0)
+    (out SPL R24)
     ;; leds init
     (ldi R24 #x80)
     (out DDRB R24)
@@ -67,21 +73,22 @@
     ;; out UCSRC,r16
 
     ;; send some test data
-    (ldi R24 #xca)
+    (ldi R24 (char-code #\h))
     (call :transmit)
-    (ldi R24 #xfe)
+    (ldi R24 (char-code #\a))
     (call :transmit)
-    (ldi R24 #xba)
+    (ldi R24 (char-code #\l))
     (call :transmit)
-    (ldi R24 #xbe)
+    (ldi R24 (char-code #\o))
     (call :transmit)
+    
+    (label :end)
     
     (call :receive) ;; TODO relative call
     (out PORTE R24)
 
-    (label :end)
     (rjmp :end)))
   
 (bit-writer->file (compile-asm *program*) "test.bin")
 
-;;(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
+(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)

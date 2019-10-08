@@ -30,7 +30,7 @@
       (loop for element in code do
 	(unless (eq 'label (car element))
 	  (setf offset (+ offset (instruction-size (car element))))
-	  (cond ((or (eq 'jmp (car element)))
+	  (cond ((or (eq 'jmp (car element)) (eq 'call (car element)))
 		 (write-instruction (car element) bit-writer (make-instance 'address :internal-value (gethash (car (cdr element)) labels))))
 		((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
 		 (write-instruction (car element) bit-writer (make-instance 'address :internal-value (- (gethash (car (cdr element)) labels) offset))))
