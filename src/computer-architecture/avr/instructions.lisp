@@ -33,6 +33,10 @@
 	      (lambda (item)
 		`(setf ,(nth 0 item) ,(nth 2 item)))
 	      (cdr instruction))
+	   ;; TODO convert raw integers to the specified types
+	   ;; TODO NEW IDEA:
+	   ;; there are generic parse-binary (value target-type) methods that return an object of the specified type. this would fix types like bit-index and constant
+	   ;; and then there are generic build-binary (value original-type) methods that do the reverse
 	   ,@body
 	   t)))))
 
@@ -517,8 +521,9 @@
    (define-assembly-instruction (ldi (d register (+ d 16) (- d 16) (and (<= 16 d) (<= d 31))) (k integer k k (and (<= 0 k) (<= k 255))))
        (1 1 1 0 k k k k  d d d d k k k k)
        1
-     ;;(setf (register d) k)
-     ;;(setf program-counter (+ program-counter 1)) ;; the program counter addresses words
+     ;; m == machine
+     (setf (register *m* d) k)
+     (setf (program-counter *m*) (+ (program-counter *m*) 1)) ;; the program counter addresses words
      (log +debug+ (format nil "ldi r~d, 0x~x~%" d k)))
 
    ;; https://www.microchip.com/webdoc/avrassembler/avrassembler.wb_LDS.html

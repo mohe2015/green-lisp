@@ -9,6 +9,8 @@
 		 (:file "bits")
 		 (:file "computer-architecture/avr/architecture")
 		 (:file "computer-architecture/avr/instructions")
+		 (:file "compiler")
+		 (:file "serial-interface")
 		 (:file "main")
 		 )))
   :description "An eco-friendly lisp"
