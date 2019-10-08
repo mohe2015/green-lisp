@@ -14,6 +14,71 @@
   (:shadowing-import-from :green-lisp.logger :log))
 (in-package :green-lisp)
 
+#|
+(maybe load random values into register?)
+(push all registers and sreg and pc (later add offset))
+(run target instruction)
+(push sreg, all registers and pc (later substract offset)
+(pop stack and send using uart)
+;; client can then analyze the data
+;; do this multiple times using fuzzing
+|#
+
+(defparameter *program1*
+  `(
+    ,@(loop repeat 35 collect
+	    `(jmp :entry0))
+
+    (label :transmit)
+    (sbis UCSRA0 UDRE)
+    (rjmp :transmit)
+    (out UDR0 R24)
+    (ret)
+
+    (label :receive)
+    (sbis UCSRA0 RXC)
+    (rjmp :receive)
+    (in R24 UDR0)
+    (ret)
+    
+    (label :entry0)
+    ;; leds init
+    (ldi R24 #x80)
+    (out DDRB R24)
+    (out PORTB R24)
+    (ldi R24 #xff)
+    (out DDRE R24)
+    (out DDRC R24)
+    ;; usart0 init
+    (ldi R24 25) ;; 16000000/16/38400-1
+    (out UBRR0L R24)
+    (ldi R24 #x98) ;; (1<<RXEN)|(1<<TXEN)
+    (out UCSR0B R24)
+    ;; leds on
+    (ldi R24 #xff)
+    (out PORTE R24)
+    
+    ;; Set frame format: 8data, 2stop bit
+    ;; ldi r16, (1<<USBS)|(3<<UCSZ0)
+    ;; out UCSRC,r16
+
+    ;; send some test data
+    (ldi R24 #xca)
+    (call :transmit)
+    (ldi R24 #xfe)
+    (call :transmit)
+    (ldi R24 #xba)
+    (call :transmit)
+    (ldi R24 #xbe)
+    (call :transmit)
+    
+    (call :receive) ;; TODO relative call
+    (out PORTE R24)
+
+    (label :end)
+    (rjmp :end)
+    ))
+
 (defparameter *program*
   `(
     ,@(loop repeat 18 collect
