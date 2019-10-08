@@ -7,9 +7,10 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <strings.h>
+#include <string.h>
 
 int main(void) {
-	struct termios oldtio{}, newtio{};
+	struct termios oldtio, newtio;
 	int fd = open("/dev/serial/by-id/usb-16c0_092e-if00", O_RDWR | O_NOCTTY);
         if (fd < 0) {
             perror("device not found");
@@ -17,7 +18,7 @@ int main(void) {
         }
 	tcgetattr(fd, &oldtio); /* save current port settings */
 
-    bzero(&newtio, sizeof(newtio));
+    memset(&newtio, 0, sizeof(newtio));
 
     // TODO autodetect from /dev/tty device properties
     //if (xbeeInUse) {

@@ -67,10 +67,6 @@
     ;; leds on
     (ldi R24 #xff)
     (out PORTE R24)
-    
-    ;; Set frame format: 8data, 2stop bit
-    ;; ldi r16, (1<<USBS)|(3<<UCSZ0)
-    ;; out UCSRC,r16
 
     ;; send some test data
     (ldi R24 (char-code #\h))
