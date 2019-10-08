@@ -24,19 +24,23 @@
 ;; do this multiple times using fuzzing
 |#
 
-(defparameter *program1*
+;; TODO FIXME
+(defparameter UDRE0 5)
+(defparameter RXC0 7)
+
+(defparameter *program*
   `(
     ,@(loop repeat 35 collect
 	    `(jmp :entry0))
 
     (label :transmit)
-    (sbis UCSRA0 UDRE)
+    (sbis UCSR0A UDRE0)
     (rjmp :transmit)
     (out UDR0 R24)
     (ret)
 
     (label :receive)
-    (sbis UCSRA0 RXC)
+    (sbis UCSR0A RXC0)
     (rjmp :receive)
     (in R24 UDR0)
     (ret)
@@ -52,7 +56,7 @@
     ;; usart0 init
     (ldi R24 25) ;; 16000000/16/38400-1
     (out UBRR0L R24)
-    (ldi R24 #x98) ;; (1<<RXEN)|(1<<TXEN)
+    (ldi R24 24) ;; (1<<RXEN 3)|(1<<TXEN 4)
     (out UCSR0B R24)
     ;; leds on
     (ldi R24 #xff)
@@ -76,32 +80,7 @@
     (out PORTE R24)
 
     (label :end)
-    (rjmp :end)
-    ))
-
-(defparameter *program*
-  `(
-    ,@(loop repeat 18 collect
-	    `(jmp :entry0))    
-    (jmp :uart_interrupt)
-    ,@(loop repeat 16 collect
-	    `(jmp :entry0))    
-    
-    (label :uart_interrupt)
-    (_push R24)
-    (in R24 UDR0)
-    (out UDR0 R24)
-    (_pop R24)
-    (reti)
-
-    (label :entry0)
-    (bset 7) ;; TODO FIXME (sei) should also work
-    (ldi R24 #x19)
-    (out UBRR0L R24)
-    (ldi R24 #x98)
-    (out UCSR0B R24)
-    (label :loop)
-    (jmp :loop)))
+    (rjmp :end)))
   
 (bit-writer->file (compile-asm *program*) "test.bin")
 
