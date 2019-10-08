@@ -1,5 +1,6 @@
 (defpackage green-lisp.serial-interface
-  (:use :cl :cffi))
+  (:use :cl :cffi)
+  (:export :serial-connect :serial-read :serial-write :serial-close))
 (in-package :green-lisp.serial-interface)
 
 (define-foreign-library libserial-interface
@@ -11,6 +12,6 @@
   (handle :pointer))
 (defcfun "serial_write" :bool
   (handle :pointer)
-  (char :char))
+  (byte :unsigned-char))
 (defcfun "serial_close" :void
   (handle :pointer))

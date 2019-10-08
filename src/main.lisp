@@ -11,7 +11,9 @@
   (:use :cl :green-lisp.avr.instructions :green-lisp.avr.architecture)
   (:import-from :green-lisp.bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:import-from :green-lisp.compiler :compile-asm :label)
-  (:shadowing-import-from :green-lisp.logger :log))
+  (:import-from :green-lisp.serial-interface :serial-connect :serial-read :serial-write :serial-close)
+  (:shadowing-import-from :green-lisp.logger :log)
+  (:export :main))
 (in-package :green-lisp)
 
 #|
@@ -68,6 +70,9 @@
     (ldi R24 #xff)
     (out PORTE R24)
 
+    (call :receive) ;; TODO relative call
+    (out PORTE R24)
+    
     ;; send some test data
     (ldi R24 (char-code #\h))
     (call :transmit)
@@ -87,4 +92,14 @@
   
 (bit-writer->file (compile-asm *program*) "test.bin")
 
-;;(uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
+(defun main ()
+  (uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/ttyACM0 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
+  (let ((serial (serial-connect)))
+    (sleep 2)
+    (print (serial-write serial 0))
+    (print (serial-read serial))
+    (print (serial-read serial))
+    (print (serial-read serial))
+    (print (serial-read serial))
+    (print (serial-write serial #xf0))
+    (serial-close serial)))
