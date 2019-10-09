@@ -23,7 +23,7 @@
     (let ((offset 0))
       (loop for element in code do
 	(if (eq 'label (car element))
-	    (setf (gethash (car (cdr element)) labels) offset)
+	    (setf (getf labels (car (cdr element))) offset)
 	    (setf offset (+ offset (instruction-size (car element)))))))
   
     (let ((offset 0))
@@ -31,9 +31,9 @@
 	(unless (eq 'label (car element))
 	  (setf offset (+ offset (instruction-size (car element))))
 	  (cond ((or (eq 'jmp (car element)) (eq 'call (car element)))
-		 (write-instruction (car element) bit-writer (make-instance 'address :internal-value (gethash (car (cdr element)) labels))))
+		 (write-instruction (car element) bit-writer (make-instance 'address :internal-value (getf labels (car (cdr element))))))
 		((or (eq 'rjmp (car element)) (eq 'brcc (car element)))
-		 (write-instruction (car element) bit-writer (make-instance 'address :internal-value (- (gethash (car (cdr element)) labels) offset))))
+		 (write-instruction (car element) bit-writer (make-instance 'address :internal-value (- (getf labels (car (cdr element))) offset))))
 		(t
 		 (apply #'write-instruction (cons (car element) (cons bit-writer (map #'eval (cdr element))))))))))
     bit-writer))
