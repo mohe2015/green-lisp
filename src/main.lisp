@@ -257,21 +257,21 @@
     (sleep 1)
 
     (let ((r0-value (random 256)))
-      ;;(setf (getf old-values :r0) r0-value)
+      (setf (getf old-values :r0) r0-value)
       (serial-write serial r0-value)) ;; R0
     (serial-write serial 0)  ;; SREG
     ;;(serial-write serial 0)  ;; SPL
     ;;(serial-write serial 16) ;; SPH
-    (loop repeat 31 do
+    (doeach (register '(R1 R2 R3 R4 R5 R6 R7 R8 R9 R10 R11 R12 R13 R14 R15 R16 R17 R18 R19 R20 R21 R22 R23 R24 R25 R26 R27 R28 R29 R30 R31))
       (let ((register-value (random 256)))
-	(format t "r ~x | " register-value)
+	(format t "~a ~x | " register register-value)
 	(serial-write serial register-value))) ;; R1 - R31
 
     (format t "~%")
     
-    (loop repeat 31 do
+    (doeach (register '(R31 R30 R29 R28 R27 R26 R25 R24 R23 R22 R21 R20 R19 R18 R17 R16 R15 R14 R13 R12 R11 R10 R9 R8 R7 R6 R5 R4 R3 R2 R1))
       (let ((register-value (serial-read serial)))
-	(format t "r ~x | " register-value))) ;; R31 - R1
+	(format t "~a ~x | " register register-value))) ;; R31 - R1
 
     ;;(print (serial-read serial)) ;; SPH
     ;;(print (serial-read serial)) ;; SPL
