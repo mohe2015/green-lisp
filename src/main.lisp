@@ -9,7 +9,7 @@
 ;;;;
 ;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 (defpackage green-lisp
-  (:use :cl :green-lisp.avr.instructions :green-lisp.avr.architecture)
+  (:use :cl21 :green-lisp.avr.instructions :green-lisp.avr.architecture)
   (:import-from :green-lisp.bits :file->bit-reader :bit-writer :bit-writer->bytes :bit-writer->file)
   (:import-from :green-lisp.compiler :compile-asm :label)
   (:import-from :green-lisp.serial-interface :serial-connect :serial-read :serial-write :serial-close)
@@ -251,10 +251,13 @@
 
 (defun main ()
   (uiop:run-program "avr-objcopy -I binary -O ihex test.bin test.ihex && avrdude -c stk500v2 -P /dev/serial/by-id/usb-16c0_092e-if00 -p atmega128 -B 2 -U flash:w:test.ihex" :output *standard-output* :force-shell t :error-output *standard-output*)
-  (let ((serial (serial-connect)))
+  (let ((serial (serial-connect))
+	(old-values (make-hash-table))
+	(new-values (make-hash-table)))
     (sleep 1)
+
     (let ((r0-value (random 256)))
-      (format t "r0 ~x | " r0-value)
+      ;;(setf (getf old-values :r0) r0-value)
       (serial-write serial r0-value)) ;; R0
     (serial-write serial 0)  ;; SREG
     ;;(serial-write serial 0)  ;; SPL

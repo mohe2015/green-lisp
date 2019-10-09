@@ -10,6 +10,8 @@ nano ~/.config/common-lisp/source-registry.conf
   (:tree (:home "Documents/green-lisp"))
   :inherit-configuration)
 
+(ql-dist:install-dist "http://dists.cl21.org/cl21.txt")
+
 ## Author
 
 * Moritz Hedtke (Moritz.Hedtke@t-online.de)

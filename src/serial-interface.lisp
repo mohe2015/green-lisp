@@ -1,5 +1,5 @@
 (defpackage green-lisp.serial-interface
-  (:use :cl :cffi)
+  (:use :cl21 :cffi)
   (:export :serial-connect :serial-read :serial-write :serial-close))
 (in-package :green-lisp.serial-interface)
 

@@ -10,7 +10,7 @@
 ;; http://www.gigamonkeys.com/book/files-and-file-io.html chapter 24
 
 (defpackage :green-lisp.bits
-  (:use :common-lisp)
+  (:use :cl21)
   (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->bytes
 	   :bit-writer :write-bit :bit-writer->bytes :bit-writer->file))
 (in-package :green-lisp.bits)
@@ -24,7 +24,7 @@
    #'concatenate
    (cons
     'list
-    (mapcar
+    (map
      (lambda (i)
        (list (cadr i) (car i)))
      (file->byte-pairs filename)))))
@@ -35,7 +35,7 @@
       (push (if (logbitp index byte) 1 0) bits))))
 
 (defun bytes->bits (bytes)
-  (apply #'concatenate (cons 'list (mapcar #'byte->bits bytes))))
+  (apply #'concatenate (cons 'list (map #'byte->bits bytes))))
 
 (defun file->bits (filename)
   (bytes->bits (file->bytes filename)))
@@ -64,14 +64,14 @@
 
 (defun bits->bits-list (bits)
   (loop for x from 0 to (- (length bits) 1) by 16 append
-       (list (loop for y from 8 to 15 collect (nth (+ x y) bits))
-	     (loop for y from 0 to 7 collect (nth (+ x y) bits)))))
+       (list (loop for y from 8 to 15 collect (nth bits (+ x y)))
+	     (loop for y from 0 to 7 collect (nth bits (+ x y))))))
 
 (defun bits->byte (bits)
   (reduce #'(lambda (a b) (+ (ash a 1) b)) bits))
 
 (defun bits-list->bytes (bits-list)
-  (mapcar #'bits->byte bits-list))
+  (map #'bits->byte bits-list))
 
 (defun bit-writer->bytes (bit-writer)
   (bits-list->bytes (bits->bits-list (reverse (bit-writer-bits bit-writer)))))

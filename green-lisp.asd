@@ -2,7 +2,7 @@
   :version "0.1.0"
   :author "Moritz Hedtke"
   :license "AGPL-3.0"
-  :depends-on ("cserial-port")
+  :depends-on ("cserial-port" "cl21")
   :components ((:module "src"
                 :components
                 ((:file "logger")
