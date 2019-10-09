@@ -50,8 +50,8 @@
 
 (defmethod value ((argument io-register) origin-class)
   (ecase origin-class
-    ('register (register-data-memory-address argument))
-    ('io-register (- (register-data-memory-address argument) #x20))))
+    (register (register-data-memory-address argument))
+    (io-register (- (register-data-memory-address argument) #x20))))
 
 (defmethod value ((argument integer) (origin-class (eql 'integer)))
   argument)
