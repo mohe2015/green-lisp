@@ -1,8 +1,8 @@
-(defpackage green-lisp/tests/main
+(defpackage green-lisp/tests/bits
   (:use :cl21
         :green-lisp
         :rove))
-(in-package :green-lisp/tests/main)
+(in-package :green-lisp/tests/bits)
 
 ;; NOTE: To run this test file, execute `(asdf:test-system :green-lisp)' in your Lisp.
 
