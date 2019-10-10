@@ -11,7 +11,7 @@
 
 (defpackage :green-lisp.bits
   (:use :cl21)
-  (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->byte-pairs :file->bytes :byte->bits :bytes->bits
+  (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->byte-pairs :file->bytes :byte->bits :bytes->bits :file->bits
 	   :bit-writer :write-bit :bit-writer->bytes :bit-writer->file))
 (in-package :green-lisp.bits)
 
@@ -30,6 +30,7 @@
      (file->byte-pairs filename)))))
 
 (defun byte->bits (byte)
+  (declare ((unsigned-byte 8) byte))
   (let ((bits '()))
     (dotimes (index 8 bits)
       (push (if (logbitp index byte) 1 0) bits))))
