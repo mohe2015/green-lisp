@@ -11,7 +11,7 @@
 
 (defpackage :green-lisp.bits
   (:use :cl21)
-  (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->byte-pairs :file->bytes
+  (:export :bit-reader :bit-reader-bits :read-bit :file->bit-reader :file->byte-pairs :file->bytes :byte->bits :bytes->bits
 	   :bit-writer :write-bit :bit-writer->bytes :bit-writer->file))
 (in-package :green-lisp.bits)
 
