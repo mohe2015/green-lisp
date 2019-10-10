@@ -281,4 +281,4 @@
       (let ((r0-value (serial-read serial)))
 	(format t "r0 ~x~%" r0-value));; R0
 
-      (serial-close serial)))))
+      (serial-close serial))))
