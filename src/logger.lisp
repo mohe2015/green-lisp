@@ -9,7 +9,7 @@
 ;;;; You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 (defpackage :green-lisp.logger
-  (:use :common-lisp)
+  (:use :cl21)
   (:shadow :log)
   (:export :log :+trace+ :+debug+ :+info+ :+warning+ :+error+))
 (in-package :green-lisp.logger)

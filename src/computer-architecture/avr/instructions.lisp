@@ -3,7 +3,7 @@
     (unexport symbol :green-lisp.avr.instructions)))
 
 (defpackage :green-lisp.avr.instructions
-  (:use :common-lisp :cserial-port :green-lisp.bits :green-lisp.logger :green-lisp.avr.architecture)
+  (:use :cl21 :cserial-port :green-lisp.bits :green-lisp.logger :green-lisp.avr.architecture)
   (:import-from :green-lisp.bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :green-lisp.logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :green-lisp.logger :log))
@@ -14,10 +14,10 @@
 (export 'read-instruction)
 (defmacro read-format (instruction format &body body)
   (let ((name (car instruction))
-	(args (mapcar #'car (cdr instruction))))
+	(args (map #'car (cdr instruction))))
     `(progn
        (defmethod read-instruction ((name (eql ',name)) (bit-reader bit-reader)) 
-	 (let ,(mapcar (lambda (s) `(,s 0)) args)
+	 (let ,(map (lambda (s) `(,s 0)) args)
 	   ,@(loop for item in format collect
 				      (cond ((or (eql item 0) (eql item 1))
 					     `(let ((bit (read-bit bit-reader)))
@@ -29,9 +29,9 @@
 					     `(let ((bit (read-bit bit-reader)))
 						(log +trace+ (format nil "read ~a" bit))
 						(setf ,item (logior (ash ,item 1) bit))))))
-	   ,@(mapcar
+	   ,@(map
 	      (lambda (item)
-		`(setf ,(nth 0 item) ,(nth 2 item)))
+		`(setf ,(nth item 0) ,(nth item 2)))
 	      (cdr instruction))
 	   ;; TODO convert raw integers to the specified types
 	   ;; TODO NEW IDEA:
@@ -44,7 +44,7 @@
 (export 'write-instruction)
 (defmacro write-format (instruction format)
   (let ((name (car instruction))
-	(args (mapcar (lambda (e) (subseq e 0 2)) (cdr instruction))))
+	(args (map (lambda (e) (subseq e 0 2)) (cdr instruction))))
     `(progn
        ;; TODO hash-map?
        (defmethod instruction-size ((name (eql ',name)))
@@ -53,13 +53,13 @@
        ;; TODO check preconditions of parameters
        (export ',name)
        (defmethod ,name ((bit-writer bit-writer) ,@args)
-	 ,@(mapcar
+	 ,@(map
 	    (lambda (item)
-	      `(setf ,(nth 0 item) (value ,(nth 0 item) ',(nth 1 item))))
+	      `(setf ,(nth item 0) (value ,(nth item 0) ',(nth item 1))))
 	    (cdr instruction))
-	 ,@(mapcar
+	 ,@(map
 	    (lambda (item)
-	      `(setf ,(nth 0 item) ,(nth 3 item)))
+	      `(setf ,(nth item 0) ,(nth item 3)))
 	    (cdr instruction))
 	 ,@(maplist
 	    (lambda (item-list)

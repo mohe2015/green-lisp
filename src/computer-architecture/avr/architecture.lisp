@@ -21,7 +21,7 @@
     (unexport symbol :green-lisp.avr.architecture)))
 
 (defpackage :green-lisp.avr.architecture
-  (:use :common-lisp :cserial-port :green-lisp.bits :green-lisp.logger)
+  (:use :cl21 :cserial-port :green-lisp.bits :green-lisp.logger)
   (:import-from :green-lisp.bits :bit-reader :bit-reader-bits :read-bit :file->bit-reader :bit-writer :write-bit :bit-writer->bytes)
   (:import-from :green-lisp.logger :+trace+ :+debug+ :+info+ :+warning+ :+error+)
   (:shadowing-import-from :green-lisp.logger :log))
@@ -50,8 +50,8 @@
 
 (defmethod value ((argument io-register) origin-class)
   (ecase origin-class
-    ('register (register-data-memory-address argument))
-    ('io-register (- (register-data-memory-address argument) #x20))))
+    (register (register-data-memory-address argument))
+    (io-register (- (register-data-memory-address argument) #x20))))
 
 (defmethod value ((argument integer) (origin-class (eql 'integer)))
   argument)
@@ -91,7 +91,7 @@
 (defmacro define-registers (&rest registers)
   `(make-instance 'simulated-avr-architecture :registers (list
 		  ,@(loop for register in registers collect
-			  `(define-register ,(nth 0 register) ,(nth 1 register) ,(nth 2 register))))))
+			  `(define-register ,(nth register 0) ,(nth register 1) ,(nth register 2))))))
 
 (define-registers
     ;; TODO Registers should also be accessible by (r 1) (r 2) ...

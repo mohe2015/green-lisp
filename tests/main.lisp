@@ -1,5 +1,5 @@
 (defpackage green-lisp/tests/main
-  (:use :cl
+  (:use :cl21
         :green-lisp
         :rove))
 (in-package :green-lisp/tests/main)
