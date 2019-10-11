@@ -4,13 +4,21 @@
 
 ## Installation
 
+```bash
+sudo pacman -S sbcl
+curl -o /tmp/ql.lisp http://beta.quicklisp.org/quicklisp.lisp
+sbcl --no-sysinit --no-userinit --load /tmp/ql.lisp \
+       --eval '(quicklisp-quickstart:install :path "~/.quicklisp")' \
+       --eval '(ql:add-to-init-file)' \
+       --quit
+sbcl --eval '(ql-dist:install-dist "http://dists.cl21.org/cl21.txt")' --eval '(ql:quickload :cl21)' --quit
+
 mkdir ~/.config/common-lisp
 nano ~/.config/common-lisp/source-registry.conf
 (:source-registry
   (:tree (:home "Documents/green-lisp"))
   :inherit-configuration)
-
-(ql-dist:install-dist "http://dists.cl21.org/cl21.txt")
+```
 
 ## Author
 

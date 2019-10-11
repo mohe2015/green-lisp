@@ -24,6 +24,8 @@
   :components ((:module "tests"
                 :components
                 ((:file "bits")
+		 (:file "computer-architecture/avr/instructions")
+		 (:file "compiler")
 		 (:file "main"))))
   :description "Test system for green-lisp"
   :perform (test-op (op c) (symbol-call :rove :run c)))
