@@ -1,3 +1,6 @@
 [submodule "simavr"]
 	path = simavr
 	url = https://github.com/mohe2015/simavr.git
+[submodule "wabt"]
+	path = wabt
+	url = https://github.com/webassembly/wabt
