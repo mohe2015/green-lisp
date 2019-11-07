@@ -5,40 +5,41 @@
 
 ;; 79 e3           ldi     r23, 0x39       ; 57
 
-(define-assembly-instruction (ldi (d register) (k integer))
-  (1 1 1 0 k k k k  d d d d k k k k)
-  1
-  (set! (register m d) k)
-  (increment! (program-counter m))) ;; the program counter addresses words
+'(define-assembly-instruction (ldi (d register) (k integer))
+   (1 1 1 0 k k k k  d d d d k k k k)
+   1
+   (set! (register m d) k)
+   (increment! (program-counter m))) ;; the program counter addresses words
 
 ;; https://docs.racket-lang.org/reference/generic-numbers.html#%28def._%28%28quote._~23~25kernel%29._bitwise-ior%29%29
-(define read-ldi (in)
-  (let* ((byte2 (read-byte in)) ;; little endian
-         (byte1 (read-byte in))
-         (d (arithmetic-shift byte2 -4))
-         (k (bitwise-ior
-             (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4))
-                          (arithmetic-shift byte1 4))
-             (bitwise-and (sub1 (arithmetic-shift 1 4))
-                          byte2))))
+(define (read-ldi [in : Input-Port])
+  (let* ([byte2 : Byte (cast (read-byte in) Byte)] ;; little endian
+         [byte1 : Byte (cast (read-byte in) Byte)]
+         [d : Byte (arithmetic-shift byte2 -4)]
+         [k : Integer (bitwise-ior
+                   (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4))
+                                (arithmetic-shift byte1 4))
+                   (bitwise-and (sub1 (arithmetic-shift 1 4))
+                                byte2))])
     (values d k)))
 
 ;; this only needs bytes probably
-(define-binary-class module
-  ((magic (constant #"\0asm"))
-   (version (constant #"\1\0\0\0"))))
+'(define-binary-class module
+   ((magic (constant #"\0asm"))
+    (version (constant #"\1\0\0\0"))))
 
-(define (read-module file)
-  (call-with-input-file file
-    (λ (in) (read-value module% in))))
+'(define (read-module file)
+   (call-with-input-file file
+     (λ (in) (read-value module% in))))
 
 ;; TODO https://docs.racket-lang.org/optimization-coach/index.html
 
 ;; https://docs.racket-lang.org/guide/i_o.html
+(: write-file (-> Output-Port Any))
 (define (write-file out)
   (write-byte 1 out))
 
 (call-with-output-file "data" #:exists 'truncate write-file)
 
 ;; wasm-objdump -sxhd webassembly/demo/example.wasm
-(read-module "/home/moritz/Documents/green-lisp/webassembly/demo/example.wasm")
+'(read-module "/home/moritz/Documents/green-lisp/webassembly/demo/example.wasm")
