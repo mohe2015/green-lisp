@@ -11,17 +11,22 @@
    (set! (register m d) k)
    (increment! (program-counter m))) ;; the program counter addresses words
 
-;; https://docs.racket-lang.org/reference/generic-numbers.html#%28def._%28%28quote._~23~25kernel%29._bitwise-ior%29%29
+(define (parse-ldi [byte1 : Byte] [byte2 : Byte])
+  (if (= (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4)) byte1)
+           #b11100000)
+        (let* ([d : Byte (arithmetic-shift byte2 -4)]
+               [k : Integer (bitwise-ior
+                             (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4))
+                                          (arithmetic-shift byte1 4))
+                             (bitwise-and (sub1 (arithmetic-shift 1 4))
+                                          byte2))])
+          (list d k))
+        null))
+
 (define (read-ldi [in : Input-Port])
   (let* ([byte2 : Byte (cast (read-byte in) Byte)] ;; little endian
-         [byte1 : Byte (cast (read-byte in) Byte)]
-         [d : Byte (arithmetic-shift byte2 -4)]
-         [k : Integer (bitwise-ior
-                   (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4))
-                                (arithmetic-shift byte1 4))
-                   (bitwise-and (sub1 (arithmetic-shift 1 4))
-                                byte2))])
-    (values d k)))
+         [byte1 : Byte (cast (read-byte in) Byte)])
+    (parse-ldi byte1 byte2)))
 
 ;; this only needs bytes probably
 '(define-binary-class module
