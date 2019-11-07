@@ -1,20 +1,32 @@
-#lang racket/base
+#lang typed/racket
 ;; https://docs.racket-lang.org/ts-guide/
-
-(provide read-module)
-  
-;; https://docs.racket-lang.org/binary-class/index.html
-(require racket/class)
-(require binary-class)
   
 ;; http://webassembly.github.io/spec/core/binary/conventions.html
-(define (valtype)
-  (binary
-   (λ (in) (read-byte in))
-   (λ (out value) (write-byte value out))))
 
-(define-binary-class module%
-  ((_ (constant #"\0asm"))))
+;; 79 e3           ldi     r23, 0x39       ; 57
+
+(define-assembly-instruction (ldi (d register) (k integer))
+  (1 1 1 0 k k k k  d d d d k k k k)
+  1
+  (set! (register m d) k)
+  (increment! (program-counter m))) ;; the program counter addresses words
+
+;; https://docs.racket-lang.org/reference/generic-numbers.html#%28def._%28%28quote._~23~25kernel%29._bitwise-ior%29%29
+(define read-ldi (in)
+  (let* ((byte2 (read-byte in)) ;; little endian
+         (byte1 (read-byte in))
+         (d (arithmetic-shift byte2 -4))
+         (k (bitwise-ior
+             (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4))
+                          (arithmetic-shift byte1 4))
+             (bitwise-and (sub1 (arithmetic-shift 1 4))
+                          byte2))))
+    (values d k)))
+
+;; this only needs bytes probably
+(define-binary-class module
+  ((magic (constant #"\0asm"))
+   (version (constant #"\1\0\0\0"))))
 
 (define (read-module file)
   (call-with-input-file file
@@ -28,4 +40,5 @@
 
 (call-with-output-file "data" #:exists 'truncate write-file)
 
-;; /home/moritz/Documents/green-lisp/webassembly/demo/example.wasm
+;; wasm-objdump -sxhd webassembly/demo/example.wasm
+(read-module "/home/moritz/Documents/green-lisp/webassembly/demo/example.wasm")

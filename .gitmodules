@@ -7,3 +7,6 @@
 [submodule "wasmtime"]
 	path = wasmtime
 	url = https://github.com/CraneStation/wasmtime
+[submodule "niborobolib"]
+	path = niborobolib
+	url = https://github.com/mohe2015/niborobolib/
