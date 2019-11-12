@@ -23,6 +23,18 @@
           (list d k))
         null))
 
+;; TODO big switch case
+(define (detect-instruction [in : Input-Port])
+  (let* ([byte2 : Byte (cast (read-byte in) Byte)]
+         [byte1 : Byte (cast (read-byte in) Byte)]
+         [byte4 : Byte (cast (read-byte in) Byte)]
+         [byte3 : Byte (cast (read-byte in) Byte)])
+    ;; maybe use a jump table?
+    (if (bitwise-bit-set? byte1 0)
+        null ;; some are at both locations
+        null) ;; some only at one
+  null))
+
 (define (read-ldi [in : Input-Port])
   (let* ([byte2 : Byte (cast (read-byte in) Byte)] ;; little endian
          [byte1 : Byte (cast (read-byte in) Byte)])
