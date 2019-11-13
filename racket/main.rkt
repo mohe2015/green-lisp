@@ -11,7 +11,7 @@
    (set! (register m d) k)
    (increment! (program-counter m))) ;; the program counter addresses words
 
-(define (parse-ldi [byte1 : Byte] [byte2 : Byte])
+(define (parse-ldi [byte2 : Byte] [byte1 : Byte])
   (if (= (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4)) byte1)
            #b11100000)
         (let* ([d : Byte (arithmetic-shift byte2 -4)]
