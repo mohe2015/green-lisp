@@ -13,3 +13,6 @@
 [submodule "ndk-samples"]
 	path = ndk-samples
 	url = https://github.com/android/ndk-samples
+[submodule "useful-projects/racket"]
+	path = useful-projects/racket
+	url = https://github.com/racket/racket

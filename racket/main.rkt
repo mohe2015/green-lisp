@@ -11,18 +11,6 @@
    (set! (register m d) k)
    (increment! (program-counter m))) ;; the program counter addresses words
 
-(define (parse-ldi [byte2 : Byte] [byte1 : Byte])
-  (if (= (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4)) byte1)
-           #b11100000)
-        (let* ([d : Byte (arithmetic-shift byte2 -4)]
-               [k : Integer (bitwise-ior
-                             (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4))
-                                          (arithmetic-shift byte1 4))
-                             (bitwise-and (sub1 (arithmetic-shift 1 4))
-                                          byte2))])
-          (list d k))
-        null))
-
 ;; TODO big switch case
 (define (detect-instruction [in : Input-Port])
   (let* ([byte2 : Byte (cast (read-byte in) Byte)]
