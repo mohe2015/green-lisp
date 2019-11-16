@@ -31,6 +31,10 @@
            
            )]))
 
+  '(define-assembly-instruction-argument register
+     (arithmetic-shift register 3) ;; parsing
+     (arithmetic-shift register -3) ;; building
+     (and (<= 0 register) (<= register 31))) ;; constraints
   
   (define (parse-ldi [byte2 : Byte] [byte1 : Byte])
     (if (= (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4)) byte1)
