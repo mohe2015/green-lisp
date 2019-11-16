@@ -10,3 +10,6 @@
 [submodule "niborobolib"]
 	path = niborobolib
 	url = https://github.com/mohe2015/niborobolib/
+[submodule "ndk-samples"]
+	path = ndk-samples
+	url = https://github.com/android/ndk-samples
