@@ -1,5 +1,6 @@
 (module avr-utils typed/racket
 
+  (require typed/racket/stream)
   (require (for-syntax syntax/parse))
 
   (begin-for-syntax
@@ -35,6 +36,20 @@
      (arithmetic-shift register 3) ;; parsing
      (arithmetic-shift register -3) ;; building
      (and (<= 0 register) (<= register 31))) ;; constraints
+
+  (define-syntax (get-bits-from-binary stx)
+    (syntax-parse stx
+      [(_ (bit:expr ...))
+       #'(lambda (binary)
+           
+            (for ([i (in-naturals)]
+                  [b #'(bit ...)])
+
+
+              null)
+           
+           
+           null)]))
   
   (define (parse-ldi [byte2 : Byte] [byte1 : Byte])
     (if (= (bitwise-and (- (arithmetic-shift 1 8) (arithmetic-shift 1 4)) byte1)
