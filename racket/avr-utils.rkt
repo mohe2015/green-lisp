@@ -15,7 +15,12 @@
                             (syntax->list #'(instruction-argument.instruction-argument-var ...)))
                "duplicate variable name"
                #:with (instruction-argument-var ...) #'(instruction-argument.instruction-argument-var ...)
-               #:with (instruction-argument-type ...) #'(instruction-argument.instruction-argument-type ...))))
+               #:with (instruction-argument-type ...) #'(instruction-argument.instruction-argument-type ...)))
+
+    (define-syntax-class bits
+      #:description "bits"
+      (pattern (bit:expr ...)))
+    )
   
   (define-syntax (define-assembly-instruction stx)
     (syntax-parse stx
@@ -39,16 +44,11 @@
 
   (define-syntax (get-bits-from-binary stx)
     (syntax-parse stx
-      [(_ (bit:expr ...))
+      [(_ bits:bits) ;; (1 0 0 0 1 0 0 0) means extracting these bit and building a new integer with 2 bits
        #'(lambda (binary)
-           
-            (for ([i (in-naturals)]
-                  [b #'(bit ...)])
-
-
-              null)
-           
-           
+            (for ([i (in-range (- (length 'bits) 1) -1 -1)])
+              (let ((value (list-ref 'bits i))) 
+                (print `(arithmetic-shift 1 ,i))))
            null)]))
   
   (define (parse-ldi [byte2 : Byte] [byte1 : Byte])
@@ -70,5 +70,5 @@
     (increment! (program-counter m))) ;; the program counter addresses words
 
   (ldi 1 1)
-  
+  ((get-bits-from-binary (1 0 0 0 1)) 17)
   )
