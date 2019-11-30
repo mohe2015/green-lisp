@@ -13,4 +13,4 @@ _exit:
     swi #0                  @ software interrupt
 
 _string:
-.asciz "Hello world\n"          @ our string, NULL terminated
+.asciz "Hello world!!!\n"          @ our string, NULL terminated
