@@ -1,9 +1,10 @@
 #lang typed/racket
+(require/typed racket [index-of (-> (Listof Any) Any Integer)])
 ;; this should also support bit-elements
 
 ;; https://refspecs.linuxfoundation.org/elf/ARMELF.pdf
 
-'(define-type ei_class_type (U 'class_none 'class_32 'class_64))
+(define-type ei_class_type (U 'class_none 'class_32 'class_64))
 
 (define ei_class_list '(class_none class_32 class_64))
 
@@ -11,14 +12,14 @@
   (class object% 
     (super-new)
 
-    (: abc (U Byte Null))
-    (define abc null)
+    (: abc ei_class_type)
+    (define abc 'class_none)
 
     (define/public (read [in : Input-Port])
-      (set! abc (cast (read-byte in) Byte)))
+      (set! abc (list-ref ei_class_list (cast (read-byte in) Byte))))
 
     (define/public (write [out : Output-Port])
-      (write-byte (cast abc Byte) out))
+      (write-byte (cast (index-of ei_class_list abc) Byte) out))
     
     ))
   
