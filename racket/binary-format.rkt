@@ -1,5 +1,6 @@
 (module binary-format typed/racket
-
+  
+  (require/typed macro-debugger/stepper (expand/step (-> Syntax Any)))
   (require/typed racket [index-of (-> (Listof Any) Any Integer)])
   ;; this should also support bit-elements
 
@@ -8,8 +9,7 @@
   ;; TODO replace this with the define enum declaration
   (define-type ei_class_type (U 'class_none 'class_32 'class_64))
 
-  (: ei_class_list (Listof ei_class_type))
-  (define ei_class_list '(class_none class_32 class_64))
+  (define ei_class_list : (Listof ei_class_type) '(class_none class_32 class_64))
 
   (define ei_class
     (class object% 
@@ -31,7 +31,23 @@
       (ELFCLASS32 1 "32-bit objects")
       (ELFCLASS64 2 "64-bit objects")))
 
+  (define-syntax-rule (define-binary-class name format)
+    (define name
+      (class object% 
+        (super-new)
 
+        ; (: abc ei_class_type)
+        ; (define abc 'class_none)
+
+        (define/public (read [in : Input-Port])
+          null)
+
+        (define/public (write [out : Output-Port])
+          null)
+    
+        )))
+
+  (expand/step #'(define-binary-class elephant ()))
 
   '(define-binary-class e_ident
      ((EI_MAG0 (constant #x7f)
