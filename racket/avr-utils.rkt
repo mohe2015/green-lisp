@@ -3,6 +3,7 @@
   (require typed/racket/stream)
   (require (for-syntax syntax/parse))
 
+  ;; TODO merge with the shit from binary-format.rkt
   (begin-for-syntax
     (define-syntax-class instruction-argument
       #:description "instruction argument"

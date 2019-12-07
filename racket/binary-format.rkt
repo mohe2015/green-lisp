@@ -10,6 +10,7 @@
   ;(require macro-debugger/expand)
   (require/typed racket
                  [index-of (-> (Listof Any) Any Integer)])
+  (require (for-syntax syntax/parse))
   
   ;; this should also support bit-elements
 
@@ -40,23 +41,37 @@
       (ELFCLASS32 1 "32-bit objects")
       (ELFCLASS64 2 "64-bit objects")))
 
-  (define-syntax-rule (define-binary-class name format)
-    (define name
-      (class object% 
-        (super-new)
+  (begin-for-syntax
+    (define-syntax-class typed-name
+      #:description "typed name"
+      (pattern (name:id type:id)))
 
-        ; (: abc ei_class_type)
-        ; (define abc 'class_none)
+    (define-syntax-class unique-typed-names
+      #:description "unique typed names"
+      (pattern (typed-name:typed-name ...)
+               #:fail-when (check-duplicate-identifier
+                            (syntax->list #'(typed-name.name ...)))
+               "duplicate variable name")))
 
-        (define/public (read [in : Input-Port])
-          null)
+  (define-syntax-rule (define-binary-class name unique-typed-names)
+    (begin
+      (print #'unique-typed-names)
+      (define name
+        (class object% 
+          (super-new)
 
-        (define/public (write [out : Output-Port])
-          null)
+          ; (: abc ei_class_type)
+          ; (define abc 'class_none)
+
+          (define/public (read [in : Input-Port])
+            null)
+
+          (define/public (write [out : Output-Port])
+            null)
     
-        )))
+          ))))
 
-  (expand/step #'(define-binary-class elephant ()))
+  (define-binary-class elephant ())
 
   '(define-binary-class e_ident
      ((EI_MAG0 (constant #x7f)
