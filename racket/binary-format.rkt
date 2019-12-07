@@ -4,8 +4,10 @@
 
 ;; https://refspecs.linuxfoundation.org/elf/ARMELF.pdf
 
+;; TODO replace this with the define enum declaration
 (define-type ei_class_type (U 'class_none 'class_32 'class_64))
 
+(: ei_class_list (Listof ei_class_type))
 (define ei_class_list '(class_none class_32 class_64))
 
 (define ei_class
