@@ -1,7 +1,16 @@
 (module binary-format typed/racket
   
-  (require/typed macro-debugger/stepper (expand/step (-> Syntax Any)))
-  (require/typed racket [index-of (-> (Listof Any) Any Integer)])
+  (require/typed macro-debugger/stepper
+                 (expand/step (-> Syntax Any)))
+  (require/typed macro-debugger/syntax-browser
+                 (browse-syntax (-> Syntax Any)))
+  (require/typed macro-debugger/stepper-text
+                 (expand/step-text (-> Syntax Any)))
+  ;(require macro-debugger/emit)
+  ;(require macro-debugger/expand)
+  (require/typed racket
+                 [index-of (-> (Listof Any) Any Integer)])
+  
   ;; this should also support bit-elements
 
   ;; https://refspecs.linuxfoundation.org/elf/ARMELF.pdf
