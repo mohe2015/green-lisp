@@ -64,6 +64,8 @@
           ; (define abc 'class_none)
 
           (define/public (read [in : Input-Port])
+            `(print #'(car (syntax-e unique-typed-names)))
+            
             null)
 
           (define/public (write [out : Output-Port])
@@ -71,7 +73,7 @@
     
           ))))
 
-  (define-binary-class elephant ())
+  (define-binary-class elephant ((test ei_class)))
 
   '(define-binary-class e_ident
      ((EI_MAG0 (constant #x7f)
