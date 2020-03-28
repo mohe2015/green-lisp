@@ -119,9 +119,11 @@
 ;; https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
 (define EM_X86_64 62)
 
-(define base #x08048000)
+(define base #x401000)
 
 (let ((writer (new bit-writer%)))
+  ;; $$ = start of file in virtual address
+  ;; $ = current address in virtual address
   ;; e_ident
   ;; file start
   ;; ehdr start
@@ -138,7 +140,7 @@
   (send writer write-unsigned-2 ET_EXEC) ;; e_type
   (send writer write-unsigned-2 EM_X86_64) ;; e_machine
   (send writer write-unsigned-4 EV_CURRENT) ;; e_version
-  (send writer write-unsigned-8 120) ;; aTODO entrypoint) ;; e_entry
+  (send writer write-unsigned-8 (+ base 120)) ;; aTODO entrypoint) ;; e_entry
   (send writer write-unsigned-8 64) ;; e_phoff aTODO phdr - $$
   (send writer write-unsigned-8 0) ;; e_shoff
   (send writer write-unsigned-4 0) ;; e_flags
@@ -153,10 +155,10 @@
 
   ;; phrd start
   (send writer write-unsigned-4 1) ;; p_type
-  (send writer write-unsigned-4 5) ;; p_flags
+  (send writer write-unsigned-4 5) ;; p_flags ;; read + execute
   (send writer write-unsigned-8 0) ;; p_offset
-  (send writer write-unsigned-8 80) ;; p_vaddr aTODO current addr
-  (send writer write-unsigned-8 88) ;; p_paddr aTODO current addr
+  (send writer write-unsigned-8 base) ;; p_vaddr aTODO current addr
+  (send writer write-unsigned-8 base) ;; p_paddr aTODO current addr
   (send writer write-unsigned-8 122) ;; p_filesz aTODO filesize
   (send writer write-unsigned-8 122) ;; p_memsz aTODO filesize
   (send writer write-unsigned-8 #x1000) ;; p_align
