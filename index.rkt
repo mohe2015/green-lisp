@@ -31,10 +31,9 @@
 
 (define (jmp writer displacement)
   (send writer write-byte #xeb)
-  (send writer write-byte displacement))
-
+  (send writer write-byte (bytes-ref (integer->integer-bytes displacement 1 #t) 0)))
 
 (let ((writer (new bit-writer%)))
-  (jmp writer #xfe)
+  (jmp writer -2) ;; size of jmp instruction
   (send writer get-bits)
   (send writer write-to-file "/tmp/a.bin"))
