@@ -138,12 +138,12 @@
   (send writer write-unsigned-2 ET_EXEC) ;; e_type
   (send writer write-unsigned-2 EM_X86_64) ;; e_machine
   (send writer write-unsigned-4 EV_CURRENT) ;; e_version
-  (send writer write-unsigned-8 114) ;; aTODO entrypoint) ;; e_entry
+  (send writer write-unsigned-8 120) ;; aTODO entrypoint) ;; e_entry
   (send writer write-unsigned-8 64) ;; e_phoff aTODO phdr - $$
   (send writer write-unsigned-8 0) ;; e_shoff
   (send writer write-unsigned-4 0) ;; e_flags
   (send writer write-unsigned-2 64) ;; e_ehsize aTODO headersize
-  (send writer write-unsigned-2 50) ;; e_phentsize aTODO phdrsize
+  (send writer write-unsigned-2 56) ;; e_phentsize aTODO phdrsize
 
   (send writer write-unsigned-2 1) ;; e_phnum p
   (send writer write-unsigned-2 0) ;; e_shentsize
@@ -152,20 +152,20 @@
   ;; ehdr end 64
 
   ;; phrd start
-  (send writer write-unsigned-1 1) ;; p_type
-  (send writer write-unsigned-1 5) ;; p_flags
+  (send writer write-unsigned-4 1) ;; p_type
+  (send writer write-unsigned-4 5) ;; p_flags
   (send writer write-unsigned-8 0) ;; p_offset
-  (send writer write-unsigned-8 74) ;; p_vaddr aTODO current addr
-  (send writer write-unsigned-8 82) ;; p_paddr aTODO current addr
-  (send writer write-unsigned-8 116) ;; p_filesz aTODO filesize
-  (send writer write-unsigned-8 116) ;; p_memsz aTODO filesize
+  (send writer write-unsigned-8 80) ;; p_vaddr aTODO current addr
+  (send writer write-unsigned-8 88) ;; p_paddr aTODO current addr
+  (send writer write-unsigned-8 122) ;; p_filesz aTODO filesize
+  (send writer write-unsigned-8 122) ;; p_memsz aTODO filesize
   (send writer write-unsigned-8 #x1000) ;; p_align
-  ;; phrd end 50
+  ;; phrd end 56
 
-  ;; code start
+  ;; code start 120 until here
   (jmp writer -2) ;; size of jmp instruction
   ;; code end 2
-  ;; file end 116
+  ;; file end 122
 
   
   (send writer get-bits)
