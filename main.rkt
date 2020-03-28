@@ -2,6 +2,15 @@
 
 ;; some ideas
 
+;; https://coq.inria.fr/refman/language/cic.html
+;; https://en.wikipedia.org/wiki/Peano_axioms
+;; https://en.wikipedia.org/wiki/Formal_specification
+;; Use not so formal proofing but one that is more understandable to the average programmer
+
+;; first step: really basic x86_64 assembler
+;; second step: elf builder
+;; third step: combine
+
 ;; provable assembly instructions
 (define-assembly-instruction ldi (register value)
   (binary-format ...)
