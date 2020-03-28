@@ -20,10 +20,9 @@
           (let ((bits (reverse bits)))
             (for ((byte-index (in-range 0 (length bits) 8)))
               (let ((byte 0))
-                (for ((bit-index (in-range 8)))
+                (for ((bit-index (in-range 7 -1 -1)))
                   (set! byte (bitwise-ior byte (arithmetic-shift (car bits) bit-index)))
-                  (displayln byte)
-                  (set bits (cdr bits)))
+                  (set! bits (cdr bits)))
                 (racket-write-byte byte out)))))
           #:mode 'binary #:exists 'truncate/replace))
     
