@@ -106,6 +106,9 @@
     (define the-label label)
     (super-new)
 
+    (define/public (get-label)
+      the-label)
+    
     (define/public (length)
       0)))
 
@@ -161,9 +164,9 @@
      (syscall)
      ;(mov-imm8 0 60) ;; exit syscall
      ;(mov-imm8 7 0)  ;; exit code
-     (syscall))))
+     (syscall)
      ;(jmp -2) ;; size of jmp instruction
-     (label 'hello)
+     (label 'hello))))
      ;(unsigned 8 (char->integer #\H))
      ;(unsigned 8 (char->integer #\e))
      ;(unsigned 8 (char->integer #\l))
@@ -177,7 +180,7 @@
                  
          ]
         [(is-a? code label%) ;; a label instruction
-         '(((send code get-label) . offset))
+         (list (cons (send code get-label) offset))
          ]
         [else '()]))
 
