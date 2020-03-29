@@ -60,6 +60,10 @@
   (send writer write-unsigned-8 (bitwise-ior #xb0 register))
   (send writer write-unsigned-8 value))
 
+(define (syscall writer)
+  (send writer write-unsigned-8 #x0f)
+  (send writer write-unsigned-8 #x05))
+
 ;; https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 ;;typedef struct elf64_hdr {
 ;;  unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
@@ -125,7 +129,7 @@
 
 (define base #x401000)
 
-(define code-size 15)
+(define code-size 27)
 
 (let ((writer (new bit-writer%)))
   ;; $$ = start of file in virtual address
@@ -173,12 +177,18 @@
   ;; code start 120 until here
 
   (mov-imm8 writer 2 5)  ; dl / rdx: length of string
+  
   ;; mov     rsi, string ; string1 to source index
+  (send writer write-unsigned-8 #b01001000) ;; REX.W
+  (send writer write-unsigned-8 (+ #xb8 6)) ;; opcode with register
+  (send writer write-unsigned-64 #x0040108d) ;; value?
+  
   (mov-imm8 writer 0 1)  ; al / rax: set write to command
 
   (send writer write-unsigned-8 #x40) ; REX prefix to access dil instead of bh
   (mov-imm8 writer 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-  ;; syscall 
+
+  (syscall writer) 
   
   (jmp writer -2) ;; size of jmp instruction
 
