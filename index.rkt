@@ -56,6 +56,10 @@
   (send writer write-unsigned-1 #xeb)
   (send writer write-unsigned-1 (bytes-ref (integer->integer-bytes displacement 1 #t) 0)))
 
+(define (mov-imm8 writer register value)
+  (send writer write-unsigned-1 (bitwise-ior #xb0 register))
+  (send writer write-unsigned-1 value))
+
 ;; https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 ;;typedef struct elf64_hdr {
 ;;  unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
@@ -121,6 +125,8 @@
 
 (define base #x401000)
 
+(define code-size 15)
+
 (let ((writer (new bit-writer%)))
   ;; $$ = start of file in virtual address
   ;; $ = current address in virtual address
@@ -159,13 +165,29 @@
   (send writer write-unsigned-8 0) ;; p_offset
   (send writer write-unsigned-8 base) ;; p_vaddr aTODO current addr
   (send writer write-unsigned-8 base) ;; p_paddr aTODO current addr
-  (send writer write-unsigned-8 122) ;; p_filesz aTODO filesize
-  (send writer write-unsigned-8 122) ;; p_memsz aTODO filesize
+  (send writer write-unsigned-8 (+ 120 code-size)) ;; p_filesz aTODO filesize
+  (send writer write-unsigned-8 (+ 120 code-size)) ;; p_memsz aTODO filesize
   (send writer write-unsigned-8 #x1000) ;; p_align
   ;; phrd end 56
 
   ;; code start 120 until here
+
+  (mov-imm8 writer 2 5)  ; dl / rdx: length of string
+  ;; mov     rsi, string ; string1 to source index
+  (mov-imm8 writer 0 1)  ; al / rax: set write to command
+
+  (send writer write-unsigned-1 #x40) ; REX prefix to access dil instead of bh
+  (mov-imm8 writer 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+  ;; syscall 
+  
   (jmp writer -2) ;; size of jmp instruction
+
+  (send writer write-unsigned-1 (char->integer #\H))
+  (send writer write-unsigned-1 (char->integer #\e))
+  (send writer write-unsigned-1 (char->integer #\l))
+  (send writer write-unsigned-1 (char->integer #\l))
+  (send writer write-unsigned-1 (char->integer #\o))
+  (send writer write-unsigned-1 (char->integer #\!))
   ;; code end 2
   ;; file end 122
 
