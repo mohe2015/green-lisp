@@ -71,9 +71,17 @@
 
 ;; write an assembler in racket
 (assemble-x86-64
+ (label 'test)
  (ldi r1 7)
+ (jmp 'test)
+ (jmp 'a)
  (add r1 r1)
+ (label 'a)
  (ret))
+
+;; first pass: count instruction bytes
+;; if label, store current count
+;; second pass: add the address to all references
 
 ;; make a generic language on top of it with fake variables
 (assemble

@@ -72,7 +72,17 @@
   (bytes-append (bytes #xeb) (integer->integer-bytes displacement 1 #t)))
 
 (define (mov-imm8 register value)
-  (bytes (bitwise-ior #xb0 register) value))
+  (bytes-append
+   (if (= register 7)
+       (unsigned 8 #x40)
+       (bytes)) ; REX prefix to access dil instead of bh
+   (bytes (bitwise-ior #xb0 register) value)))
+
+(define (mov-imm64 register value)
+  (bytes-append
+   (unsigned 8 #b01001000) ;; REX.W
+   (unsigned 8 (+ #xb8 register)) ;; opcode with register
+   (unsigned 64 value))) ;; value? TODO CALCULATE THIS ADDRESS
 
 (define (syscall)
   (bytes #x0f #x05))
@@ -120,12 +130,8 @@
   (lambda ()
     (bytes-append
      (mov-imm8 2 6)  ; dl / rdx: length of string
-     ;; mov     rsi, string ; string1 to source index
-     (unsigned 8 #b01001000) ;; REX.W
-     (unsigned 8 (+ #xb8 6)) ;; opcode with register
-     (unsigned 64 #x0040108d) ;; value? TODO CALCULATE THIS ADDRESS
+     (mov-imm64 6 #x0040108d) ;; load string
      (mov-imm8 0 1)  ; al / rax: set write to command
-     (unsigned 8 #x40) ; REX prefix to access dil instead of bh
      (mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
      (syscall) 
      (jmp -2) ;; size of jmp instruction
@@ -135,6 +141,19 @@
      (unsigned 8 (char->integer #\l))
      (unsigned 8 (char->integer #\o))
      (unsigned 8 (char->integer #\newline)))))
+
+'(assemble-x86-64
+  (label 'test)
+  (ldi r1 7)
+  (jmp 'test)
+  (jmp 'a)
+  (add r1 r1)
+  (label 'a)
+  (ret))
+
+;; first pass: count instruction bytes
+;; if label, store current count
+;; second pass: add the address to all references
 
 (define code-size
   (lambda ()
