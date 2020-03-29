@@ -19,6 +19,10 @@
 ;;  Elf64_Half e_shstrndx;
 ;;} Elf64_Ehdr;
 
+(define unsigned
+  (lambda (bits value)
+    (integer->integer-bytes value (/ bits 8) #f)))
+
 (define EI_MAG0	0) ;; /* e_ident[] indexes */
 ;;#define	EI_MAG1		1
 ;;#define	EI_MAG2		2
@@ -64,26 +68,6 @@
 ;; https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
 (define EM_X86_64 62)
 
-(define unsigned
-  (lambda (bits value)
-    (integer->integer-bytes value (/ bits 8) #f)))
-
-'(define (jmp displacement)
-  (bytes-append (bytes #xeb) (integer->integer-bytes displacement 1 #t)))
-
-'(define (mov-imm8 register value)
-  (bytes-append
-   (if (= register 7)
-       (unsigned 8 #x40)
-       (bytes)) ; REX prefix to access dil instead of bh
-   (bytes (bitwise-ior #xb0 register) value)))
-
-'(define (mov-imm64 register value)
-  (bytes-append
-   (unsigned 8 #b01001000) ;; REX.W
-   (unsigned 8 (+ #xb8 register)) ;; opcode with register
-   (unsigned 64 value))) ;; value? TODO CALCULATE THIS ADDRESS
-
 (define instruction-interface
   (interface () length get-bytes))
 
@@ -99,6 +83,76 @@
 
 (define (syscall)
   (new syscall%))
+
+(define mov-imm8%
+  (class* object% (instruction-interface)
+    (init register value)
+    (define the-register register)
+    (define the-value value)
+    (super-new)
+    
+    (define/public (get-bytes label-addresses)
+      (bytes-append
+       (if (= the-register 7)
+           (unsigned 8 #x40)
+           (bytes)) ; REX prefix to access dil instead of bh
+       (bytes (bitwise-ior #xb0 the-register) the-value)))
+
+    (define/public (length)
+      (if (= the-register 7) 3 2))))
+
+(define (mov-imm8 register value)
+  (new mov-imm8% [register register] [value value]))
+
+(define mov-imm64%
+  (class* object% (instruction-interface)
+    (init register value)
+    (define the-register register)
+    (define the-value value)
+    (super-new)
+    
+    (define/public (get-bytes label-addresses)
+      (bytes-append
+       (unsigned 8 #b01001000) ;; REX.W
+       (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
+       (unsigned 64 (second (assoc the-value label-addresses))))) ;; value
+    
+    (define/public (length)
+      10)))
+
+(define (mov-imm64 register value)
+  (new mov-imm64% [register register] [value value]))
+
+(define jmp%
+  (class* object% (instruction-interface)
+    (init displacement)
+    (define the-displacement displacement)
+    (super-new)
+    
+    (define/public (get-bytes label-addresses)
+      (bytes-append (bytes #xeb) (integer->integer-bytes the-displacement 1 #t)))
+    
+    (define/public (length)
+      2)))
+
+(define (jmp displacement)
+  (new jmp% [displacement displacement]))
+
+(define data-unsigned%
+  (class* object% (instruction-interface)
+    (init bits value)
+    (define the-bits bits)
+    (define the-value value)
+    (super-new)
+
+    (define/public (get-bytes label-addresses)
+      (integer->integer-bytes the-value (/ the-bits 8) #f))
+
+    (define/public (length)
+      (/ the-bits 8))))
+
+(define (data-unsigned bits value)
+  (new data-unsigned% [bits bits] [value value]))
 
 (define label%
   (class* object% (instruction-interface)
@@ -160,22 +214,22 @@
 (define code
   (lambda ()
     (list
-     ;(mov-imm8 2 6)  ; dl / rdx: length of string
-     ;(mov-imm64 6 'hello) ;; load string
-     ;(mov-imm8 0 1)  ; al / rax: set write to command
-     ;(mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+     (mov-imm8 2 6)  ; dl / rdx: length of string
+     (mov-imm64 6 'hello) ;; load string
+     (mov-imm8 0 1)  ; al / rax: set write to command
+     (mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
      (syscall)
-     ;(mov-imm8 0 60) ;; exit syscall
-     ;(mov-imm8 7 0)  ;; exit code
+     (mov-imm8 0 60) ;; exit syscall
+     (mov-imm8 7 0)  ;; exit code
      (syscall)
-     ;(jmp -2) ;; size of jmp instruction
-     (label 'hello))))
-     ;(unsigned 8 (char->integer #\H))
-     ;(unsigned 8 (char->integer #\e))
-     ;(unsigned 8 (char->integer #\l))
-     ;(unsigned 8 (char->integer #\l))
-     ;(unsigned 8 (char->integer #\o))
-     ;(unsigned 8 (char->integer #\newline)))))
+     (jmp -2) ;; size of jmp instruction
+     (label 'hello)
+     (data-unsigned 8 (char->integer #\H))
+     (data-unsigned 8 (char->integer #\e))
+     (data-unsigned 8 (char->integer #\l))
+     (data-unsigned 8 (char->integer #\l))
+     (data-unsigned 8 (char->integer #\o))
+     (data-unsigned 8 (char->integer #\newline)))))
 
 (define (code->label-addresses code offset)
   (cond [(empty? code) (list (list 'end offset))]
@@ -198,11 +252,10 @@
 
 (define file
   (lambda (base)
-    (println (code->label-addresses (code) 0))
     (bytes-append
      (ehdr base (ehdr-size) (phdr-size))
      (phdr base (ehdr-size) (phdr-size) (code-size))
-     (code->bytes (code) (code->label-addresses (code) 0))
+     (code->bytes (code) (code->label-addresses (code) (+ (ehdr-size) (phdr-size) base)))
      )))
 
 (call-with-output-file "/tmp/a.bin"
