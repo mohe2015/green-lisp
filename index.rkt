@@ -68,24 +68,49 @@
   (lambda (bits value)
     (integer->integer-bytes value (/ bits 8) #f)))
 
-(define (jmp displacement)
+'(define (jmp displacement)
   (bytes-append (bytes #xeb) (integer->integer-bytes displacement 1 #t)))
 
-(define (mov-imm8 register value)
+'(define (mov-imm8 register value)
   (bytes-append
    (if (= register 7)
        (unsigned 8 #x40)
        (bytes)) ; REX prefix to access dil instead of bh
    (bytes (bitwise-ior #xb0 register) value)))
 
-(define (mov-imm64 register value)
+'(define (mov-imm64 register value)
   (bytes-append
    (unsigned 8 #b01001000) ;; REX.W
    (unsigned 8 (+ #xb8 register)) ;; opcode with register
    (unsigned 64 value))) ;; value? TODO CALCULATE THIS ADDRESS
 
-(define (syscall)
+'(define (syscall)
   (bytes #x0f #x05))
+
+(define instruction-interface
+  (interface () length))
+
+(define syscall%
+  (class* object% (instruction-interface)
+    (super-new)
+
+    (define/public (length)
+      2)))
+
+(define (syscall)
+  (new syscall%))
+
+(define label%
+  (class* object% (instruction-interface)
+    (init label)
+    (define the-label label)
+    (super-new)
+
+    (define/public (length)
+      0)))
+
+(define (label label)
+  (new label% [label label]))
 
 (define ehdr
   (lambda (base ehdr-size phdr-size)
@@ -128,28 +153,33 @@
 
 (define code
   (lambda ()
-    (bytes-append
-     (mov-imm8 2 6)  ; dl / rdx: length of string
-     (mov-imm64 6 #x0040108d) ;; load string
-     (mov-imm8 0 1)  ; al / rax: set write to command
-     (mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-     (syscall) 
-     (jmp -2) ;; size of jmp instruction
-     (unsigned 8 (char->integer #\H))
-     (unsigned 8 (char->integer #\e))
-     (unsigned 8 (char->integer #\l))
-     (unsigned 8 (char->integer #\l))
-     (unsigned 8 (char->integer #\o))
-     (unsigned 8 (char->integer #\newline)))))
+    (list
+     ;(mov-imm8 2 6)  ; dl / rdx: length of string
+     ;(mov-imm64 6 'hello) ;; load string
+     ;(mov-imm8 0 1)  ; al / rax: set write to command
+     ;(mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+     (syscall)
+     ;(mov-imm8 0 60) ;; exit syscall
+     ;(mov-imm8 7 0)  ;; exit code
+     (syscall))))
+     ;(jmp -2) ;; size of jmp instruction
+     (label 'hello)
+     ;(unsigned 8 (char->integer #\H))
+     ;(unsigned 8 (char->integer #\e))
+     ;(unsigned 8 (char->integer #\l))
+     ;(unsigned 8 (char->integer #\l))
+     ;(unsigned 8 (char->integer #\o))
+     ;(unsigned 8 (char->integer #\newline)))))
 
-'(assemble-x86-64
-  (label 'test)
-  (ldi r1 7)
-  (jmp 'test)
-  (jmp 'a)
-  (add r1 r1)
-  (label 'a)
-  (ret))
+(define (code->label-addresses code offset)
+  (cond [(pair? code)
+         (append (code->label-addresses (first code) offset) (code->label-addresses (rest code) (+ offset (send (first code) length))))
+                 
+         ]
+        [(is-a? code label%) ;; a label instruction
+         '(((send code get-label) . offset))
+         ]
+        [else '()]))
 
 ;; first pass: count instruction bytes
 ;; if label, store current count
@@ -157,14 +187,14 @@
 
 (define code-size
   (lambda ()
-    (bytes-length (code))))
+    (length (code)))) ;; TODO FIXME
 
 (define file
   (lambda (base)
     (bytes-append
      (ehdr base (ehdr-size) (phdr-size))
      (phdr base (ehdr-size) (phdr-size) (code-size))
-     (code))))
+     (code->label-addresses (code) 0))))
 
 (with-output-to-file "/tmp/a.bin"
   (lambda ()
