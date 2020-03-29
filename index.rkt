@@ -64,10 +64,6 @@
 ;; https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
 (define EM_X86_64 62)
 
-(define base #x401000)
-
-(define code-size 27)
-
 (define unsigned
   (lambda (bits value)
     (integer->integer-bytes value (/ bits 8) #f)))
@@ -82,13 +78,13 @@
   (bytes #x0f #x05))
 
 (define ehdr
-  (lambda ()
+  (lambda (base ehdr-size phdr-size)
     (bytes-append
      (bytes ELFMAG0 ELFMAG1 ELFMAG2 ELFMAG3 ELFCLASS64 ELFDATA2LSB EV_CURRENT ELFOSABI_SYSV 0 0 0 0 0 0 0 0) ;; e_ident
      (unsigned 16 ET_EXEC) ;; e_type
      (unsigned 16 EM_X86_64) ;; e_machine
      (unsigned 32 EV_CURRENT) ;; e_version
-     (unsigned 64 (+ base 120)) ;; aTODO entrypoint) ;; e_entry
+     (unsigned 64 (+ base ehdr-size phdr-size)) ;; aTODO entrypoint) ;; e_entry
      (unsigned 64 64) ;; e_phoff aTODO phdr - $$
      (unsigned 64 0) ;; e_shoff
      (unsigned 32 0) ;; e_flags
@@ -100,22 +96,30 @@
      (unsigned 16 0) ;; e_shnum p
      (unsigned 16 0)))) ;; e_shstrndx
 
-(define phdr
+(define ehdr-size
   (lambda ()
+    (bytes-length (ehdr 0 0 0))))
+
+(define phdr
+  (lambda (base ehdr-size phdr-size code-size)
     (bytes-append
      (unsigned 32 1) ;; p_type
      (unsigned 32 5) ;; p_flags ;; read + execute
      (unsigned 64 0) ;; p_offset
      (unsigned 64 base) ;; p_vaddr aTODO current addr
      (unsigned 64 base) ;; p_paddr aTODO current addr
-     (unsigned 64 (+ 120 code-size)) ;; p_filesz aTODO filesize
-     (unsigned 64 (+ 120 code-size)) ;; p_memsz aTODO filesize
+     (unsigned 64 (+ ehdr-size phdr-size code-size)) ;; p_filesz aTODO filesize
+     (unsigned 64 (+ ehdr-size phdr-size code-size)) ;; p_memsz aTODO filesize
      (unsigned 64 #x1000)))) ;; p_align
+
+(define phdr-size
+  (lambda ()
+    (bytes-length (phdr 0 0 0 0))))
 
 (define code
   (lambda ()
     (bytes-append
-     (mov-imm8 2 5)  ; dl / rdx: length of string
+     (mov-imm8 2 6)  ; dl / rdx: length of string
      ;; mov     rsi, string ; string1 to source index
      (unsigned 8 #b01001000) ;; REX.W
      (unsigned 8 (+ #xb8 6)) ;; opcode with register
@@ -130,16 +134,20 @@
      (unsigned 8 (char->integer #\l))
      (unsigned 8 (char->integer #\l))
      (unsigned 8 (char->integer #\o))
-     (unsigned 8 (char->integer #\!)))))
+     (unsigned 8 (char->integer #\newline)))))
+
+(define code-size
+  (lambda ()
+    (bytes-length (code))))
 
 (define file
-  (lambda ()
+  (lambda (base)
     (bytes-append
-     (ehdr)
-     (phdr)
+     (ehdr base (ehdr-size) (phdr-size))
+     (phdr base (ehdr-size) (phdr-size) (code-size))
      (code))))
 
 (with-output-to-file "/tmp/a.bin"
   (lambda ()
-    (write-bytes (file))) #:mode 'binary #:exists 'truncate/replace)
+    (write-bytes (file #x401000))) #:mode 'binary #:exists 'truncate/replace)
 (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit))
