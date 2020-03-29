@@ -1,68 +1,5 @@
 #lang racket
-(require (only-in racket/base (write-byte racket-write-byte)))
-
-(define bit-writer%
-  (class object%
-    (define bits '())
-
-    (super-new)
-
-    (define/public (write-bit bit)
-      (set! bits (cons bit bits)))
-
-    (define/public (write-unsigned-16 integer)
-      (let ((value (integer->integer-bytes integer 2 #f)))
-        (write-unsigned-8 (bytes-ref value 0)) ;; TODO big / little endian
-        (write-unsigned-8 (bytes-ref value 1))))
-
-    (define/public (write-unsigned-32 integer)
-      (let ((value (integer->integer-bytes integer 4 #f)))
-        (write-unsigned-8 (bytes-ref value 0))
-        (write-unsigned-8 (bytes-ref value 1))
-        (write-unsigned-8 (bytes-ref value 2))
-        (write-unsigned-8 (bytes-ref value 3))))
-
-    (define/public (write-unsigned-64 integer)
-      (let ((value (integer->integer-bytes integer 8 #f)))
-        (write-unsigned-8 (bytes-ref value 0))
-        (write-unsigned-8 (bytes-ref value 1))
-        (write-unsigned-8 (bytes-ref value 2))
-        (write-unsigned-8 (bytes-ref value 3))
-        (write-unsigned-8 (bytes-ref value 4))
-        (write-unsigned-8 (bytes-ref value 5))
-        (write-unsigned-8 (bytes-ref value 6))
-        (write-unsigned-8 (bytes-ref value 7))))
-
-    (define/public (write-unsigned-8 byte)
-      (for ((i (in-range 7 -1 -1)))
-        (write-bit (if (bitwise-bit-set? byte i) 1 0))))
-
-    (define/public (write-to-file file)
-      (call-with-output-file file
-        (lambda (out)
-          (let ((bits (reverse bits)))
-            (for ((byte-index (in-range 0 (length bits) 8)))
-              (let ((byte 0))
-                (for ((bit-index (in-range 7 -1 -1)))
-                  (set! byte (bitwise-ior byte (arithmetic-shift (car bits) bit-index)))
-                  (set! bits (cdr bits)))
-                (racket-write-byte byte out)))))
-          #:mode 'binary #:exists 'truncate/replace))
-    
-    (define/public (get-bits)
-      (reverse bits))))
-
-(define (jmp writer displacement)
-  (send writer write-unsigned-8 #xeb)
-  (send writer write-unsigned-8 (bytes-ref (integer->integer-bytes displacement 1 #t) 0)))
-
-(define (mov-imm8 writer register value)
-  (send writer write-unsigned-8 (bitwise-ior #xb0 register))
-  (send writer write-unsigned-8 value))
-
-(define (syscall writer)
-  (send writer write-unsigned-8 #x0f)
-  (send writer write-unsigned-8 #x05))
+(compile-enforce-module-constants #f)
 
 ;; https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 ;;typedef struct elf64_hdr {
@@ -131,78 +68,78 @@
 
 (define code-size 27)
 
-(let ((writer (new bit-writer%)))
-  ;; $$ = start of file in virtual address
-  ;; $ = current address in virtual address
-  ;; e_ident
-  ;; file start
-  ;; ehdr start
-  (send writer write-unsigned-8 ELFMAG0)
-  (send writer write-unsigned-8 ELFMAG1)
-  (send writer write-unsigned-8 ELFMAG2)
-  (send writer write-unsigned-8 ELFMAG3)
-  (send writer write-unsigned-8 ELFCLASS64)
-  (send writer write-unsigned-8 ELFDATA2LSB)
-  (send writer write-unsigned-8 EV_CURRENT)
-  (send writer write-unsigned-8 ELFOSABI_SYSV)
-  (for ((i (in-range 8)))
-    (send writer write-unsigned-8 0))
-  (send writer write-unsigned-16 ET_EXEC) ;; e_type
-  (send writer write-unsigned-16 EM_X86_64) ;; e_machine
-  (send writer write-unsigned-32 EV_CURRENT) ;; e_version
-  (send writer write-unsigned-64 (+ base 120)) ;; aTODO entrypoint) ;; e_entry
-  (send writer write-unsigned-64 64) ;; e_phoff aTODO phdr - $$
-  (send writer write-unsigned-64 0) ;; e_shoff
-  (send writer write-unsigned-32 0) ;; e_flags
-  (send writer write-unsigned-16 64) ;; e_ehsize aTODO headersize
-  (send writer write-unsigned-16 56) ;; e_phentsize aTODO phdrsize
+(define unsigned
+  (lambda (bits value)
+    (integer->integer-bytes value (/ bits 8) #f)))
 
-  (send writer write-unsigned-16 1) ;; e_phnum p
-  (send writer write-unsigned-16 0) ;; e_shentsize
-  (send writer write-unsigned-16 0) ;; e_shnum p
-  (send writer write-unsigned-16 0) ;; e_shstrndx
-  ;; ehdr end 64
+(define (jmp displacement)
+  (bytes-append (bytes #xeb) (integer->integer-bytes displacement 1 #t)))
 
-  ;; phrd start
-  (send writer write-unsigned-32 1) ;; p_type
-  (send writer write-unsigned-32 5) ;; p_flags ;; read + execute
-  (send writer write-unsigned-64 0) ;; p_offset
-  (send writer write-unsigned-64 base) ;; p_vaddr aTODO current addr
-  (send writer write-unsigned-64 base) ;; p_paddr aTODO current addr
-  (send writer write-unsigned-64 (+ 120 code-size)) ;; p_filesz aTODO filesize
-  (send writer write-unsigned-64 (+ 120 code-size)) ;; p_memsz aTODO filesize
-  (send writer write-unsigned-64 #x1000) ;; p_align
-  ;; phrd end 56
+(define (mov-imm8 register value)
+  (bytes (bitwise-ior #xb0 register) value))
 
-  ;; code start 120 until here
+(define (syscall)
+  (bytes #x0f #x05))
 
-  (mov-imm8 writer 2 5)  ; dl / rdx: length of string
-  
-  ;; mov     rsi, string ; string1 to source index
-  (send writer write-unsigned-8 #b01001000) ;; REX.W
-  (send writer write-unsigned-8 (+ #xb8 6)) ;; opcode with register
-  (send writer write-unsigned-64 #x0040108d) ;; value?
-  
-  (mov-imm8 writer 0 1)  ; al / rax: set write to command
+(define ehdr
+  (lambda ()
+    (bytes-append
+     (bytes ELFMAG0 ELFMAG1 ELFMAG2 ELFMAG3 ELFCLASS64 ELFDATA2LSB EV_CURRENT ELFOSABI_SYSV 0 0 0 0 0 0 0 0) ;; e_ident
+     (unsigned 16 ET_EXEC) ;; e_type
+     (unsigned 16 EM_X86_64) ;; e_machine
+     (unsigned 32 EV_CURRENT) ;; e_version
+     (unsigned 64 (+ base 120)) ;; aTODO entrypoint) ;; e_entry
+     (unsigned 64 64) ;; e_phoff aTODO phdr - $$
+     (unsigned 64 0) ;; e_shoff
+     (unsigned 32 0) ;; e_flags
+     (unsigned 16 64) ;; e_ehsize aTODO headersize
+     (unsigned 16 56) ;; e_phentsize aTODO phdrsize
 
-  (send writer write-unsigned-8 #x40) ; REX prefix to access dil instead of bh
-  (mov-imm8 writer 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+     (unsigned 16 1) ;; e_phnum p
+     (unsigned 16 0) ;; e_shentsize
+     (unsigned 16 0) ;; e_shnum p
+     (unsigned 16 0)))) ;; e_shstrndx
 
-  (syscall writer) 
-  
-  (jmp writer -2) ;; size of jmp instruction
+(define phdr
+  (lambda ()
+    (bytes-append
+     (unsigned 32 1) ;; p_type
+     (unsigned 32 5) ;; p_flags ;; read + execute
+     (unsigned 64 0) ;; p_offset
+     (unsigned 64 base) ;; p_vaddr aTODO current addr
+     (unsigned 64 base) ;; p_paddr aTODO current addr
+     (unsigned 64 (+ 120 code-size)) ;; p_filesz aTODO filesize
+     (unsigned 64 (+ 120 code-size)) ;; p_memsz aTODO filesize
+     (unsigned 64 #x1000)))) ;; p_align
 
-  (send writer write-unsigned-8 (char->integer #\H))
-  (send writer write-unsigned-8 (char->integer #\e))
-  (send writer write-unsigned-8 (char->integer #\l))
-  (send writer write-unsigned-8 (char->integer #\l))
-  (send writer write-unsigned-8 (char->integer #\o))
-  (send writer write-unsigned-8 (char->integer #\!))
-  ;; code end 2
-  ;; file end 122
+(define code
+  (lambda ()
+    (bytes-append
+     (mov-imm8 2 5)  ; dl / rdx: length of string
+     ;; mov     rsi, string ; string1 to source index
+     (unsigned 8 #b01001000) ;; REX.W
+     (unsigned 8 (+ #xb8 6)) ;; opcode with register
+     (unsigned 64 #x0040108d) ;; value?
+     (mov-imm8 0 1)  ; al / rax: set write to command
+     (unsigned 8 #x40) ; REX prefix to access dil instead of bh
+     (mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+     (syscall) 
+     (jmp -2) ;; size of jmp instruction
+     (unsigned 8 (char->integer #\H))
+     (unsigned 8 (char->integer #\e))
+     (unsigned 8 (char->integer #\l))
+     (unsigned 8 (char->integer #\l))
+     (unsigned 8 (char->integer #\o))
+     (unsigned 8 (char->integer #\!)))))
 
-  
-  (send writer get-bits)
-  (send writer write-to-file "/tmp/a.bin")
-  (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit))
-  )
+(define file
+  (lambda ()
+    (bytes-append
+     (ehdr)
+     (phdr)
+     (code))))
+
+(with-output-to-file "/tmp/a.bin"
+  (lambda ()
+    (write-bytes (file))) #:mode 'binary #:exists 'truncate/replace)
+(file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit))
