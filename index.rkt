@@ -123,7 +123,7 @@
      ;; mov     rsi, string ; string1 to source index
      (unsigned 8 #b01001000) ;; REX.W
      (unsigned 8 (+ #xb8 6)) ;; opcode with register
-     (unsigned 64 #x0040108d) ;; value?
+     (unsigned 64 #x0040108d) ;; value? TODO CALCULATE THIS ADDRESS
      (mov-imm8 0 1)  ; al / rax: set write to command
      (unsigned 8 #x40) ; REX prefix to access dil instead of bh
      (mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)

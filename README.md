@@ -1,3 +1,12 @@
+https://antofthy.gitlab.io/info/crypto/passwd_caching.txt
+https://antofthy.gitlab.io/info/crypto/keyring_linux_kernal.txt
+https://antofthy.gitlab.io/info/crypto/keyring_gnome.txt
+
+syscalls:
+https://filippo.io/linux-syscall-table/
+https://de.wikipedia.org/wiki/Liste_der_Linux-Systemaufrufe
+http://man7.org/linux/man-pages/man2/syscalls.2.html
+
 Required binary formats:
 
 ELF
