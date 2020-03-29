@@ -84,16 +84,16 @@
    (unsigned 8 (+ #xb8 register)) ;; opcode with register
    (unsigned 64 value))) ;; value? TODO CALCULATE THIS ADDRESS
 
-'(define (syscall)
-  (bytes #x0f #x05))
-
 (define instruction-interface
-  (interface () length))
+  (interface () length get-bytes))
 
 (define syscall%
   (class* object% (instruction-interface)
     (super-new)
 
+    (define/public (get-bytes label-addresses)
+      (bytes #x0f #x05))
+    
     (define/public (length)
       2)))
 
@@ -108,6 +108,9 @@
 
     (define/public (get-label)
       the-label)
+
+    (define/public (get-bytes label-addresses)
+      (bytes))
     
     (define/public (length)
       0)))
@@ -175,31 +178,34 @@
      ;(unsigned 8 (char->integer #\newline)))))
 
 (define (code->label-addresses code offset)
-  (cond [(pair? code)
-         (append (code->label-addresses (first code) offset) (code->label-addresses (rest code) (+ offset (send (first code) length))))
-                 
-         ]
+  (cond [(empty? code) (list (list 'end offset))]
+        [(list? code) ;; list of instructions
+         (append (code->label-addresses (first code) offset) (code->label-addresses (rest code) (+ offset (send (first code) length))))]
         [(is-a? code label%) ;; a label instruction
-         (list (cons (send code get-label) offset))
-         ]
-        [else '()]))
+         (list (list (send code get-label) offset))]
+        [else (list)])) ;; end
 
-;; first pass: count instruction bytes
-;; if label, store current count
-;; second pass: add the address to all references
+(define (code->bytes code label-addresses)
+  (cond [(pair? code)
+         (bytes-append (code->bytes (first code) label-addresses) (code->bytes (rest code) label-addresses))]
+        [(is-a? code instruction-interface)
+         (send code get-bytes label-addresses)]
+        [else (bytes)]))
 
 (define code-size
   (lambda ()
-    (length (code)))) ;; TODO FIXME
+    (second (assoc 'end (code->label-addresses (code) 0)))))
 
 (define file
   (lambda (base)
+    (println (code->label-addresses (code) 0))
     (bytes-append
      (ehdr base (ehdr-size) (phdr-size))
      (phdr base (ehdr-size) (phdr-size) (code-size))
-     (code->label-addresses (code) 0))))
+     (code->bytes (code) (code->label-addresses (code) 0))
+     )))
 
-(with-output-to-file "/tmp/a.bin"
-  (lambda ()
-    (write-bytes (file #x401000))) #:mode 'binary #:exists 'truncate/replace)
+(call-with-output-file "/tmp/a.bin"
+  (lambda (out)
+    (write-bytes (file #x401000) out)) #:mode 'binary #:exists 'truncate/replace)
 (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit))
