@@ -171,4 +171,6 @@
 
   
   (send writer get-bits)
-  (send writer write-to-file "/tmp/a.bin"))
+  (send writer write-to-file "/tmp/a.bin")
+  (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit))
+  )
