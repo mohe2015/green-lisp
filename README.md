@@ -1,3 +1,11 @@
+# Setup
+
+```bash
+raco pkg install
+```
+
+
+
 https://stackoverflow.com/questions/26812142/what-is-the-use-of-the-sht-null-section-in-elf
 
 

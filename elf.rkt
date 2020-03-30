@@ -1,5 +1,5 @@
 (module elf racket
-  (require x86-64)
+  (require green-lisp/x86-64)
 
   (define unsigned
     (lambda (bits value)
