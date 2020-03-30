@@ -182,35 +182,67 @@
      (unsigned 32 EV_CURRENT) ;; e_version
      (unsigned 64 (+ base ehdr-size phdr-size)) ;; aTODO entrypoint) ;; e_entry
      (unsigned 64 64) ;; e_phoff aTODO phdr - $$
-     (unsigned 64 0) ;; e_shoff
+     (unsigned 64 128) ;; e_shoff
      (unsigned 32 0) ;; e_flags
      (unsigned 16 64) ;; e_ehsize aTODO headersize
      (unsigned 16 56) ;; e_phentsize aTODO phdrsize
-
-     (unsigned 16 1) ;; e_phnum p
-     (unsigned 16 0) ;; e_shentsize
-     (unsigned 16 0) ;; e_shnum p
+     (unsigned 16 1)  ;; e_phnum p
+     (unsigned 16 64) ;; e_shentsize
+     (unsigned 16 1)  ;; e_shnum p
      (unsigned 16 0)))) ;; e_shstrndx
 
 (define ehdr-size
   (lambda ()
     (bytes-length (ehdr 0 0 0))))
 
+;;typedef struct elf64_shdr {
+;;  Elf64_Word sh_name;		/* Section name, index in string tbl */
+;;  Elf64_Word sh_type;		/* Type of section */
+;;  Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
+;;  Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+;;  Elf64_Off sh_offset;		/* Section file offset */
+;;  Elf64_Xword sh_size;		/* Size of section in bytes */
+;;  Elf64_Word sh_link;		/* Index of another section */
+;;  Elf64_Word sh_info;		/* Additional section information */
+;;  Elf64_Xword sh_addralign;	/* Section alignment */
+;;  Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+;;} Elf64_Shdr;
+
+
+(define shdr
+  (lambda ()
+    (bytes-append
+     (unsigned 32 0) ;; sh_name:   section name, index in string table
+     (unsigned 32 0) ;; sh_type:   type of section
+     (unsigned 64 0) ;; sh_flags:  section attributes
+     (unsigned 64 0) ;; sh_addr:   section virtual address at execution
+     (unsigned 64 0) ;; sh_offset: section file offset
+     (unsigned 64 0) ;; sh_size:   size of section in bytes
+     (unsigned 32 0) ;; sh_link:   index of another section
+     (unsigned 32 0) ;; sh_info:   additional section information
+     (unsigned 64 0) ;; sh_addralign: section alignment
+     (unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+     )))
+
+(define shdr-size
+  (lambda ()
+    (bytes-length (shdr))))
+
 (define phdr
-  (lambda (base ehdr-size phdr-size code-size)
+  (lambda (base ehdr-size phdr-size shdr-size code-size)
     (bytes-append
      (unsigned 32 1) ;; p_type
      (unsigned 32 5) ;; p_flags ;; read + execute
      (unsigned 64 0) ;; p_offset
      (unsigned 64 base) ;; p_vaddr aTODO current addr
      (unsigned 64 base) ;; p_paddr aTODO current addr
-     (unsigned 64 (+ ehdr-size phdr-size code-size)) ;; p_filesz aTODO filesize
-     (unsigned 64 (+ ehdr-size phdr-size code-size)) ;; p_memsz aTODO filesize
+     (unsigned 64 (+ ehdr-size phdr-size shdr-size code-size)) ;; p_filesz aTODO filesize
+     (unsigned 64 (+ ehdr-size phdr-size shdr-size code-size)) ;; p_memsz aTODO filesize
      (unsigned 64 #x1000)))) ;; p_align
 
 (define phdr-size
   (lambda ()
-    (bytes-length (phdr 0 0 0 0))))
+    (bytes-length (phdr 0 0 0 0 0))))
 
 (define code
   (lambda ()
@@ -259,8 +291,9 @@
   (lambda (base)
     (bytes-append
      (ehdr base (ehdr-size) (phdr-size))
-     (phdr base (ehdr-size) (phdr-size) (code-size))
-     (code->bytes (code) (code->label-addresses (code) (+ (ehdr-size) (phdr-size) base)))
+     (phdr base (ehdr-size) (phdr-size) (shdr-size) (code-size))
+     (shdr)
+     (code->bytes (code) (code->label-addresses (code) (+ (ehdr-size) (phdr-size) (shdr-size) base)))
      )))
 
 (call-with-output-file "/tmp/a.bin"
