@@ -1,5 +1,5 @@
 (module x86-64 racket
-  (provide label%)
+  (provide unsigned instruction-interface syscall% syscall mov-imm8% mov-imm8 mov-imm64% mov-imm64 jmp% jmp data-unsigned% data-unsigned label% label)
 
   (define unsigned
     (lambda (bits value)

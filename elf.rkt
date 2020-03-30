@@ -1,5 +1,6 @@
 (module elf racket
   (require green-lisp/x86-64)
+  (provide file)
 
   (define unsigned
     (lambda (bits value)
@@ -192,7 +193,7 @@
     (lambda (base code)
       (bytes-append
        (ehdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size))
-       (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size (code)))
+       (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size code))
        (shdr (+ base (ehdr-size) (phdr-size) (shdr-size)) (shstrtab-size))
        (shstrtab)
        (code->bytes code (code->label-addresses code (+ (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) base)))))))
