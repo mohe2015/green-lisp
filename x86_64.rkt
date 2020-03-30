@@ -1,73 +1,6 @@
 #lang racket
 (compile-enforce-module-constants #f)
 
-;; https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
-;;typedef struct elf64_hdr {
-;;  unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
-;;  Elf64_Half e_type;
-;;  Elf64_Half e_machine;
-;;  Elf64_Word e_version;
-;;  Elf64_Addr e_entry;		/* Entry point virtual address */
-;;  Elf64_Off e_phoff;		/* Program header table file offset */
-;;  Elf64_Off e_shoff;		/* Section header table file offset */
-;;  Elf64_Word e_flags;
-;;  Elf64_Half e_ehsize;
-;;  Elf64_Half e_phentsize;
-;;  Elf64_Half e_phnum;
-;;  Elf64_Half e_shentsize;
-;;  Elf64_Half e_shnum;
-;;  Elf64_Half e_shstrndx;
-;;} Elf64_Ehdr;
-
-(define unsigned
-  (lambda (bits value)
-    (integer->integer-bytes value (/ bits 8) #f)))
-
-(define EI_MAG0	0) ;; /* e_ident[] indexes */
-;;#define	EI_MAG1		1
-;;#define	EI_MAG2		2
-;;#define	EI_MAG3		3
-;;#define	EI_CLASS	4
-;;#define	EI_DATA		5
-;;#define	EI_VERSION	6
-;;#define	EI_OSABI	7
-;;#define	EI_PAD		8
-
-(define ELFMAG0 #x7f) ;; /* EI_MAG */
-(define ELFMAG1 (char->integer #\E))
-(define ELFMAG2 (char->integer #\L))
-(define ELFMAG3 (char->integer #\F))
-
-;;#define	ELFCLASSNONE	0		/* EI_CLASS */
-;;#define	ELFCLASS32	1
-(define ELFCLASS64 2)
-;;#define	ELFCLASSNUM	3
-
-;;#define ELFDATANONE	0		/* e_ident[EI_DATA] */
-(define ELFDATA2LSB 1)
-;;#define ELFDATA2MSB	2
-
-;;#define EV_NONE		0		/* e_version, EI_VERSION */
-(define EV_CURRENT 1)
-;;#define EV_NUM		2
-
-;;#define ELFOSABI_NONE	0
-;;#define ELFOSABI_LINUX	3
-(define ELFOSABI_SYSV 0)
-
-;; e_type
-;;#define ET_NONE   0
-;;#define ET_REL    1
-(define ET_EXEC 2)
-;;#define ET_DYN    3
-;;#define ET_CORE   4
-;;#define ET_LOPROC 0xff00
-;;#define ET_HIPROC 0xffff
-
-;; e_machine
-;; https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
-(define EM_X86_64 62)
-
 (define instruction-interface
   (interface () length get-bytes))
 
@@ -171,6 +104,74 @@
 
 (define (label label)
   (new label% [label label]))
+
+
+;; https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
+;;typedef struct elf64_hdr {
+;;  unsigned char	e_ident[EI_NIDENT];	/* ELF "magic number" */
+;;  Elf64_Half e_type;
+;;  Elf64_Half e_machine;
+;;  Elf64_Word e_version;
+;;  Elf64_Addr e_entry;		/* Entry point virtual address */
+;;  Elf64_Off e_phoff;		/* Program header table file offset */
+;;  Elf64_Off e_shoff;		/* Section header table file offset */
+;;  Elf64_Word e_flags;
+;;  Elf64_Half e_ehsize;
+;;  Elf64_Half e_phentsize;
+;;  Elf64_Half e_phnum;
+;;  Elf64_Half e_shentsize;
+;;  Elf64_Half e_shnum;
+;;  Elf64_Half e_shstrndx;
+;;} Elf64_Ehdr;
+
+(define unsigned
+  (lambda (bits value)
+    (integer->integer-bytes value (/ bits 8) #f)))
+
+(define EI_MAG0	0) ;; /* e_ident[] indexes */
+;;#define	EI_MAG1		1
+;;#define	EI_MAG2		2
+;;#define	EI_MAG3		3
+;;#define	EI_CLASS	4
+;;#define	EI_DATA		5
+;;#define	EI_VERSION	6
+;;#define	EI_OSABI	7
+;;#define	EI_PAD		8
+
+(define ELFMAG0 #x7f) ;; /* EI_MAG */
+(define ELFMAG1 (char->integer #\E))
+(define ELFMAG2 (char->integer #\L))
+(define ELFMAG3 (char->integer #\F))
+
+;;#define	ELFCLASSNONE	0		/* EI_CLASS */
+;;#define	ELFCLASS32	1
+(define ELFCLASS64 2)
+;;#define	ELFCLASSNUM	3
+
+;;#define ELFDATANONE	0		/* e_ident[EI_DATA] */
+(define ELFDATA2LSB 1)
+;;#define ELFDATA2MSB	2
+
+;;#define EV_NONE		0		/* e_version, EI_VERSION */
+(define EV_CURRENT 1)
+;;#define EV_NUM		2
+
+;;#define ELFOSABI_NONE	0
+;;#define ELFOSABI_LINUX	3
+(define ELFOSABI_SYSV 0)
+
+;; e_type
+;;#define ET_NONE   0
+;;#define ET_REL    1
+(define ET_EXEC 2)
+;;#define ET_DYN    3
+;;#define ET_CORE   4
+;;#define ET_LOPROC 0xff00
+;;#define ET_HIPROC 0xffff
+
+;; e_machine
+;; https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
+(define EM_X86_64 62)
 
 (define ehdr
   (lambda (base ehdr-size phdr-size)
