@@ -208,41 +208,67 @@
 ;;  Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 ;;} Elf64_Shdr;
 
+;/* sh_type */
+(define SHT_NULL	0)
+(define SHT_PROGBITS	1)
+(define SHT_SYMTAB	2)
+(define SHT_STRTAB	3)
+(define SHT_RELA	4)
+(define SHT_HASH	5)
+(define SHT_DYNAMIC	6)
+(define SHT_NOTE	7)
+(define SHT_NOBITS	8)
+(define SHT_REL		9)
+(define SHT_SHLIB	10)
+(define SHT_DYNSYM	11)
+(define SHT_NUM		12)
+(define SHT_LOPROC	#x70000000)
+(define SHT_HIPROC	#x7fffffff)
+(define SHT_LOUSER	#x80000000)
+(define SHT_HIUSER	#xffffffff)
+
+(define shstrtab
+  (lambda ()
+    #"\0.shstrtab\0"))
+
+(define shstrtab-size
+  (lambda ()
+    (bytes-length (shstrtab))))
 
 (define shdr
-  (lambda ()
+  (lambda (offset size)
     (bytes-append
      (unsigned 32 0) ;; sh_name:   section name, index in string table
-     (unsigned 32 0) ;; sh_type:   type of section
+     (unsigned 32 SHT_STRTAB) ;; sh_type:   type of section
      (unsigned 64 0) ;; sh_flags:  section attributes
      (unsigned 64 0) ;; sh_addr:   section virtual address at execution
-     (unsigned 64 0) ;; sh_offset: section file offset
-     (unsigned 64 0) ;; sh_size:   size of section in bytes
+     (unsigned 64 offset) ;; sh_offset: section file offset
+     (unsigned 64 size) ;; sh_size:   size of section in bytes
      (unsigned 32 0) ;; sh_link:   index of another section
      (unsigned 32 0) ;; sh_info:   additional section information
-     (unsigned 64 0) ;; sh_addralign: section alignment
-     (unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+     (unsigned 64 1) ;; sh_addralign: section alignment
+     (unsigned 64 1) ;; sh_entsize:   entry size if section holds table
      )))
 
 (define shdr-size
   (lambda ()
-    (bytes-length (shdr))))
+    (bytes-length (shdr 0 0))))
 
 (define phdr
-  (lambda (base ehdr-size phdr-size shdr-size code-size)
+  (lambda (base ehdr-size phdr-size shdr-size shstrtab-size code-size)
     (bytes-append
      (unsigned 32 1) ;; p_type
      (unsigned 32 5) ;; p_flags ;; read + execute
      (unsigned 64 0) ;; p_offset
      (unsigned 64 base) ;; p_vaddr aTODO current addr
      (unsigned 64 base) ;; p_paddr aTODO current addr
-     (unsigned 64 (+ ehdr-size phdr-size shdr-size code-size)) ;; p_filesz aTODO filesize
-     (unsigned 64 (+ ehdr-size phdr-size shdr-size code-size)) ;; p_memsz aTODO filesize
+     (unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_filesz aTODO filesize
+     (unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_memsz aTODO filesize
      (unsigned 64 #x1000)))) ;; p_align
 
 (define phdr-size
   (lambda ()
-    (bytes-length (phdr 0 0 0 0 0))))
+    (bytes-length (phdr 0 0 0 0 0 0))))
 
 (define code
   (lambda ()
@@ -291,9 +317,10 @@
   (lambda (base)
     (bytes-append
      (ehdr base (ehdr-size) (phdr-size))
-     (phdr base (ehdr-size) (phdr-size) (shdr-size) (code-size))
-     (shdr)
-     (code->bytes (code) (code->label-addresses (code) (+ (ehdr-size) (phdr-size) (shdr-size) base)))
+     (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size))
+     (shdr (+ base (ehdr-size) (phdr-size) (shdr-size)) (shstrtab-size))
+     (shstrtab)
+     (code->bytes (code) (code->label-addresses (code) (+ (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) base)))
      )))
 
 (call-with-output-file "/tmp/a.bin"
