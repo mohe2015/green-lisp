@@ -182,12 +182,12 @@
      (unsigned 32 EV_CURRENT) ;; e_version
      (unsigned 64 (+ base ehdr-size phdr-size shdr-size shstrtab-size)) ;; aTODO entrypoint) ;; e_entry
      (unsigned 64 64) ;; e_phoff aTODO phdr - $$
-     (unsigned 64 128) ;; e_shoff
+     (unsigned 64 (+ ehdr-size phdr-size)) ;; e_shoff
      (unsigned 32 0) ;; e_flags
-     (unsigned 16 64) ;; e_ehsize aTODO headersize
-     (unsigned 16 56) ;; e_phentsize aTODO phdrsize
+     (unsigned 16 ehdr-size) ;; e_ehsize aTODO headersize
+     (unsigned 16 phdr-size) ;; e_phentsize aTODO phdrsize
      (unsigned 16 1)  ;; e_phnum p
-     (unsigned 16 64) ;; e_shentsize
+     (unsigned 16 shdr-size) ;; e_shentsize
      (unsigned 16 1)  ;; e_shnum p
      (unsigned 16 0)))) ;; e_shstrndx
 
