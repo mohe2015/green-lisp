@@ -234,14 +234,18 @@
 (define (code->label-addresses code offset)
   (cond [(empty? code) (list (list 'end offset))]
         [(list? code) ;; list of instructions
-         (append (code->label-addresses (first code) offset) (code->label-addresses (rest code) (+ offset (send (first code) length))))]
+         (append
+          (code->label-addresses (first code) offset)
+          (code->label-addresses (rest code) (+ offset (send (first code) length))))]
         [(is-a? code label%) ;; a label instruction
          (list (list (send code get-label) offset))]
         [else (list)])) ;; end
 
 (define (code->bytes code label-addresses)
   (cond [(pair? code)
-         (bytes-append (code->bytes (first code) label-addresses) (code->bytes (rest code) label-addresses))]
+         (bytes-append
+          (code->bytes (first code) label-addresses)
+          (code->bytes (rest code) label-addresses))]
         [(is-a? code instruction-interface)
          (send code get-bytes label-addresses)]
         [else (bytes)]))
