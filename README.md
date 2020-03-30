@@ -1,3 +1,8 @@
+https://stackoverflow.com/questions/26812142/what-is-the-use-of-the-sht-null-section-in-elf
+
+
+https://wiki.osdev.org/ELF_Tutorial
+
 https://antofthy.gitlab.io/info/crypto/passwd_caching.txt
 https://antofthy.gitlab.io/info/crypto/keyring_linux_kernal.txt
 https://antofthy.gitlab.io/info/crypto/keyring_gnome.txt

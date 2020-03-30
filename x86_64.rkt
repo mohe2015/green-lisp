@@ -174,13 +174,13 @@
 (define EM_X86_64 62)
 
 (define ehdr
-  (lambda (base ehdr-size phdr-size)
+  (lambda (base ehdr-size phdr-size shdr-size shstrtab-size)
     (bytes-append
      (bytes ELFMAG0 ELFMAG1 ELFMAG2 ELFMAG3 ELFCLASS64 ELFDATA2LSB EV_CURRENT ELFOSABI_SYSV 0 0 0 0 0 0 0 0) ;; e_ident
      (unsigned 16 ET_EXEC) ;; e_type
      (unsigned 16 EM_X86_64) ;; e_machine
      (unsigned 32 EV_CURRENT) ;; e_version
-     (unsigned 64 (+ base ehdr-size phdr-size)) ;; aTODO entrypoint) ;; e_entry
+     (unsigned 64 (+ base ehdr-size phdr-size shdr-size shstrtab-size)) ;; aTODO entrypoint) ;; e_entry
      (unsigned 64 64) ;; e_phoff aTODO phdr - $$
      (unsigned 64 128) ;; e_shoff
      (unsigned 32 0) ;; e_flags
@@ -193,7 +193,7 @@
 
 (define ehdr-size
   (lambda ()
-    (bytes-length (ehdr 0 0 0))))
+    (bytes-length (ehdr 0 0 0 0 0))))
 
 ;;typedef struct elf64_shdr {
 ;;  Elf64_Word sh_name;		/* Section name, index in string tbl */
@@ -229,7 +229,7 @@
 
 (define shstrtab
   (lambda ()
-    #"\0.shstrtab\0"))
+    #"\0.strtab\0"))
 
 (define shstrtab-size
   (lambda ()
@@ -239,15 +239,15 @@
   (lambda (offset size)
     (bytes-append
      (unsigned 32 0) ;; sh_name:   section name, index in string table
-     (unsigned 32 SHT_STRTAB) ;; sh_type:   type of section
+     (unsigned 32 SHT_NULL) ;; sh_type:   type of section
      (unsigned 64 0) ;; sh_flags:  section attributes
      (unsigned 64 0) ;; sh_addr:   section virtual address at execution
-     (unsigned 64 offset) ;; sh_offset: section file offset
-     (unsigned 64 size) ;; sh_size:   size of section in bytes
+     (unsigned 64 0) ;; sh_offset: section file offset
+     (unsigned 64 0) ;; sh_size:   size of section in bytes
      (unsigned 32 0) ;; sh_link:   index of another section
      (unsigned 32 0) ;; sh_info:   additional section information
-     (unsigned 64 1) ;; sh_addralign: section alignment
-     (unsigned 64 1) ;; sh_entsize:   entry size if section holds table
+     (unsigned 64 0) ;; sh_addralign: section alignment
+     (unsigned 64 0) ;; sh_entsize:   entry size if section holds table
      )))
 
 (define shdr-size
@@ -316,7 +316,7 @@
 (define file
   (lambda (base)
     (bytes-append
-     (ehdr base (ehdr-size) (phdr-size))
+     (ehdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size))
      (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size))
      (shdr (+ base (ehdr-size) (phdr-size) (shdr-size)) (shstrtab-size))
      (shstrtab)
