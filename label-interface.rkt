@@ -1,5 +1,5 @@
 (module label-interface racket
-  (provide data-interface label% label data-unsigned% data-unsigned data-list% data-list)
+  (provide data-interface label% label data-unsigned% data-unsigned data-list% data-list data-string% data-string)
   
   (define data-interface
     (interface () length get-bytes get-label-addresses))
@@ -43,6 +43,24 @@
 
   (define (data-unsigned bits value)
     (new data-unsigned% [bits bits] [value value]))
+
+  (define data-string%
+    (class* object% (data-interface)
+      (init string)
+      (define the-string string)
+      (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        the-string)
+
+      (define/public (length)
+        (bytes-length the-string))))
+
+  (define (data-string string)
+    (new data-string% [string string]))
 
   (define data-list%
     (class* object% (data-interface)

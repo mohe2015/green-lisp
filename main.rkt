@@ -14,12 +14,7 @@
        (syscall)
        (jmp -2) ;; size of jmp instruction
        (label 'hello)
-       (data-unsigned 8 (char->integer #\H))
-       (data-unsigned 8 (char->integer #\e))
-       (data-unsigned 8 (char->integer #\l))
-       (data-unsigned 8 (char->integer #\l))
-       (data-unsigned 8 (char->integer #\o))
-       (data-unsigned 8 (char->integer #\newline))
+       (data-string #"Hello\n")
        (label 'end))))
 
   (call-with-output-file "out.elf"

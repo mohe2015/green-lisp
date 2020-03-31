@@ -139,15 +139,7 @@
   (define shstrtab
     (lambda ()
       (data-list
-       (data-unsigned 8 (char->integer #\0))
-       (data-unsigned 8 (char->integer #\.))
-       (data-unsigned 8 (char->integer #\s))
-       (data-unsigned 8 (char->integer #\t))
-       (data-unsigned 8 (char->integer #\r))
-       (data-unsigned 8 (char->integer #\t))
-       (data-unsigned 8 (char->integer #\a))
-       (data-unsigned 8 (char->integer #\b))
-       (data-unsigned 8 (char->integer #\0)))))
+       (data-string #"\0.strtab\0"))))
 
   (define shstrtab-size
     (lambda ()
