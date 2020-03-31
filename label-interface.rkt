@@ -36,7 +36,11 @@
         (list))
 
       (define/public (get-bytes current-address label-addresses)
-        (integer->integer-bytes the-value (/ the-bits 8) #f))
+        (integer->integer-bytes (eval
+                                 `(let ,label-addresses
+                                    ,the-value)
+                                 (make-base-namespace))
+                                (/ the-bits 8) #f))
 
       (define/public (length)
         (/ the-bits 8))))

@@ -68,6 +68,7 @@
   (define ehdr
     (lambda (base ehdr-size phdr-size shdr-size shstrtab-size)
       (data-list
+       (label 'ehdr-start)
        ;; e_ident
        (data-unsigned 8 ELFMAG0)
        (data-unsigned 8 ELFMAG1)
@@ -93,12 +94,13 @@
        (data-unsigned 64 64) ;; e_phoff aTODO phdr - $$
        (data-unsigned 64 (+ ehdr-size phdr-size)) ;; e_shoff
        (data-unsigned 32 0) ;; e_flags
-       (data-unsigned 16 ehdr-size) ;; e_ehsize aTODO headersize
+       (data-unsigned 16 '(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
        (data-unsigned 16 phdr-size) ;; e_phentsize aTODO phdrsize
        (data-unsigned 16 1)  ;; e_phnum p
        (data-unsigned 16 shdr-size) ;; e_shentsize
        (data-unsigned 16 1)  ;; e_shnum p
-       (data-unsigned 16 0)))) ;; e_shstrndx
+       (data-unsigned 16 0)  ;; e_shstrndx
+       (label 'ehdr-end))))
 
   (define ehdr-size
     (lambda ()
