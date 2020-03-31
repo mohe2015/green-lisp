@@ -4,8 +4,9 @@
   (define code
     (lambda ()
       (data-list
+       (label 'code-start)
        (mov-imm8 2 6)  ; dl / rdx: length of string
-       (mov-imm64 6 'hello) ;; load string
+       (mov-imm64 6 'hello-string) ;; load string
        (mov-imm8 0 1)  ; al / rax: set write to command
        (mov-imm8 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
        (syscall)
@@ -13,9 +14,9 @@
        (mov-imm8 7 0)  ;; exit code
        (syscall)
        (jmp -2) ;; size of jmp instruction
-       (label 'hello)
+       (label 'hello-string)
        (data-string #"Hello\n")
-       (label 'end))))
+       (label 'code-end))))
 
   (call-with-output-file "out.elf"
     (lambda (out)
