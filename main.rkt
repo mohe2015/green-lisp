@@ -19,9 +19,10 @@
        (data-unsigned 8 (char->integer #\l))
        (data-unsigned 8 (char->integer #\l))
        (data-unsigned 8 (char->integer #\o))
-       (data-unsigned 8 (char->integer #\newline)))))
+       (data-unsigned 8 (char->integer #\newline))
+       (label 'end))))
 
   (call-with-output-file "/tmp/a.bin"
     (lambda (out)
-      (write-bytes (send (file #x401000 (code)) get-bytes '()) out)) #:mode 'binary #:exists 'truncate/replace)
+      (write-bytes (send (file #x401000 (code)) get-bytes (send (file #x401000 (code)) get-label-addresses 0)) out)) #:mode 'binary #:exists 'truncate/replace)
   (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit)))

@@ -2,7 +2,7 @@
   (provide data-interface label% label data-unsigned% data-unsigned data-list% data-list)
   
   (define data-interface
-    (interface () length get-bytes))
+    (interface () length get-bytes get-label-addresses))
 
   (define label%
     (class* object% (data-interface)
@@ -13,6 +13,9 @@
       (define/public (get-label)
         the-label)
 
+      (define/public (get-label-addresses offset)
+        (list (list the-label offset)))
+      
       (define/public (get-bytes label-addresses)
         (bytes))
     
@@ -28,6 +31,9 @@
       (define the-bits bits)
       (define the-value value)
       (super-new)
+      
+      (define/public (get-label-addresses offset)
+        (list))
 
       (define/public (get-bytes label-addresses)
         (integer->integer-bytes the-value (/ the-bits 8) #f))
@@ -43,6 +49,18 @@
       (init list)
       (define the-list list)
       (super-new)
+
+      (define (list->label-addresses a-list offset)
+        (cond [(null? a-list) '()]
+              [(pair? a-list)
+               (append
+                (list->label-addresses (first a-list) offset)
+                (list->label-addresses (rest a-list) (+ offset (send (first a-list) length))))]
+              [else
+               (send a-list get-label-addresses offset)]))
+      
+      (define/public (get-label-addresses offset)
+        (list->label-addresses the-list offset))
 
       (define/public (get-bytes label-addresses)
         (bytes-append* (bytes) (map (λ (v) (send v get-bytes label-addresses)) the-list)))

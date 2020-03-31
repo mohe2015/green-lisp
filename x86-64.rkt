@@ -10,6 +10,9 @@
     (class* object% (data-interface)
       (super-new)
 
+      (define/public (get-label-addresses offset)
+        (list))
+      
       (define/public (get-bytes label-addresses)
         (bytes #x0f #x05))
     
@@ -25,7 +28,10 @@
       (define the-register register)
       (define the-value value)
       (super-new)
-    
+
+      (define/public (get-label-addresses offset)
+        (list))
+      
       (define/public (get-bytes label-addresses)
         (bytes-append
          (if (= the-register 7)
@@ -45,6 +51,9 @@
       (define the-register register)
       (define the-value value)
       (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
     
       (define/public (get-bytes label-addresses)
         (bytes-append
@@ -63,6 +72,9 @@
       (init displacement)
       (define the-displacement displacement)
       (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
     
       (define/public (get-bytes label-addresses)
         (bytes-append (bytes #xeb) (integer->integer-bytes the-displacement 1 #t)))
