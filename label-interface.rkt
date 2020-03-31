@@ -16,7 +16,7 @@
       (define/public (get-label-addresses offset)
         (list (list the-label offset)))
       
-      (define/public (get-bytes label-addresses)
+      (define/public (get-bytes current-address label-addresses)
         (bytes))
     
       (define/public (length)
@@ -35,7 +35,7 @@
       (define/public (get-label-addresses offset)
         (list))
 
-      (define/public (get-bytes label-addresses)
+      (define/public (get-bytes current-address label-addresses)
         (integer->integer-bytes the-value (/ the-bits 8) #f))
 
       (define/public (length)
@@ -62,8 +62,17 @@
       (define/public (get-label-addresses offset)
         (list->label-addresses the-list offset))
 
-      (define/public (get-bytes label-addresses)
-        (bytes-append* (bytes) (map (λ (v) (send v get-bytes label-addresses)) the-list)))
+      (define (list->bytes a-list current-address label-addresses)
+        (cond [(null? a-list) (bytes)]
+              [(pair? a-list)
+               (bytes-append
+                (list->bytes (first a-list) current-address label-addresses)
+                (list->bytes (rest a-list) (+ current-address (send (first a-list) length)) label-addresses))]
+              [else
+               (send a-list get-bytes current-address label-addresses)]))
+
+      (define/public (get-bytes current-address label-addresses)
+        (list->bytes the-list current-address label-addresses))
 
       (define/public (length)
         (foldr + 0 (map (λ (v) (send v length)) the-list)))))

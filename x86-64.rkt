@@ -13,7 +13,7 @@
       (define/public (get-label-addresses offset)
         (list))
       
-      (define/public (get-bytes label-addresses)
+      (define/public (get-bytes current-address label-addresses)
         (bytes #x0f #x05))
     
       (define/public (length)
@@ -32,7 +32,7 @@
       (define/public (get-label-addresses offset)
         (list))
       
-      (define/public (get-bytes label-addresses)
+      (define/public (get-bytes current-address label-addresses)
         (bytes-append
          (if (= the-register 7)
              (unsigned 8 #x40)
@@ -55,7 +55,7 @@
       (define/public (get-label-addresses offset)
         (list))
     
-      (define/public (get-bytes label-addresses)
+      (define/public (get-bytes current-address label-addresses)
         (bytes-append
          (unsigned 8 #b01001000) ;; REX.W
          (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
@@ -76,7 +76,7 @@
       (define/public (get-label-addresses offset)
         (list))
     
-      (define/public (get-bytes label-addresses)
+      (define/public (get-bytes current-address label-addresses)
         (bytes-append (bytes #xeb) (integer->integer-bytes the-displacement 1 #t)))
     
       (define/public (length)
