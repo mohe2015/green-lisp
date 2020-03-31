@@ -184,6 +184,8 @@
       (data-list
        (label 'strtab-start)
        (data-string #"\0")
+       (label 'message-string)
+       (data-string #"message\0")
        (label 'strtab-end))))
   
   (define strtab-shdr
@@ -213,7 +215,7 @@
 
   (define (symbol)
     (data-list
-     (data-unsigned 32 0)   ;; st_name
+     (data-unsigned 32 '(- message-string strtab-start))   ;; st_name
      (data-unsigned 8 0)    ;; st_info
      (data-unsigned 8 0)    ;; st_other
      (data-unsigned 16 0)   ;; st_shndx
@@ -237,7 +239,7 @@
        (data-unsigned 64 '(- symtab-shdr-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- symtab-shdr-end symtab-shdr-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 2) ;; sh_link:   index of another section
-       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 32 5) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information
        (data-unsigned 64 1) ;; sh_addralign: section alignment
        (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_entsize:   entry size if section holds table
        (label 'symtab-shdr-end))))
