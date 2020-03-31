@@ -1,10 +1,6 @@
 (module elf racket
-  (require green-lisp/x86-64)
+  (require green-lisp/x86-64 green-lisp/label-interface)
   (provide file)
-
-  (define unsigned
-    (lambda (bits value)
-      (integer->integer-bytes value (/ bits 8) #f)))
 
   ;; https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
   ;;typedef struct elf64_hdr {
@@ -71,25 +67,42 @@
 
   (define ehdr
     (lambda (base ehdr-size phdr-size shdr-size shstrtab-size)
-      (bytes-append
-       (bytes ELFMAG0 ELFMAG1 ELFMAG2 ELFMAG3 ELFCLASS64 ELFDATA2LSB EV_CURRENT ELFOSABI_SYSV 0 0 0 0 0 0 0 0) ;; e_ident
-       (unsigned 16 ET_EXEC) ;; e_type
-       (unsigned 16 EM_X86_64) ;; e_machine
-       (unsigned 32 EV_CURRENT) ;; e_version
-       (unsigned 64 (+ base ehdr-size phdr-size shdr-size shstrtab-size)) ;; aTODO entrypoint) ;; e_entry
-       (unsigned 64 64) ;; e_phoff aTODO phdr - $$
-       (unsigned 64 (+ ehdr-size phdr-size)) ;; e_shoff
-       (unsigned 32 0) ;; e_flags
-       (unsigned 16 ehdr-size) ;; e_ehsize aTODO headersize
-       (unsigned 16 phdr-size) ;; e_phentsize aTODO phdrsize
-       (unsigned 16 1)  ;; e_phnum p
-       (unsigned 16 shdr-size) ;; e_shentsize
-       (unsigned 16 1)  ;; e_shnum p
-       (unsigned 16 0)))) ;; e_shstrndx
+      (data-list
+       ;; e_ident
+       (data-unsigned 8 ELFMAG0)
+       (data-unsigned 8 ELFMAG1)
+       (data-unsigned 8 ELFMAG2)
+       (data-unsigned 8 ELFMAG3)
+       (data-unsigned 8 ELFCLASS64)
+       (data-unsigned 8 ELFDATA2LSB)
+       (data-unsigned 8 EV_CURRENT)
+       (data-unsigned 8 ELFOSABI_SYSV)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+       (data-unsigned 8 0)
+
+       (data-unsigned 16 ET_EXEC) ;; e_type
+       (data-unsigned 16 EM_X86_64) ;; e_machine
+       (data-unsigned 32 EV_CURRENT) ;; e_version
+       (data-unsigned 64 (+ base ehdr-size phdr-size shdr-size shstrtab-size)) ;; aTODO entrypoint) ;; e_entry
+       (data-unsigned 64 64) ;; e_phoff aTODO phdr - $$
+       (data-unsigned 64 (+ ehdr-size phdr-size)) ;; e_shoff
+       (data-unsigned 32 0) ;; e_flags
+       (data-unsigned 16 ehdr-size) ;; e_ehsize aTODO headersize
+       (data-unsigned 16 phdr-size) ;; e_phentsize aTODO phdrsize
+       (data-unsigned 16 1)  ;; e_phnum p
+       (data-unsigned 16 shdr-size) ;; e_shentsize
+       (data-unsigned 16 1)  ;; e_shnum p
+       (data-unsigned 16 0)))) ;; e_shstrndx
 
   (define ehdr-size
     (lambda ()
-      (bytes-length (ehdr 0 0 0 0 0))))
+      (send (ehdr 0 0 0 0 0) length)))
 
   ;;typedef struct elf64_shdr {
   ;;  Elf64_Word sh_name;		/* Section name, index in string tbl */
@@ -125,75 +138,67 @@
 
   (define shstrtab
     (lambda ()
-      #"\0.strtab\0"))
+      (data-list
+       (data-unsigned 8 (char->integer #\0))
+       (data-unsigned 8 (char->integer #\.))
+       (data-unsigned 8 (char->integer #\s))
+       (data-unsigned 8 (char->integer #\t))
+       (data-unsigned 8 (char->integer #\r))
+       (data-unsigned 8 (char->integer #\t))
+       (data-unsigned 8 (char->integer #\a))
+       (data-unsigned 8 (char->integer #\b))
+       (data-unsigned 8 (char->integer #\0)))))
 
   (define shstrtab-size
     (lambda ()
-      (bytes-length (shstrtab))))
+      (send (shstrtab) length)))
 
   (define shdr
     (lambda (offset size)
-      (bytes-append
-       (unsigned 32 0) ;; sh_name:   section name, index in string table
-       (unsigned 32 SHT_NULL) ;; sh_type:   type of section
-       (unsigned 64 0) ;; sh_flags:  section attributes
-       (unsigned 64 0) ;; sh_addr:   section virtual address at execution
-       (unsigned 64 0) ;; sh_offset: section file offset
-       (unsigned 64 0) ;; sh_size:   size of section in bytes
-       (unsigned 32 0) ;; sh_link:   index of another section
-       (unsigned 32 0) ;; sh_info:   additional section information
-       (unsigned 64 0) ;; sh_addralign: section alignment
-       (unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+      (data-list
+       (data-unsigned 32 0) ;; sh_name:   section name, index in string table
+       (data-unsigned 32 SHT_NULL) ;; sh_type:   type of section
+       (data-unsigned 64 0) ;; sh_flags:  section attributes
+       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 0) ;; sh_offset: section file offset
+       (data-unsigned 64 0) ;; sh_size:   size of section in bytes
+       (data-unsigned 32 0) ;; sh_link:   index of another section
+       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 64 0) ;; sh_addralign: section alignment
+       (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        )))
 
   (define shdr-size
     (lambda ()
-      (bytes-length (shdr 0 0))))
+      (send (shdr 0 0) length)))
 
   (define phdr
     (lambda (base ehdr-size phdr-size shdr-size shstrtab-size code-size)
-      (bytes-append
-       (unsigned 32 1) ;; p_type
-       (unsigned 32 5) ;; p_flags ;; read + execute
-       (unsigned 64 0) ;; p_offset
-       (unsigned 64 base) ;; p_vaddr aTODO current addr
-       (unsigned 64 base) ;; p_paddr aTODO current addr
-       (unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_filesz aTODO filesize
-       (unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_memsz aTODO filesize
-       (unsigned 64 #x1000)))) ;; p_align
+      (data-list
+       (data-unsigned 32 1) ;; p_type
+       (data-unsigned 32 5) ;; p_flags ;; read + execute
+       (data-unsigned 64 0) ;; p_offset
+       (data-unsigned 64 base) ;; p_vaddr aTODO current addr
+       (data-unsigned 64 base) ;; p_paddr aTODO current addr
+       (data-unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_filesz aTODO filesize
+       (data-unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_memsz aTODO filesize
+       (data-unsigned 64 #x1000)))) ;; p_align
 
   (define phdr-size
     (lambda ()
-      (bytes-length (phdr 0 0 0 0 0 0))))
-
-  (define (code->label-addresses code offset)
-    (cond [(empty? code) (list (list 'end offset))]
-          [(list? code) ;; list of instructions
-           (append
-            (code->label-addresses (first code) offset)
-            (code->label-addresses (rest code) (+ offset (send (first code) length))))]
-          [(is-a? code label%) ;; a label instruction
-           (list (list (send code get-label) offset))]
-          [else (list)])) ;; end
-
-  (define (code->bytes code label-addresses)
-    (cond [(pair? code)
-           (bytes-append
-            (code->bytes (first code) label-addresses)
-            (code->bytes (rest code) label-addresses))]
-          [(is-a? code instruction-interface)
-           (send code get-bytes label-addresses)]
-          [else (bytes)]))
+      (send (phdr 0 0 0 0 0 0) length)))
 
   (define code-size
     (lambda (code)
-      (second (assoc 'end (code->label-addresses code 0)))))
+      (second (assoc 'end (send code get-label-addresses 0)))))
 
   (define file
     (lambda (base code)
-      (bytes-append
+      (data-list
        (ehdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size))
        (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size code))
        (shdr (+ base (ehdr-size) (phdr-size) (shdr-size)) (shstrtab-size))
        (shstrtab)
-       (code->bytes code (code->label-addresses code (+ (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) base)))))))
+       code))))
+
+;; (code->bytes code (code->label-addresses code (+ (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) base)

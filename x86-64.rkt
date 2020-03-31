@@ -1,17 +1,18 @@
 (module x86-64 racket
-  (provide unsigned instruction-interface syscall% syscall mov-imm8% mov-imm8 mov-imm64% mov-imm64 jmp% jmp data-unsigned% data-unsigned label% label)
+  (require green-lisp/label-interface)
+  (provide syscall% syscall mov-imm8% mov-imm8 mov-imm64% mov-imm64 jmp% jmp)
 
   (define unsigned
     (lambda (bits value)
       (integer->integer-bytes value (/ bits 8) #f)))
 
-  (define instruction-interface
-    (interface () length get-bytes))
-
   (define syscall%
-    (class* object% (instruction-interface)
+    (class* object% (data-interface)
       (super-new)
 
+      (define/public (get-label-addresses offset)
+        (list))
+      
       (define/public (get-bytes label-addresses)
         (bytes #x0f #x05))
     
@@ -22,12 +23,15 @@
     (new syscall%))
 
   (define mov-imm8%
-    (class* object% (instruction-interface)
+    (class* object% (data-interface)
       (init register value)
       (define the-register register)
       (define the-value value)
       (super-new)
-    
+
+      (define/public (get-label-addresses offset)
+        (list))
+      
       (define/public (get-bytes label-addresses)
         (bytes-append
          (if (= the-register 7)
@@ -42,11 +46,14 @@
     (new mov-imm8% [register register] [value value]))
 
   (define mov-imm64%
-    (class* object% (instruction-interface)
+    (class* object% (data-interface)
       (init register value)
       (define the-register register)
       (define the-value value)
       (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
     
       (define/public (get-bytes label-addresses)
         (bytes-append
@@ -61,10 +68,13 @@
     (new mov-imm64% [register register] [value value]))
 
   (define jmp%
-    (class* object% (instruction-interface)
+    (class* object% (data-interface)
       (init displacement)
       (define the-displacement displacement)
       (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
     
       (define/public (get-bytes label-addresses)
         (bytes-append (bytes #xeb) (integer->integer-bytes the-displacement 1 #t)))
@@ -73,38 +83,4 @@
         2)))
 
   (define (jmp displacement)
-    (new jmp% [displacement displacement]))
-
-  (define data-unsigned%
-    (class* object% (instruction-interface)
-      (init bits value)
-      (define the-bits bits)
-      (define the-value value)
-      (super-new)
-
-      (define/public (get-bytes label-addresses)
-        (integer->integer-bytes the-value (/ the-bits 8) #f))
-
-      (define/public (length)
-        (/ the-bits 8))))
-
-  (define (data-unsigned bits value)
-    (new data-unsigned% [bits bits] [value value]))
-
-  (define label%
-    (class* object% (instruction-interface)
-      (init label)
-      (define the-label label)
-      (super-new)
-
-      (define/public (get-label)
-        the-label)
-
-      (define/public (get-bytes label-addresses)
-        (bytes))
-    
-      (define/public (length)
-        0)))
-
-  (define (label label)
-    (new label% [label label])))
+    (new jmp% [displacement displacement])))
