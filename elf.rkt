@@ -65,6 +65,17 @@
   ;; https://refspecs.linuxfoundation.org/elf/gabi4+/ch4.eheader.html
   (define EM_X86_64 62)
 
+  
+;;/* special section indexes */
+(define SHN_UNDEF 0)
+;;#define SHN_LORESERVE	0xff00
+;;#define SHN_LOPROC	0xff00
+;;#define SHN_HIPROC	0xff1f
+;;#define SHN_LIVEPATCH	0xff20
+;;#define SHN_ABS		0xfff1
+;;#define SHN_COMMON	0xfff2
+;;#define SHN_HIRESERVE	0xffff
+
   (define ehdr
     (lambda ()
       (data-list
@@ -213,18 +224,28 @@
 ;;  Elf64_Xword st_size;		/* Associated symbol size */
 ;;} Elf64_Sym;
 
-  (define (symbol)
+  (define (symbol0)
     (data-list
-     (data-unsigned 32 '(- message-string strtab-start))   ;; st_name
+     (data-unsigned 32 0)   ;; st_name
      (data-unsigned 8 0)    ;; st_info
      (data-unsigned 8 0)    ;; st_other
      (data-unsigned 16 0)   ;; st_shndx
      (data-unsigned 64 0)   ;; st_value
+     (data-unsigned 64 SHN_UNDEF))) ;; st_size
+  
+  (define (symbol)
+    (data-list
+     (data-unsigned 32 '(- message-string strtab-start))   ;; st_name
+     (data-unsigned 8 #xca)    ;; st_info
+     (data-unsigned 8 0)    ;; st_other
+     (data-unsigned 16 1)   ;; st_shndx
+     (data-unsigned 64 #xcafebabe)   ;; st_value
      (data-unsigned 64 0))) ;; st_size
 
   (define (symbols)
     (data-list
      (label 'symbols-start)
+     (symbol0)
      (symbol)
      (label 'symbols-end)))
   
@@ -236,12 +257,12 @@
        (data-unsigned 32 SHT_SYMTAB) ;; sh_type:   type of section
        (data-unsigned 64 0) ;; sh_flags:  section attributes
        (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
-       (data-unsigned 64 '(- symtab-shdr-start start)) ;; sh_offset: section file offset
-       (data-unsigned 64 '(- symtab-shdr-end symtab-shdr-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 64 '(- symbols-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 2) ;; sh_link:   index of another section
        (data-unsigned 32 5) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information
        (data-unsigned 64 1) ;; sh_addralign: section alignment
-       (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_entsize:   entry size if section holds table
+       (data-unsigned 64 24) ;; TODO THIS IS THE SIZE OF ONE SYMBOL sh_entsize:   entry size if section holds table
        (label 'symtab-shdr-end))))
 
   (define (shdrs)
@@ -274,8 +295,8 @@
        (ehdr)
        (phdr)
        (shdrs)
+       (symbols)
        (shstrtab)
        (strtab)
-       (symbols)
        code
        (label 'end)))))
