@@ -66,8 +66,9 @@
   (define EM_X86_64 62)
 
   (define ehdr
-    (lambda (base ehdr-size phdr-size shdr-size shstrtab-size)
+    (lambda ()
       (data-list
+       (label 'ehdr-start)
        ;; e_ident
        (data-unsigned 8 ELFMAG0)
        (data-unsigned 8 ELFMAG1)
@@ -89,20 +90,17 @@
        (data-unsigned 16 ET_EXEC) ;; e_type
        (data-unsigned 16 EM_X86_64) ;; e_machine
        (data-unsigned 32 EV_CURRENT) ;; e_version
-       (data-unsigned 64 (+ base ehdr-size phdr-size shdr-size shstrtab-size)) ;; aTODO entrypoint) ;; e_entry
+       (data-unsigned 64 'shstrtab-end) ;; aTODO entrypoint) ;; e_entry
        (data-unsigned 64 64) ;; e_phoff aTODO phdr - $$
-       (data-unsigned 64 (+ ehdr-size phdr-size)) ;; e_shoff
+       (data-unsigned 64 '(- phdr-end start)) ;; e_shoff
        (data-unsigned 32 0) ;; e_flags
-       (data-unsigned 16 ehdr-size) ;; e_ehsize aTODO headersize
-       (data-unsigned 16 phdr-size) ;; e_phentsize aTODO phdrsize
+       (data-unsigned 16 '(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
+       (data-unsigned 16 '(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
        (data-unsigned 16 1)  ;; e_phnum p
-       (data-unsigned 16 shdr-size) ;; e_shentsize
+       (data-unsigned 16 '(- shdr-end shdr-start)) ;; e_shentsize
        (data-unsigned 16 1)  ;; e_shnum p
-       (data-unsigned 16 0)))) ;; e_shstrndx
-
-  (define ehdr-size
-    (lambda ()
-      (send (ehdr 0 0 0 0 0) length)))
+       (data-unsigned 16 0)  ;; e_shstrndx
+       (label 'ehdr-end))))
 
   ;;typedef struct elf64_shdr {
   ;;  Elf64_Word sh_name;		/* Section name, index in string tbl */
@@ -139,23 +137,15 @@
   (define shstrtab
     (lambda ()
       (data-list
-       (data-unsigned 8 (char->integer #\0))
-       (data-unsigned 8 (char->integer #\.))
-       (data-unsigned 8 (char->integer #\s))
-       (data-unsigned 8 (char->integer #\t))
-       (data-unsigned 8 (char->integer #\r))
-       (data-unsigned 8 (char->integer #\t))
-       (data-unsigned 8 (char->integer #\a))
-       (data-unsigned 8 (char->integer #\b))
-       (data-unsigned 8 (char->integer #\0)))))
+       (label 'shstrtab-start)
+       (data-string #"\0.strtab\0")
+       (label 'shstrtab-end))))
 
-  (define shstrtab-size
-    (lambda ()
-      (send (shstrtab) length)))
 
   (define shdr
-    (lambda (offset size)
+    (lambda ()
       (data-list
+       (label 'shdr-start)
        (data-unsigned 32 0) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_NULL) ;; sh_type:   type of section
        (data-unsigned 64 0) ;; sh_flags:  section attributes
@@ -166,39 +156,29 @@
        (data-unsigned 32 0) ;; sh_info:   additional section information
        (data-unsigned 64 0) ;; sh_addralign: section alignment
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
-       )))
-
-  (define shdr-size
-    (lambda ()
-      (send (shdr 0 0) length)))
+       (label 'shdr-end))))
 
   (define phdr
-    (lambda (base ehdr-size phdr-size shdr-size shstrtab-size code-size)
+    (lambda ()
       (data-list
+       (label 'phdr-start)
        (data-unsigned 32 1) ;; p_type
        (data-unsigned 32 5) ;; p_flags ;; read + execute
        (data-unsigned 64 0) ;; p_offset
-       (data-unsigned 64 base) ;; p_vaddr aTODO current addr
-       (data-unsigned 64 base) ;; p_paddr aTODO current addr
-       (data-unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_filesz aTODO filesize
-       (data-unsigned 64 (+ ehdr-size phdr-size shdr-size shstrtab-size code-size)) ;; p_memsz aTODO filesize
-       (data-unsigned 64 #x1000)))) ;; p_align
-
-  (define phdr-size
-    (lambda ()
-      (send (phdr 0 0 0 0 0 0) length)))
-
-  (define code-size
-    (lambda (code)
-      (second (assoc 'end (send code get-label-addresses 0)))))
+       (data-unsigned 64 'start) ;; p_vaddr aTODO current addr
+       (data-unsigned 64 'start) ;; p_paddr aTODO current addr
+       (data-unsigned 64 '(- end start)) ;; p_filesz aTODO filesize
+       (data-unsigned 64 '(- end start)) ;; p_memsz aTODO filesize
+       (data-unsigned 64 #x1000)
+       (label 'phdr-end)))) ;; p_align
 
   (define file
     (lambda (base code)
       (data-list
-       (ehdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size))
-       (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size code))
-       (shdr (+ base (ehdr-size) (phdr-size) (shdr-size)) (shstrtab-size))
+       (label 'start)
+       (ehdr)
+       (phdr)
+       (shdr)
        (shstrtab)
-       code))))
-
-;; (code->bytes code (code->label-addresses code (+ (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) base)
+       code
+       (label 'end)))))
