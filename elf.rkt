@@ -1,5 +1,5 @@
 (module elf racket
-  (require green-lisp/x86-64)
+  (require green-lisp/x86-64 green-lisp/label-interface)
   (provide file)
 
   (define unsigned
@@ -181,7 +181,7 @@
            (bytes-append
             (code->bytes (first code) label-addresses)
             (code->bytes (rest code) label-addresses))]
-          [(is-a? code instruction-interface)
+          [(is-a? code data-interface)
            (send code get-bytes label-addresses)]
           [else (bytes)]))
 
