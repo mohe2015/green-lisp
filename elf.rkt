@@ -150,34 +150,79 @@
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'null-shdr-end))))
 
-  (define shstrtab
+  (define strtab
     (lambda ()
       (data-list
-       (label 'shstrtab-start)
-       (data-string #"\0.strtab\0")
-       (label 'shstrtab-end))))
+       (label 'strtab-start)
+       (data-string #"\0")
+       (label 'strtab-string)
+       (data-string #".strtab\0")
+       (label 'symtab-string)
+       (data-string #".symtab\0")
+       (label 'strtab-end))))
   
-  (define shstrtab-shdr
+  (define strtab-shdr
     (lambda ()
       (data-list
-       (label 'shstrtab-shdr-start)
-       (data-unsigned 32 1) ;; sh_name:   section name, index in string table
+       (label 'strtab-shdr-start)
+       (data-unsigned 32 '(- strtab-string strtab-start)) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_STRTAB) ;; sh_type:   type of section
        (data-unsigned 64 0) ;; sh_flags:  section attributes
        (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
-       (data-unsigned 64 '(- shstrtab-start start)) ;; sh_offset: section file offset
-       (data-unsigned 64 '(- shstrtab-end shstrtab-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 64 '(- strtab-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- strtab-end strtab-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 0) ;; sh_link:   index of another section
        (data-unsigned 32 0) ;; sh_info:   additional section information
        (data-unsigned 64 1) ;; sh_addralign: section alignment
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
-       (label 'shstrtab-shdr-end))))
+       (label 'strtab-shdr-end))))
+
+;; typedef struct elf64_sym {
+;;  Elf64_Word st_name;	         	/* Symbol name, index in string tbl */
+;;  unsigned char	st_info;	/* Type and binding attributes */
+;;  unsigned char	st_other;	/* No defined meaning, 0 */
+;;  Elf64_Half st_shndx;		/* Associated section index */
+;;  Elf64_Addr st_value;		/* Value of the symbol */
+;;  Elf64_Xword st_size;		/* Associated symbol size */
+;;} Elf64_Sym;
+
+  (define (symbol)
+    (data-list
+     (data-unsigned 32 0)   ;; st_name
+     (data-unsigned 8 0)    ;; st_info
+     (data-unsigned 8 0)    ;; st_other
+     (data-unsigned 16 0)   ;; st_shndx
+     (data-unsigned 64 0)   ;; st_value
+     (data-unsigned 64 0))) ;; st_size
+
+  (define (symbols)
+    (data-list
+     (label 'symbols-start)
+     (symbol)
+     (label 'symbols-end)))
+  
+  (define symtab-shdr
+    (lambda ()
+      (data-list
+       (label 'symtab-shdr-start)
+       (data-unsigned 32 '(- symtab-string strtab-start)) ;; sh_name:   section name, index in string table
+       (data-unsigned 32 SHT_SYMTAB) ;; sh_type:   type of section
+       (data-unsigned 64 0) ;; sh_flags:  section attributes
+       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 '(- symtab-shdr-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- symtab-shdr-end symtab-shdr-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 32 '(- symbols-start start)) ;; sh_link:   index of another section
+       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 1) ;; sh_entsize:   entry size if section holds table
+       (label 'symtab-shdr-end))))
 
   (define (shdrs)
     (data-list
      (label 'shdrs-start)
      (null-shdr)
-     (shstrtab-shdr)
+     (strtab-shdr)
+     (symtab-shdr)
      (label 'shdrs-end)))
 
   (define phdr
@@ -201,6 +246,7 @@
        (ehdr)
        (phdr)
        (shdrs)
-       (shstrtab)
+       (strtab)
+       (symbols)
        code
        (label 'end)))))
