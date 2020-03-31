@@ -1,5 +1,11 @@
 (module label-interface racket
-  (provide data-interface label% label data-unsigned% data-unsigned data-list% data-list data-string% data-string)
+  (provide dynamic data-interface label% label data-unsigned% data-unsigned data-list% data-list data-string% data-string)
+
+  (define (dynamic value label-addresses)
+    (eval
+     `(let ,label-addresses
+        ,value)
+     (make-base-namespace)))
   
   (define data-interface
     (interface () length get-bytes get-label-addresses))
@@ -36,11 +42,7 @@
         (list))
 
       (define/public (get-bytes current-address label-addresses)
-        (integer->integer-bytes (eval
-                                 `(let ,label-addresses
-                                    ,the-value)
-                                 (make-base-namespace))
-                                (/ the-bits 8) #f))
+        (integer->integer-bytes (dynamic the-value label-addresses) (/ the-bits 8) #f))
 
       (define/public (length)
         (/ the-bits 8))))

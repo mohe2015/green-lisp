@@ -37,7 +37,7 @@
          (if (= the-register 7)
              (unsigned 8 #x40)
              (bytes)) ; REX prefix to access dil instead of bh
-         (bytes (bitwise-ior #xb0 the-register) the-value)))
+         (bytes (bitwise-ior #xb0 the-register) (dynamic the-value label-addresses))))
 
       (define/public (length)
         (if (= the-register 7) 3 2))))
@@ -59,7 +59,7 @@
         (bytes-append
          (unsigned 8 #b01001000) ;; REX.W
          (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
-         (unsigned 64 (second (assoc the-value label-addresses))))) ;; value
+         (unsigned 64 (dynamic the-value label-addresses)))) ;; value
     
       (define/public (length)
         10)))
@@ -77,7 +77,7 @@
         (list))
     
       (define/public (get-bytes current-address label-addresses)
-        (bytes-append (bytes #xeb) (integer->integer-bytes the-displacement 1 #t)))
+        (bytes-append (bytes #xeb) (integer->integer-bytes (dynamic the-displacement label-addresses) 1 #t)))
     
       (define/public (length)
         2)))
