@@ -19,5 +19,7 @@
 
   (call-with-output-file "out.elf"
     (lambda (out)
-      (write-bytes (send (file #x401000 (code)) get-bytes #x401000 (send (file #x401000 (code)) get-label-addresses #x401000)) out)) #:mode 'binary #:exists 'truncate/replace)
+      (let* ((base #x401000)
+             (the-file (file base (code))))
+      (write-bytes (send the-file get-bytes base (send the-file get-label-addresses base)) out))) #:mode 'binary #:exists 'truncate/replace)
   (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-execute-bit)))
