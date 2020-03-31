@@ -22,7 +22,7 @@
        (data-unsigned 8 (char->integer #\newline))
        (label 'end))))
 
-  (call-with-output-file "/tmp/a.bin"
+  (call-with-output-file "out.elf"
     (lambda (out)
       (write-bytes (send (file #x401000 (code)) get-bytes #x401000 (send (file #x401000 (code)) get-label-addresses #x401000)) out)) #:mode 'binary #:exists 'truncate/replace)
-  (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit)))
+  (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-execute-bit)))
