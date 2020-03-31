@@ -90,16 +90,16 @@
        (data-unsigned 16 ET_EXEC) ;; e_type
        (data-unsigned 16 EM_X86_64) ;; e_machine
        (data-unsigned 32 EV_CURRENT) ;; e_version
-       (data-unsigned 64 'shstrtab-end) ;; aTODO entrypoint) ;; e_entry
+       (data-unsigned 64 'code-start) ;; aTODO entrypoint) ;; e_entry
        (data-unsigned 64 64) ;; e_phoff aTODO phdr - $$
        (data-unsigned 64 '(- phdr-end start)) ;; e_shoff
        (data-unsigned 32 0) ;; e_flags
        (data-unsigned 16 '(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
        (data-unsigned 16 '(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
        (data-unsigned 16 1)  ;; e_phnum p
-       (data-unsigned 16 '(- shdr-end shdr-start)) ;; e_shentsize
-       (data-unsigned 16 1)  ;; e_shnum p
-       (data-unsigned 16 0)  ;; e_shstrndx
+       (data-unsigned 16 '(- null-shdr-end null-shdr-start)) ;; e_shentsize
+       (data-unsigned 16 '(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
+       (data-unsigned 16 1)  ;; e_shstrndx
        (label 'ehdr-end))))
 
   ;;typedef struct elf64_shdr {
@@ -134,18 +134,10 @@
   (define SHT_LOUSER	#x80000000)
   (define SHT_HIUSER	#xffffffff)
 
-  (define shstrtab
+  (define null-shdr
     (lambda ()
       (data-list
-       (label 'shstrtab-start)
-       (data-string #"\0.strtab\0")
-       (label 'shstrtab-end))))
-
-
-  (define shdr
-    (lambda ()
-      (data-list
-       (label 'shdr-start)
+       (label 'null-shdr-start)
        (data-unsigned 32 0) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_NULL) ;; sh_type:   type of section
        (data-unsigned 64 0) ;; sh_flags:  section attributes
@@ -156,7 +148,37 @@
        (data-unsigned 32 0) ;; sh_info:   additional section information
        (data-unsigned 64 0) ;; sh_addralign: section alignment
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
-       (label 'shdr-end))))
+       (label 'null-shdr-end))))
+
+  (define shstrtab
+    (lambda ()
+      (data-list
+       (label 'shstrtab-start)
+       (data-string #"\0.strtab\0")
+       (label 'shstrtab-end))))
+  
+  (define shstrtab-shdr
+    (lambda ()
+      (data-list
+       (label 'shstrtab-shdr-start)
+       (data-unsigned 32 1) ;; sh_name:   section name, index in string table
+       (data-unsigned 32 SHT_STRTAB) ;; sh_type:   type of section
+       (data-unsigned 64 0) ;; sh_flags:  section attributes
+       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 '(- shstrtab-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- shstrtab-end shstrtab-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 32 0) ;; sh_link:   index of another section
+       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+       (label 'shstrtab-shdr-end))))
+
+  (define (shdrs)
+    (data-list
+     (label 'shdrs-start)
+     (null-shdr)
+     (shstrtab-shdr)
+     (label 'shdrs-end)))
 
   (define phdr
     (lambda ()
@@ -178,7 +200,7 @@
        (label 'start)
        (ehdr)
        (phdr)
-       (shdr)
+       (shdrs)
        (shstrtab)
        code
        (label 'end)))))
