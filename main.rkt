@@ -3,7 +3,7 @@
 
   (define code
     (lambda ()
-      (list
+      (data-list
        (mov-imm8 2 6)  ; dl / rdx: length of string
        (mov-imm64 6 'hello) ;; load string
        (mov-imm8 0 1)  ; al / rax: set write to command
@@ -23,5 +23,5 @@
 
   (call-with-output-file "/tmp/a.bin"
     (lambda (out)
-      (write-bytes (file #x401000 (code)) out)) #:mode 'binary #:exists 'truncate/replace)
+      (write-bytes (send (file #x401000 (code)) get-bytes '()) out)) #:mode 'binary #:exists 'truncate/replace)
   (file-or-directory-permissions "/tmp/a.bin" (bitwise-ior user-read-bit user-execute-bit)))

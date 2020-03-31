@@ -1,6 +1,6 @@
 (module x86-64 racket
   (require green-lisp/label-interface)
-  (provide unsigned syscall% syscall mov-imm8% mov-imm8 mov-imm64% mov-imm64 jmp% jmp data-unsigned% data-unsigned)
+  (provide syscall% syscall mov-imm8% mov-imm8 mov-imm64% mov-imm64 jmp% jmp)
 
   (define unsigned
     (lambda (bits value)
@@ -71,20 +71,4 @@
         2)))
 
   (define (jmp displacement)
-    (new jmp% [displacement displacement]))
-
-  (define data-unsigned%
-    (class* object% (data-interface)
-      (init bits value)
-      (define the-bits bits)
-      (define the-value value)
-      (super-new)
-
-      (define/public (get-bytes label-addresses)
-        (integer->integer-bytes the-value (/ the-bits 8) #f))
-
-      (define/public (length)
-        (/ the-bits 8))))
-
-  (define (data-unsigned bits value)
-    (new data-unsigned% [bits bits] [value value])))
+    (new jmp% [displacement displacement])))
