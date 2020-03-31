@@ -66,7 +66,7 @@
   (define EM_X86_64 62)
 
   (define ehdr
-    (lambda (base ehdr-size phdr-size shdr-size shstrtab-size)
+    (lambda ()
       (data-list
        (label 'ehdr-start)
        ;; e_ident
@@ -101,10 +101,6 @@
        (data-unsigned 16 1)  ;; e_shnum p
        (data-unsigned 16 0)  ;; e_shstrndx
        (label 'ehdr-end))))
-
-  (define ehdr-size
-    (lambda ()
-      (send (ehdr 0 0 0 0 0) length)))
 
   ;;typedef struct elf64_shdr {
   ;;  Elf64_Word sh_name;		/* Section name, index in string tbl */
@@ -145,12 +141,9 @@
        (data-string #"\0.strtab\0")
        (label 'shstrtab-end))))
 
-  (define shstrtab-size
-    (lambda ()
-      (send (shstrtab) length)))
 
   (define shdr
-    (lambda (offset size)
+    (lambda ()
       (data-list
        (label 'shdr-start)
        (data-unsigned 32 0) ;; sh_name:   section name, index in string table
@@ -165,12 +158,8 @@
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'shdr-end))))
 
-  (define shdr-size
-    (lambda ()
-      (send (shdr 0 0) length)))
-
   (define phdr
-    (lambda (base ehdr-size phdr-size shdr-size shstrtab-size code-size)
+    (lambda ()
       (data-list
        (label 'phdr-start)
        (data-unsigned 32 1) ;; p_type
@@ -183,23 +172,13 @@
        (data-unsigned 64 #x1000)
        (label 'phdr-end)))) ;; p_align
 
-  (define phdr-size
-    (lambda ()
-      (send (phdr 0 0 0 0 0 0) length)))
-
-  (define code-size
-    (lambda (code)
-      (second (assoc 'code-end (send code get-label-addresses 0)))))
-
   (define file
     (lambda (base code)
       (data-list
        (label 'start)
-       (ehdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size))
-       (phdr base (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) (code-size code))
-       (shdr (+ base (ehdr-size) (phdr-size) (shdr-size)) (shstrtab-size))
+       (ehdr)
+       (phdr)
+       (shdr)
        (shstrtab)
        code
        (label 'end)))))
-
-;; (code->bytes code (code->label-addresses code (+ (ehdr-size) (phdr-size) (shdr-size) (shstrtab-size) base)
