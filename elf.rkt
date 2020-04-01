@@ -298,6 +298,7 @@
 
   (define (symbols)
     (data-list
+     (align 3)
      (label 'symbols-start)
      (symbol0)
      (symbol)
@@ -315,7 +316,7 @@
        (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 3) ;; TODO FIXME calculate this sh_link:   index of another section
        (data-unsigned 32 5) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information
-       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 8) ;; sh_addralign: section alignment
        (data-unsigned 64 24) ;; TODO THIS IS THE SIZE OF ONE SYMBOL sh_entsize:   entry size if section holds table
        (label 'symtab-shdr-end))))
 
