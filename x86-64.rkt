@@ -1,6 +1,12 @@
 (module x86-64 racket
   (require green-lisp/label-interface)
-  (provide syscall% syscall mov-imm8% mov-imm8 mov-imm64% mov-imm64 jmp% jmp)
+  (provide
+   syscall% syscall
+   mov-imm8% mov-imm8
+   mov-imm64% mov-imm64
+   jmp% jmp
+   push% push
+   pop% pop)
 
   (define unsigned
     (lambda (bits value)
@@ -83,4 +89,44 @@
         2)))
 
   (define (jmp displacement)
-    (new jmp% [displacement displacement])))
+    (new jmp% [displacement displacement]))
+
+  ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
+  (define push%
+    (class* object% (data-interface)
+      (init register)
+      (define the-register register)
+      (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        (bytes (+ #x50 the-register)))
+
+      (define/public (length offset)
+        2)))
+
+  (define (push register)
+    (new push% [register register]))
+
+  ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1037&zoom=auto,-17,727
+  (define pop%
+    (class* object% (data-interface)
+      (init register)
+      (define the-register register)
+      (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        (bytes (+ #x58 the-register)))
+       ;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
+
+      (define/public (length offset)
+        2)))
+
+  (define (pop register)
+    (new pop% [register register]))
+  )
