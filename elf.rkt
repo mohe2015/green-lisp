@@ -110,7 +110,7 @@
        (data-unsigned 16 1)  ;; e_phnum p
        (data-unsigned 16 '(- null-shdr-end null-shdr-start)) ;; e_shentsize
        (data-unsigned 16 '(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
-       (data-unsigned 16 1)  ;; e_shstrndx
+       (data-unsigned 16 2)  ;; e_shstrndx TODO calculate
        (label 'ehdr-end))))
 
   ;;typedef struct elf64_shdr {
@@ -160,12 +160,30 @@
        (data-unsigned 64 0) ;; sh_addralign: section alignment
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'null-shdr-end))))
+
+  (define text-shdr
+    (lambda ()
+      (data-list
+       (label 'text-shdr-start)
+       (data-unsigned 32 '(- text-string shstrtab-start)) ;; sh_name:   section name, index in string table
+       (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
+       (data-unsigned 64 0) ;; sh_flags:  section attributes
+       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 '(- code-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- code-end code-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 32 0) ;; sh_link:   index of another section
+       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+       (label 'text-shdr-end))))
   
   (define shstrtab
     (lambda ()
       (data-list
        (label 'shstrtab-start)
        (data-string #"\0")
+       (label 'text-string)
+       (data-string #".text\0")
        (label 'shstrtab-string)
        (data-string #".shstrtab\0")
        (label 'strtab-string)
@@ -269,6 +287,7 @@
     (data-list
      (label 'shdrs-start)
      (null-shdr)
+     (text-shdr)
      (shstrtab-shdr)
      (strtab-shdr)
      (symtab-shdr)
