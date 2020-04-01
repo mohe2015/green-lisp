@@ -25,7 +25,7 @@
       (define/public (get-bytes current-address label-addresses)
         (bytes))
     
-      (define/public (length)
+      (define/public (length offset)
         0)))
 
   (define (label label)
@@ -44,7 +44,7 @@
       (define/public (get-bytes current-address label-addresses)
         (integer->integer-bytes (dynamic the-value label-addresses) (/ the-bits 8) #f))
 
-      (define/public (length)
+      (define/public (length offset)
         (/ the-bits 8))))
 
   (define (data-unsigned bits value)
@@ -62,7 +62,7 @@
       (define/public (get-bytes current-address label-addresses)
         the-string)
 
-      (define/public (length)
+      (define/public (length offset)
         (bytes-length the-string))))
 
   (define (data-string string)

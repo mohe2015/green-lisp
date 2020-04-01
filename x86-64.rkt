@@ -16,7 +16,7 @@
       (define/public (get-bytes current-address label-addresses)
         (bytes #x0f #x05))
     
-      (define/public (length)
+      (define/public (length offset)
         2)))
 
   (define (syscall)
@@ -39,7 +39,7 @@
              (bytes)) ; REX prefix to access dil instead of bh
          (bytes (bitwise-ior #xb0 the-register) (dynamic the-value label-addresses))))
 
-      (define/public (length)
+      (define/public (length offset)
         (if (= the-register 7) 3 2))))
 
   (define (mov-imm8 register value)
@@ -61,7 +61,7 @@
          (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
          (unsigned 64 (dynamic the-value label-addresses)))) ;; value
     
-      (define/public (length)
+      (define/public (length offset)
         10)))
 
   (define (mov-imm64 register value)
@@ -79,7 +79,7 @@
       (define/public (get-bytes current-address label-addresses)
         (bytes-append (bytes #xeb) (integer->integer-bytes (dynamic the-displacement label-addresses) 1 #t)))
     
-      (define/public (length)
+      (define/public (length offset)
         2)))
 
   (define (jmp displacement)

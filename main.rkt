@@ -10,7 +10,7 @@
   (define code
     (lambda ()
       (data-list
-       ;;(align 12)
+       (align 12)
        (label 'code-start)
        (mov-imm64 2 6)  ; dl / rdx: length of string
        (mov-imm64 6 'hello-string) ;; rsi load string
