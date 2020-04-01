@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: build green-lisp
-      uses: jackfirth/racket-package-ci-action@master
+      uses: mohe2015/racket-package-ci-action@master
       with:
         name: green-lisp
 
