@@ -161,13 +161,21 @@
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'null-shdr-end))))
 
+  ;; sh_flags
+  (define SHF_WRITE		#x1)
+  (define SHF_ALLOC		#x2)
+  (define SHF_EXECINSTR		#x4)
+  (define SHF_RELA_LIVEPATCH	#x00100000)
+  (define SHF_RO_AFTER_INIT	#x00200000)
+  (define SHF_MASKPROC		#xf0000000)
+  
   (define text-shdr
     (lambda ()
       (data-list
        (label 'text-shdr-start)
        (data-unsigned 32 '(- text-string shstrtab-start)) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
-       (data-unsigned 64 0) ;; sh_flags:  section attributes
+       (data-unsigned 64 (+ SHF_ALLOC SHF_EXECINSTR)) ;; sh_flags:  section attributes
        (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
        (data-unsigned 64 '(- code-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- code-end code-start)) ;; sh_size:   size of section in bytes
@@ -281,6 +289,15 @@
   
   (define (symbol)
     (data-list
+     (data-unsigned 32 0)   ;; st_name
+     (data-unsigned 8 (+ (arithmetic-shift STB_LOCAL 4) STT_SECTION))    ;; st_info
+     (data-unsigned 8 STV_DEFAULT)    ;; st_other
+     (data-unsigned 16 1)   ;; st_shndx associated section index (.text)
+     (data-unsigned 64 'code-start) ;; st_value
+     (data-unsigned 64 0))) ;; st_size
+  
+  (define (symbol2)
+    (data-list
      (data-unsigned 32 '(- message-string strtab-start))   ;; st_name
      (data-unsigned 8 (+ (arithmetic-shift STB_LOCAL 4) STT_NOTYPE))    ;; st_info
      (data-unsigned 8 STV_DEFAULT)    ;; st_other
@@ -290,6 +307,7 @@
 
   (define (symbols)
     (data-list
+     (align 3)
      (label 'symbols-start)
      (symbol0)
      (symbol)
@@ -307,7 +325,7 @@
        (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 3) ;; TODO FIXME calculate this sh_link:   index of another section
        (data-unsigned 32 5) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information
-       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 8) ;; sh_addralign: section alignment
        (data-unsigned 64 24) ;; TODO THIS IS THE SIZE OF ONE SYMBOL sh_entsize:   entry size if section holds table
        (label 'symtab-shdr-end))))
 
@@ -327,13 +345,13 @@
        (label 'phdr-start)
        (data-unsigned 32 1) ;; p_type
        (data-unsigned 32 5) ;; p_flags ;; read + execute
-       (data-unsigned 64 0) ;; p_offset
-       (data-unsigned 64 'start) ;; p_vaddr aTODO current addr
-       (data-unsigned 64 'start) ;; p_paddr aTODO current addr
-       (data-unsigned 64 '(- end start)) ;; p_filesz aTODO filesize
-       (data-unsigned 64 '(- end start)) ;; p_memsz aTODO filesize
-       (data-unsigned 64 #x1000)
-       (label 'phdr-end)))) ;; p_align
+       (data-unsigned 64 '(- code-start start)) ;; p_offset
+       (data-unsigned 64 'code-start) ;; p_vaddr aTODO current addr
+       (data-unsigned 64 'code-start) ;; p_paddr aTODO current addr
+       (data-unsigned 64 '(- code-end code-start)) ;; p_filesz aTODO filesize
+       (data-unsigned 64 '(- code-end code-start)) ;; p_memsz aTODO filesize
+       (data-unsigned 64 #x1000) ;; p_align
+       (label 'phdr-end))))
 
   (define file
     (lambda (base code)
