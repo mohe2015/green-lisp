@@ -1,11 +1,9 @@
 (module main racket
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
-  ;; text section AX flags
   ;; two program headers
   ;; program headers strange values: load offset
   ;; Section to Segment mapping:
-  ;; TODO ALIGN ENTRYPOINT ADDRESS
   
   (define code
     (lambda ()
