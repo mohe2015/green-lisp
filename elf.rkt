@@ -337,7 +337,7 @@
      (text-shdr)
      (shstrtab-shdr)
      (strtab-shdr)
-     (symtab-shdr) ;; TODO FIXME THIS IS GDBS PROBLEM
+     (symtab-shdr)
      (label 'shdrs-end)))
 
   (define phdr
