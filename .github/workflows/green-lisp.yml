@@ -16,7 +16,7 @@ jobs:
       with:
         name: green-lisp
     - name: Run green-lisp binary
-      run: ./main
+      run: ./main-distribution/bin/main
     - name: Upload green-lisp binary
       uses: actions/upload-artifact@v1
       with:
