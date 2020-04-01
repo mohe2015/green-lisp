@@ -1,5 +1,5 @@
 (module label-interface racket
-  (provide dynamic data-interface label% label data-unsigned% data-unsigned data-list% data-list data-string% data-string)
+  (provide dynamic data-interface label% label data-unsigned% data-unsigned data-list% data-list data-string% data-string align% align)
 
   (define (dynamic value label-addresses)
     (eval
@@ -79,7 +79,7 @@
               [(pair? a-list)
                (append
                 (list->label-addresses (first a-list) offset)
-                (list->label-addresses (rest a-list) (+ offset (send (first a-list) length))))]
+                (list->label-addresses (rest a-list) (+ offset (send (first a-list) length offset))))]
               [else
                (send a-list get-label-addresses offset)]))
       
@@ -91,15 +91,45 @@
               [(pair? a-list)
                (bytes-append
                 (list->bytes (first a-list) current-address label-addresses)
-                (list->bytes (rest a-list) (+ current-address (send (first a-list) length)) label-addresses))]
+                (list->bytes (rest a-list) (+ current-address (send (first a-list) length current-address)) label-addresses))]
               [else
                (send a-list get-bytes current-address label-addresses)]))
 
       (define/public (get-bytes current-address label-addresses)
         (list->bytes the-list current-address label-addresses))
 
-      (define/public (length)
-        (foldr + 0 (map (λ (v) (send v length)) the-list)))))
+      (define (sum-length a-list offset)
+        (cond [(null? a-list) 0]
+              [(pair? a-list)
+               (+
+                (sum-length (first a-list) offset)
+                (sum-length (rest a-list) (+ offset (sum-length (first a-list) offset))))]
+              [else
+               (send a-list length offset)])) 
+      
+      (define/public (length offset)
+        (sum-length the-list offset))))
 
   (define (data-list . list)
-    (new data-list% [list list])))
+    (new data-list% [list list]))
+
+  (define align%
+    (class* object% (data-interface)
+      (init alignment-bits)
+      (define the-alignment-bits alignment-bits)
+      (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        (make-bytes (get-byte-count-to-align current-address) 0))
+
+      (define (get-byte-count-to-align offset)
+        (- (arithmetic-shift (arithmetic-shift (+ offset (arithmetic-shift 1 the-alignment-bits) -1) (- the-alignment-bits)) the-alignment-bits) offset))
+
+      (define/public (length offset)
+        (get-byte-count-to-align offset))))
+
+  (define (align alignment-bits)
+    (new align% [alignment-bits alignment-bits])))
