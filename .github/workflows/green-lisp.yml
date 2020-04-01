@@ -11,8 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: build green-lisp
+    - name: Build green-lisp
       uses: mohe2015/racket-package-ci-action@master
       with:
         name: green-lisp
-
+    - name: Run green-lisp binary
+      run: ./main
+    - name: Upload green-lisp binary
+      uses: actions/upload-artifact@v1
+      with:
+        name: green-lisp
+        path: main-distribution
+    - name: Upload built binary
+      uses: actions/upload-artifact@v1
+      with:
+        name: program
+        path: ./out.elf
