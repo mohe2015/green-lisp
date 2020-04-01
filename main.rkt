@@ -1,6 +1,7 @@
 (module main racket
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
+  ;; symbols?
   ;; two program headers
   ;; Section to Segment mapping:
   

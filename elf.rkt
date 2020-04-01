@@ -289,6 +289,15 @@
   
   (define (symbol)
     (data-list
+     (data-unsigned 32 0)   ;; st_name
+     (data-unsigned 8 (+ (arithmetic-shift STB_LOCAL 4) STT_SECTION))    ;; st_info
+     (data-unsigned 8 STV_DEFAULT)    ;; st_other
+     (data-unsigned 16 1)   ;; st_shndx associated section index (.text)
+     (data-unsigned 64 'code-start) ;; st_value
+     (data-unsigned 64 0))) ;; st_size
+  
+  (define (symbol2)
+    (data-list
      (data-unsigned 32 '(- message-string strtab-start))   ;; st_name
      (data-unsigned 8 (+ (arithmetic-shift STB_LOCAL 4) STT_NOTYPE))    ;; st_info
      (data-unsigned 8 STV_DEFAULT)    ;; st_other
