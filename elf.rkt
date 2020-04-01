@@ -332,8 +332,8 @@
        (data-unsigned 64 'start) ;; p_paddr aTODO current addr
        (data-unsigned 64 '(- end start)) ;; p_filesz aTODO filesize
        (data-unsigned 64 '(- end start)) ;; p_memsz aTODO filesize
-       (data-unsigned 64 #x1000)
-       (label 'phdr-end)))) ;; p_align
+       (data-unsigned 64 1) ;; p_align
+       (label 'phdr-end))))
 
   (define file
     (lambda (base code)
