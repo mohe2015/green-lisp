@@ -20,6 +20,7 @@
        (syscall)
        (push 1)
        (pop 1)
+       (call 'code-start)
        (jmp -2) ;; size of jmp instruction
        (label 'hello-string)
        (data-string #"Hello\n\0")

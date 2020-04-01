@@ -6,7 +6,8 @@
    mov-imm64% mov-imm64
    jmp% jmp
    push% push
-   pop% pop)
+   pop% pop
+   call% call)
 
   (define unsigned
     (lambda (bits value)
@@ -129,4 +130,23 @@
 
   (define (pop register)
     (new pop% [register register]))
+
+  ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=224&zoom=100,28,726
+  (define call%
+    (class* object% (data-interface)
+      (init address)
+      (define the-address address)
+      (super-new)
+      
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address label-addresses) current-address 3) 4 #t)))
+
+      (define/public (length offset)
+        5)))
+
+  (define (call address)
+    (new call% [address address]))
   )
