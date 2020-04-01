@@ -322,7 +322,7 @@
        (data-unsigned 64 0) ;; sh_flags:  section attributes
        (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
        (data-unsigned 64 '(- symbols-start start)) ;; sh_offset: section file offset
-       (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 64 0) ;; sh_size:   size of section in bytes
        (data-unsigned 32 3) ;; TODO FIXME calculate this sh_link:   index of another section
        (data-unsigned 32 5) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information
        (data-unsigned 64 8) ;; sh_addralign: section alignment
@@ -336,7 +336,7 @@
      (text-shdr)
      (shstrtab-shdr)
      (strtab-shdr)
-     (symtab-shdr)
+     (symtab-shdr) ;; TODO FIXME THIS IS GDBS PROBLEM
      (label 'shdrs-end)))
 
   (define phdr
