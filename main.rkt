@@ -18,8 +18,8 @@
        (mov-imm64 0 60) ;; rax: exit syscall
        (mov-imm64 7 0)  ;; rdi: exit code
        (syscall) ;; exit(0)
-       ;(push 1)
-       ;(pop 1)
+       (push 1)
+       (pop 1)
        (call 'code-start)
        (jmp -2) ;; size of jmp instruction
        (label 'hello-string)

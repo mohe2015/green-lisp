@@ -106,7 +106,7 @@
         (bytes (+ #x50 the-register)))
 
       (define/public (length offset)
-        2)))
+        1)))
 
   (define (push register)
     (new push% [register register]))
@@ -126,7 +126,7 @@
        ;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
 
       (define/public (length offset)
-        2)))
+        1)))
 
   (define (pop register)
     (new pop% [register register]))
