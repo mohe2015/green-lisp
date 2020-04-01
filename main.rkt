@@ -2,7 +2,6 @@
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
   ;; two program headers
-  ;; program headers strange values: load offset
   ;; Section to Segment mapping:
   
   (define code
