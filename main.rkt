@@ -2,7 +2,6 @@
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
   ;; text section AX flags
-  ;; program header align 0x1000
   ;; two program headers
   ;; program headers strange values: load offset
   ;; Section to Segment mapping:

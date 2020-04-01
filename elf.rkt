@@ -161,13 +161,21 @@
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'null-shdr-end))))
 
+  ;; sh_flags
+  (define SHF_WRITE		#x1)
+  (define SHF_ALLOC		#x2)
+  (define SHF_EXECINSTR		#x4)
+  (define SHF_RELA_LIVEPATCH	#x00100000)
+  (define SHF_RO_AFTER_INIT	#x00200000)
+  (define SHF_MASKPROC		#xf0000000)
+  
   (define text-shdr
     (lambda ()
       (data-list
        (label 'text-shdr-start)
        (data-unsigned 32 '(- text-string shstrtab-start)) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
-       (data-unsigned 64 0) ;; sh_flags:  section attributes
+       (data-unsigned 64 (+ SHF_ALLOC SHF_EXECINSTR)) ;; sh_flags:  section attributes
        (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
        (data-unsigned 64 '(- code-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- code-end code-start)) ;; sh_size:   size of section in bytes
@@ -332,7 +340,7 @@
        (data-unsigned 64 'start) ;; p_paddr aTODO current addr
        (data-unsigned 64 '(- end start)) ;; p_filesz aTODO filesize
        (data-unsigned 64 '(- end start)) ;; p_memsz aTODO filesize
-       (data-unsigned 64 1) ;; p_align
+       (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-end))))
 
   (define file
