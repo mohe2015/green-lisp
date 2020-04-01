@@ -250,14 +250,42 @@
      (data-unsigned 16 0)   ;; st_shndx
      (data-unsigned 64 0)   ;; st_value
      (data-unsigned 64 SHN_UNDEF))) ;; st_size
+
+  ;; st_info binding
+  (define STB_LOCAL 	0)
+  (define STB_GLOBAL 	1)
+  (define STB_WEAK 	2)
+  (define STB_LOOS 	10)
+  (define STB_HIOS 	12)
+  (define STB_LOPROC 	13)
+  (define STB_HIPROC 	15)
+
+  ;; st_info type
+  (define STT_NOTYPE 	0)
+  (define STT_OBJECT 	1)
+  (define STT_FUNC 	2)
+  (define STT_SECTION 	3)
+  (define STT_FILE 	4)
+  (define STT_COMMON 	5)
+  (define STT_TLS 	6)
+  (define STT_LOOS 	10)
+  (define STT_HIOS 	12)
+  (define STT_LOPROC 	13)
+  (define STT_HIPROC 	15)
+
+  ;; st_other symbol visibility
+  (define STV_DEFAULT 	0)
+  (define STV_INTERNAL 	1)
+  (define STV_HIDDEN 	2)
+  (define STV_PROTECTED 3)
   
   (define (symbol)
     (data-list
      (data-unsigned 32 '(- message-string strtab-start))   ;; st_name
-     (data-unsigned 8 #xca)    ;; st_info
-     (data-unsigned 8 0)    ;; st_other
+     (data-unsigned 8 (+ (arithmetic-shift STB_LOCAL 4) STT_NOTYPE))    ;; st_info
+     (data-unsigned 8 STV_DEFAULT)    ;; st_other
      (data-unsigned 16 1)   ;; st_shndx
-     (data-unsigned 64 #xcafebabe)   ;; st_value
+     (data-unsigned 64 'hello-string) ;; st_value
      (data-unsigned 64 0))) ;; st_size
 
   (define (symbols)
@@ -277,7 +305,7 @@
        (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
        (data-unsigned 64 '(- symbols-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_size:   size of section in bytes
-       (data-unsigned 32 2) ;; sh_link:   index of another section
+       (data-unsigned 32 3) ;; TODO FIXME calculate this sh_link:   index of another section
        (data-unsigned 32 5) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information
        (data-unsigned 64 1) ;; sh_addralign: section alignment
        (data-unsigned 64 24) ;; TODO THIS IS THE SIZE OF ONE SYMBOL sh_entsize:   entry size if section holds table
