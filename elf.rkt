@@ -335,11 +335,11 @@
        (label 'phdr-start)
        (data-unsigned 32 1) ;; p_type
        (data-unsigned 32 5) ;; p_flags ;; read + execute
-       (data-unsigned 64 0) ;; p_offset
-       (data-unsigned 64 'start) ;; p_vaddr aTODO current addr
-       (data-unsigned 64 'start) ;; p_paddr aTODO current addr
-       (data-unsigned 64 '(- end start)) ;; p_filesz aTODO filesize
-       (data-unsigned 64 '(- end start)) ;; p_memsz aTODO filesize
+       (data-unsigned 64 '(- code-start start)) ;; p_offset
+       (data-unsigned 64 'code-start) ;; p_vaddr aTODO current addr
+       (data-unsigned 64 'code-start) ;; p_paddr aTODO current addr
+       (data-unsigned 64 '(- code-end code-start)) ;; p_filesz aTODO filesize
+       (data-unsigned 64 '(- code-end code-start)) ;; p_memsz aTODO filesize
        (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-end))))
 
