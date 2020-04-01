@@ -142,7 +142,7 @@
         (list))
 
       (define/public (get-bytes current-address label-addresses)
-        (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address label-addresses) current-address 3) 4 #t)))
+        (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address label-addresses) current-address (length current-address)) 4 #t)))
 
       (define/public (length offset)
         5)))
