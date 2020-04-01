@@ -27,4 +27,4 @@
       (let* ((base #x400000)
              (the-file (file base (code))))
       (write-bytes (send the-file get-bytes base (send the-file get-label-addresses base)) out))) #:mode 'binary #:exists 'truncate/replace)
-  (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-execute-bit)))
+  (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))
