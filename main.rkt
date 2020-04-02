@@ -7,6 +7,8 @@
      (label 'rodata-start)
      (label 'your-name-question-string)
      (data-string #"What's your name?\n\0")
+     (label 'greet-string)
+     (data-string #"Hello \0")
      (label 'rodata-end)))
 
   (define (data)
@@ -24,6 +26,7 @@
       (data-list
        (align 12)
        (label 'code-start)
+
        (mov-imm64 2 18)  ; dl / rdx: length of string
        (mov-imm64 6 'your-name-question-string) ;; rsi load string
        (mov-imm64 0 1)  ; al / rax: set write to command
@@ -38,8 +41,22 @@
        (syscall) ;; read(stdin, buffer, 1024)
        ;; CHECK RETURN VALUE!
 
+       ;; write "Hello "
+       (mov-imm64 2 6)  ; dl / rdx: length of string
+       (mov-imm64 6 'greet-string) ;; rsi load string
+       (mov-imm64 0 1)  ; al / rax: set write to command
+       (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+       (syscall)
 
-
+       
+       ;; echo
+       ;; TODO mov rdx, rax
+       (mov-imm64 2 1024)  ; dl / rdx: length of string
+       
+       (mov-imm64 6 'buffer) ;; rsi load string
+       (mov-imm64 0 1)  ; al / rax: set write to command
+       (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+       (syscall)
        
        (mov-imm64 0 60) ;; rax: exit syscall
        (mov-imm64 7 0)  ;; rdi: exit code
