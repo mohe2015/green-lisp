@@ -1,9 +1,8 @@
 (module main racket
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
-  ;; two program headers (probably not the problem)
-  ;; Section to Segment mapping: (probably not the problem)
-  ;; STRIPPING HELPS!!!
+  ;; TODO two program headers
+  ;; TODO Section to Segment mapping
   
   (define code
     (lambda ()
@@ -21,9 +20,21 @@
        (push 1)
        (pop 1)
        (call 'code-start)
-       (jmp -2) ;; size of jmp instruction
+       ;;(jmp -2) ;; size of jmp instruction
+      
+
+       ;; TODO overflow
+       (label '+)
+       (pop 0)
+       (pop 1)
+       (add 0 1)
+       (push 0)
+
+
+       ;; TODO put in data section
        (label 'hello-string)
        (data-string #"Hello\n\0")
+       
        (label 'code-end))))
 
   (call-with-output-file "out.elf"

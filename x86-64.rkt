@@ -7,7 +7,11 @@
    jmp% jmp
    push% push
    pop% pop
-   call% call)
+   call% call
+   add% add
+   )
+
+  (define REX.W #b01001000)
 
   (define unsigned
     (lambda (bits value)
@@ -64,7 +68,7 @@
     
       (define/public (get-bytes current-address label-addresses)
         (bytes-append
-         (unsigned 8 #b01001000) ;; REX.W
+         (unsigned 8 REX.W)
          (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
          (unsigned 64 (dynamic the-value label-addresses)))) ;; value
     
@@ -149,4 +153,29 @@
 
   (define (call address)
     (new call% [address address]))
+  
+  ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=133&zoom=100,-7,726
+  (define add%
+    (class* object% (data-interface)
+      (init destination source)
+      (define the-destination destination)
+      (define the-source source)
+      (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
+        (let* ((mod #b11000000)
+               (rm the-destination)
+               (reg the-source)
+               (modr/m (+ mod (arithmetic-shift reg 3) rm)))
+          (bytes REX.W 01 modr/m)))
+
+      (define/public (length offset)
+        3)))
+
+  (define (add destination source)
+    (new add% [destination destination] [source source]))
   )
