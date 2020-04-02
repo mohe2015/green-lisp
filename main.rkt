@@ -3,6 +3,14 @@
 
   ;; TODO two program headers
   ;; TODO Section to Segment mapping
+
+  (define (rodata)
+    (data-list
+     (align 12)
+     (label 'rodata-start)
+     (label 'hello-string)
+     (data-string #"Hello\n\0")
+     (label 'rodata-end)))
   
   (define code
     (lambda ()
@@ -43,15 +51,11 @@
        ;; https://linux.die.net/man/2/mmap2
        ;; https://linux.die.net/man/2/mremap
        
-       ;; TODO put in .data section
-       (label 'hello-string)
-       (data-string #"Hello\n\0")
-       
        (label 'code-end))))
 
   (call-with-output-file "out.elf"
     (lambda (out)
       (let* ((base #x400000)
-             (the-file (file base (code))))
+             (the-file (file base (code) (rodata))))
       (write-bytes (send the-file get-bytes base (send the-file get-label-addresses base)) out))) #:mode 'binary #:exists 'truncate/replace)
   (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))

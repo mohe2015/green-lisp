@@ -102,12 +102,12 @@
        (data-unsigned 16 EM_X86_64) ;; e_machine
        (data-unsigned 32 EV_CURRENT) ;; e_version
        (data-unsigned 64 'code-start) ;; aTODO entrypoint) ;; e_entry
-       (data-unsigned 64 64) ;; e_phoff aTODO phdr - $$
-       (data-unsigned 64 '(- phdr-end start)) ;; e_shoff
+       (data-unsigned 64 '(- phdrs-start start)) ;; e_phoff aTODO phdr - $$
+       (data-unsigned 64 '(- phdrs-end start)) ;; e_shoff
        (data-unsigned 32 0) ;; e_flags
        (data-unsigned 16 '(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
        (data-unsigned 16 '(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
-       (data-unsigned 16 1)  ;; e_phnum p
+       (data-unsigned 16 2)  ;; e_phnum p
        (data-unsigned 16 '(- null-shdr-end null-shdr-start)) ;; e_shentsize
        (data-unsigned 16 '(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
        (data-unsigned 16 2)  ;; e_shstrndx TODO calculate
@@ -184,6 +184,22 @@
        (data-unsigned 64 1) ;; sh_addralign: section alignment
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'text-shdr-end))))
+
+  (define rodata-shdr
+    (lambda ()
+      (data-list
+       (label 'rodata-shdr-start)
+       (data-unsigned 32 '(- rodata-string shstrtab-start)) ;; sh_name:   section name, index in string table
+       (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
+       (data-unsigned 64 SHF_ALLOC) ;; sh_flags:  section attributes
+       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 '(- rodata-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- rodata-end rodata-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 32 0) ;; sh_link:   index of another section
+       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+       (label 'rodata-shdr-end))))
   
   (define shstrtab
     (lambda ()
@@ -198,6 +214,8 @@
        (data-string #".strtab\0")
        (label 'symtab-string)
        (data-string #".symtab\0")
+       (label 'rodata-string)
+       (data-string #".rodata\0")
        (label 'shstrtab-end))))
   
   (define shstrtab-shdr
@@ -339,7 +357,15 @@
      (shstrtab-shdr)
      (strtab-shdr)
      (symtab-shdr)
+     (rodata-shdr)
      (label 'shdrs-end)))
+
+  (define (phdrs)
+    (data-list
+     (label 'phdrs-start)
+     (phdr)
+     (phdr-rodata)
+     (label 'phdrs-end)))
 
   (define phdr
     (lambda ()
@@ -355,15 +381,30 @@
        (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-end))))
 
+  (define phdr-rodata
+    (lambda ()
+      (data-list
+       (label 'phdr-rodata-start)
+       (data-unsigned 32 1) ;; p_type
+       (data-unsigned 32 4) ;; p_flags ;; read + execute
+       (data-unsigned 64 '(- rodata-start start)) ;; p_offset
+       (data-unsigned 64 'rodata-start) ;; p_vaddr aTODO current addr
+       (data-unsigned 64 'rodata-start) ;; p_paddr aTODO current addr
+       (data-unsigned 64 '(- rodata-end rodata-start)) ;; p_filesz aTODO filesize
+       (data-unsigned 64 '(- rodata-end rodata-start)) ;; p_memsz aTODO filesize
+       (data-unsigned 64 #x1000) ;; p_align
+       (label 'phdr-rodata-end))))
+
   (define file
-    (lambda (base code)
+    (lambda (base code rodata)
       (data-list
        (label 'start)
        (ehdr)
-       (phdr)
+       (phdrs)
        (shdrs)
        (symbols)
        (shstrtab)
        (strtab)
        code
+       rodata
        (label 'end)))))
