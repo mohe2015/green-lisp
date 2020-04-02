@@ -1,7 +1,6 @@
 (module main racket
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
-  ;; TODO two program headers
   ;; TODO Section to Segment mapping
 
   (define (rodata)
@@ -11,6 +10,16 @@
      (label 'hello-string)
      (data-string #"Hello\n\0")
      (label 'rodata-end)))
+
+  (define (data)
+    (data-list
+     (align 12) ;; needed?
+     (label 'data-start)
+
+     (label 'buffer)
+     (data-array 1024)
+
+     (label 'data-end)))
   
   (define code
     (lambda ()
@@ -44,10 +53,7 @@
 
        ;; TODO conditionals
 
-       ;; http://man7.org/linux/man-pages/man2/sbrk.2.html
-       ;; TODO memory allocation http://man7.org/linux/man-pages/man2/brk.2.html
-       ;; or use http://man7.org/linux/man-pages/man2/mmap.2.html ???
-       ;; what's the difference -> use mmap for simplicity!!!
+       ;; memory allocation:
        ;; https://linux.die.net/man/2/mmap2
        ;; https://linux.die.net/man/2/mremap
        

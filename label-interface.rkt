@@ -1,5 +1,13 @@
 (module label-interface racket
-  (provide dynamic data-interface label% label data-unsigned% data-unsigned data-list% data-list data-string% data-string align% align)
+  (provide
+   dynamic data-interface
+   label% label
+   data-unsigned% data-unsigned
+   data-list% data-list
+   data-string% data-string
+   align% align
+   data-array% data-array
+   )
 
   (define (dynamic value label-addresses)
     (eval
@@ -67,6 +75,24 @@
 
   (define (data-string string)
     (new data-string% [string string]))
+
+  (define data-array%
+    (class* object% (data-interface)
+      (init size)
+      (define the-size size)
+      (super-new)
+
+      (define/public (get-label-addresses offset)
+        (list))
+
+      (define/public (get-bytes current-address label-addresses)
+        (make-bytes the-size 0))
+
+      (define/public (length offset)
+        the-size)))
+
+  (define (data-array size)
+    (new data-array% [size size]))
 
   (define data-list%
     (class* object% (data-interface)
