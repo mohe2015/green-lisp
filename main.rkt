@@ -47,7 +47,7 @@
 
        ;; TODO read user input
        
-       ;; TODO .bss section for buffers etc.
+       ;; TODO .data .bss section for buffers etc.
 
        ;; TODO conditionals
 
@@ -60,6 +60,6 @@
   (call-with-output-file "out.elf"
     (lambda (out)
       (let* ((base #x400000)
-             (the-file (file base (code) (rodata))))
+             (the-file (file base (code) (rodata) (data))))
       (write-bytes (send the-file get-bytes base (send the-file get-label-addresses base)) out))) #:mode 'binary #:exists 'truncate/replace)
   (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))

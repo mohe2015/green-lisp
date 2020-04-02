@@ -107,7 +107,7 @@
        (data-unsigned 32 0) ;; e_flags
        (data-unsigned 16 '(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
        (data-unsigned 16 '(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
-       (data-unsigned 16 2)  ;; e_phnum p
+       (data-unsigned 16 3)  ;; e_phnum p
        (data-unsigned 16 '(- null-shdr-end null-shdr-start)) ;; e_shentsize
        (data-unsigned 16 '(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
        (data-unsigned 16 2)  ;; e_shstrndx TODO calculate
@@ -200,6 +200,22 @@
        (data-unsigned 64 1) ;; sh_addralign: section alignment
        (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
        (label 'rodata-shdr-end))))
+
+  (define data-shdr
+    (lambda ()
+      (data-list
+       (label 'data-shdr-start)
+       (data-unsigned 32 '(- data-string shstrtab-start)) ;; sh_name:   section name, index in string table
+       (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
+       (data-unsigned 64 (+ SHF_ALLOC SHF_WRITE)) ;; sh_flags:  section attributes
+       (data-unsigned 64 'data-start) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 '(- data-start start)) ;; sh_offset: section file offset
+       (data-unsigned 64 '(- data-end data-start)) ;; sh_size:   size of section in bytes
+       (data-unsigned 32 0) ;; sh_link:   index of another section
+       (data-unsigned 32 0) ;; sh_info:   additional section information
+       (data-unsigned 64 1) ;; sh_addralign: section alignment
+       (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+       (label 'data-shdr-end))))
   
   (define shstrtab
     (lambda ()
@@ -216,6 +232,8 @@
        (data-string #".symtab\0")
        (label 'rodata-string)
        (data-string #".rodata\0")
+       (label 'data-string)
+       (data-string #".data\0")
        (label 'shstrtab-end))))
   
   (define shstrtab-shdr
@@ -358,6 +376,7 @@
      (strtab-shdr)
      (symtab-shdr)
      (rodata-shdr)
+     (data-shdr)
      (label 'shdrs-end)))
 
   (define (phdrs)
@@ -365,6 +384,7 @@
      (label 'phdrs-start)
      (phdr)
      (phdr-rodata)
+     (phdr-data)
      (label 'phdrs-end)))
 
   (define phdr
@@ -372,7 +392,7 @@
       (data-list
        (label 'phdr-start)
        (data-unsigned 32 1) ;; p_type
-       (data-unsigned 32 5) ;; p_flags ;; read + execute
+       (data-unsigned 32 5) ;; p_flags ;; TODO read + execute
        (data-unsigned 64 '(- code-start start)) ;; p_offset
        (data-unsigned 64 'code-start) ;; p_vaddr aTODO current addr
        (data-unsigned 64 'code-start) ;; p_paddr aTODO current addr
@@ -386,7 +406,7 @@
       (data-list
        (label 'phdr-rodata-start)
        (data-unsigned 32 1) ;; p_type
-       (data-unsigned 32 4) ;; p_flags ;; read + execute
+       (data-unsigned 32 4) ;; p_flags ; ; TODO read + execute
        (data-unsigned 64 '(- rodata-start start)) ;; p_offset
        (data-unsigned 64 'rodata-start) ;; p_vaddr aTODO current addr
        (data-unsigned 64 'rodata-start) ;; p_paddr aTODO current addr
@@ -395,8 +415,22 @@
        (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-rodata-end))))
 
+  (define phdr-data
+    (lambda ()
+      (data-list
+       (label 'phdr-data-start)
+       (data-unsigned 32 1) ;; p_type
+       (data-unsigned 32 6) ;; p_flags ;; TODO read + write
+       (data-unsigned 64 '(- data-start start)) ;; p_offset
+       (data-unsigned 64 'data-start) ;; p_vaddr aTODO current addr
+       (data-unsigned 64 'data-start) ;; p_paddr aTODO current addr
+       (data-unsigned 64 '(- data-end data-start)) ;; p_filesz aTODO filesize
+       (data-unsigned 64 '(- data-end data-start)) ;; p_memsz aTODO filesize
+       (data-unsigned 64 #x1000) ;; p_align
+       (label 'phdr-data-end))))
+
   (define file
-    (lambda (base code rodata)
+    (lambda (base code rodata data)
       (data-list
        (label 'start)
        (ehdr)
@@ -407,4 +441,5 @@
        (strtab)
        code
        rodata
+       data
        (label 'end)))))
