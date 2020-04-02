@@ -176,7 +176,7 @@
        (data-unsigned 32 '(- text-string shstrtab-start)) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
        (data-unsigned 64 (+ SHF_ALLOC SHF_EXECINSTR)) ;; sh_flags:  section attributes
-       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 'code-start) ;; sh_addr:   section virtual address at execution
        (data-unsigned 64 '(- code-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- code-end code-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 0) ;; sh_link:   index of another section
@@ -192,7 +192,7 @@
        (data-unsigned 32 '(- rodata-string shstrtab-start)) ;; sh_name:   section name, index in string table
        (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
        (data-unsigned 64 SHF_ALLOC) ;; sh_flags:  section attributes
-       (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
+       (data-unsigned 64 'rodata-start) ;; sh_addr:   section virtual address at execution
        (data-unsigned 64 '(- rodata-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- rodata-end rodata-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 0) ;; sh_link:   index of another section

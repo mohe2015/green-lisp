@@ -1,8 +1,6 @@
 (module main racket
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
-  ;; TODO Section to Segment mapping
-
   (define (rodata)
     (data-list
      (align 12)
