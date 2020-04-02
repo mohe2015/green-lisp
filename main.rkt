@@ -30,8 +30,20 @@
        (add 0 1)
        (push 0)
 
+       ;; TODO read user input
+       
+       ;; TODO .bss section for buffers etc.
 
-       ;; TODO put in data section
+       ;; TODO conditionals
+
+       ;; http://man7.org/linux/man-pages/man2/sbrk.2.html
+       ;; TODO memory allocation http://man7.org/linux/man-pages/man2/brk.2.html
+       ;; or use http://man7.org/linux/man-pages/man2/mmap.2.html ???
+       ;; what's the difference -> use mmap for simplicity!!!
+       ;; https://linux.die.net/man/2/mmap2
+       ;; https://linux.die.net/man/2/mremap
+       
+       ;; TODO put in .data section
        (label 'hello-string)
        (data-string #"Hello\n\0")
        
