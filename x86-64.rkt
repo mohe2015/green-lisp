@@ -177,5 +177,4 @@
         3)))
 
   (define (add destination source)
-    (new add% [destination destination] [source source]))
-  )
+    (new add% [destination destination] [source source])))
