@@ -14,10 +14,13 @@
        (mov-imm64 6 'hello-string) ;; rsi load string
        (mov-imm64 0 1)  ; al / rax: set write to command
        (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-       (syscall)
+       (syscall) ;; write(stdout, "Hello\n")
        (mov-imm64 0 60) ;; rax: exit syscall
        (mov-imm64 7 0)  ;; rdi: exit code
-       (syscall)
+       (syscall) ;; exit(0)
+       (push 1)
+       (pop 1)
+       (call 'code-start)
        (jmp -2) ;; size of jmp instruction
        (label 'hello-string)
        (data-string #"Hello\n\0")
