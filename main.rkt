@@ -73,8 +73,6 @@
        (pop 1)
        (add 0 1)
        (push 0)
-
-       ;; TODO read user input
        
        ;; TODO .bss section for buffers etc.
 
