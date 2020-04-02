@@ -312,6 +312,7 @@
      ;; If the symbol table contains any local symbols, the second entry of the symbol table is an STT_FILE symbol giving the name of the file.
      (symbol0)
      (symbol)
+     (symbol2)
      (label 'symbols-end)))
   
   (define symtab-shdr
@@ -325,7 +326,7 @@
        (data-unsigned 64 '(- symbols-start start)) ;; sh_offset: section file offset
        (data-unsigned 64 '(- symbols-end symbols-start)) ;; sh_size:   size of section in bytes
        (data-unsigned 32 3) ;; TODO FIXME calculate this sh_link:   index of another section
-       (data-unsigned 32 0) ;; TODO WHAT DOES THIS MEAN sh_info:   additional section information "The global symbols immediately follow the local symbols in the symbol table. The first global symbol is identified by the symbol table sh_info value. Local and global symbols are always kept separate in this manner, and cannot be mixed together."
+       (data-unsigned 32 3) ;; TODO CALCULATE WHAT DOES THIS MEAN sh_info:   additional section information "The global symbols immediately follow the local symbols in the symbol table. The first global symbol is identified by the symbol table sh_info value. Local and global symbols are always kept separate in this manner, and cannot be mixed together."
        (data-unsigned 64 8) ;; sh_addralign: section alignment
        (data-unsigned 64 24) ;; TODO THIS IS THE SIZE OF ONE SYMBOL sh_entsize:   entry size if section holds table
        (label 'symtab-shdr-end))))
