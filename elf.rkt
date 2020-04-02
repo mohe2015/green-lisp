@@ -338,7 +338,7 @@
      (data-unsigned 8 (+ (arithmetic-shift STB_LOCAL 4) STT_NOTYPE))    ;; st_info
      (data-unsigned 8 STV_DEFAULT)    ;; st_other
      (data-unsigned 16 1)   ;; st_shndx
-     (data-unsigned 64 'hello-string) ;; st_value
+     (data-unsigned 64 'your-name-question-string) ;; st_value
      (data-unsigned 64 0))) ;; st_size
 
   (define (symbols)

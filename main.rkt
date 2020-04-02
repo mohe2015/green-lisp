@@ -5,8 +5,8 @@
     (data-list
      (align 12)
      (label 'rodata-start)
-     (label 'hello-string)
-     (data-string #"Hello\n\0")
+     (label 'your-name-question-string)
+     (data-string #"What's your name?\n\0")
      (label 'rodata-end)))
 
   (define (data)
@@ -24,19 +24,31 @@
       (data-list
        (align 12)
        (label 'code-start)
-       (mov-imm64 2 6)  ; dl / rdx: length of string
-       (mov-imm64 6 'hello-string) ;; rsi load string
+       (mov-imm64 2 18)  ; dl / rdx: length of string
+       (mov-imm64 6 'your-name-question-string) ;; rsi load string
        (mov-imm64 0 1)  ; al / rax: set write to command
        (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
        (syscall) ;; write(stdout, "Hello\n")
+       ;; TODO check return value?
+
+       (mov-imm64 2 1024) ;; rdx: buffer length?
+       (mov-imm64 6 'buffer) ;; rsi: buffer?
+       (mov-imm64 7 1) ;; rdi: stdin?
+       (mov-imm64 0 0) ;; rax: read syscall
+       (syscall) ;; read(stdin, buffer, 1024)
+       ;; CHECK RETURN VALUE!
+
+
+
+       
        (mov-imm64 0 60) ;; rax: exit syscall
        (mov-imm64 7 0)  ;; rdi: exit code
        (syscall) ;; exit(0)
+       
        (push 1)
        (pop 1)
        (call 'code-start)
        ;;(jmp -2) ;; size of jmp instruction
-      
 
        ;; TODO overflow
        (label '+)
@@ -47,7 +59,7 @@
 
        ;; TODO read user input
        
-       ;; TODO .data .bss section for buffers etc.
+       ;; TODO .bss section for buffers etc.
 
        ;; TODO conditionals
 
