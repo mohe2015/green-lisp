@@ -1,5 +1,5 @@
 (module x86-64 racket
-  (require green-lisp/label-interface)
+  (require green-lisp/label-interface green-lisp/modrm)
   (provide
    syscall% syscall
    mov-imm8% mov-imm8
@@ -167,11 +167,7 @@
 
       (define/public (get-bytes current-address label-addresses)
         ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
-        (let* ((mod #b11000000)
-               (rm the-destination)
-               (reg the-source)
-               (modr/m (+ mod (arithmetic-shift reg 3) rm)))
-          (bytes REX.W 01 modr/m)))
+          (bytes REX.W 01 (mod11-to-binary the-destination the-source)))
 
       (define/public (length offset)
         3)))
