@@ -148,6 +148,12 @@
   (define (data-array size)
     (new data-array% [size size]))
 
+  (define-type data-list-type
+    (Class
+     (init (list (Listof (Instance data-interface-type))))
+     (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
+     (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
+     (length (-> Integer Integer))))
   (define data-list%
     (class data-interface%
       (init [list : (Listof (Instance data-interface-type))])
@@ -155,18 +161,22 @@
       (define the-list list)
       (super-new)
 
+      ;; (list->label-addresses2 '() 0)
+      ;; (list->label-addresses2 '(a) 0)
+      ;; (list->label-addresses2 '(a b) 0)
+      ;; (list->label-addresses2 '(a b c) 0)
+
       (: list->label-addresses
          (-> (Listof (Instance data-interface-type))
              Integer
              (Listof (List Symbol Integer))))
       (define (list->label-addresses a-list offset)
         (cond [(null? a-list) '()]
-              [(pair? a-list)
-               (append
-                (list->label-addresses (first a-list) offset)
-                (list->label-addresses (rest a-list) (+ offset (send (first a-list) length offset))))]
               [else
-               (send a-list get-label-addresses offset)]))
+               (let ([a (car a-list)])
+                 (append
+                  (send a get-label-addresses offset)
+                  (list->label-addresses (cdr a-list) (+ offset (send a length offset)))))]))
       
       (define/override (get-label-addresses offset)
         (list->label-addresses the-list offset))
@@ -177,12 +187,10 @@
                          Bytes))
       (define (list->bytes a-list current-address label-addresses)
         (cond [(null? a-list) (bytes)]
-              [(pair? a-list)
-               (bytes-append
-                (list->bytes (first a-list) current-address label-addresses)
-                (list->bytes (rest a-list) (+ current-address (send (first a-list) length current-address)) label-addresses))]
               [else
-               (send a-list get-bytes current-address label-addresses)]))
+               (bytes-append
+                 (send (first a-list) get-bytes current-address label-addresses)
+                (list->bytes (rest a-list) (+ current-address (send (first a-list) length current-address)) label-addresses))]))
 
       (define/override (get-bytes current-address label-addresses)
         (list->bytes the-list current-address label-addresses))
@@ -192,22 +200,28 @@
                         Integer))
       (define (sum-length a-list offset)
         (cond [(null? a-list) 0]
-              [(pair? a-list)
-               (+
-                (sum-length (first a-list) offset)
-                (sum-length (rest a-list) (+ offset (sum-length (first a-list) offset))))]
               [else
-               (send a-list length offset)])) 
+               (+
+                (send (first a-list) length offset)
+                (sum-length (rest a-list) (+ offset (send (first a-list) length offset))))]))
       
       (define/override (length offset)
         (sum-length the-list offset))))
 
+  (: data-list (-> (Listof (Instance data-interface-type)) data-list-type))
   (define (data-list . list)
     (new data-list% [list list]))
 
+  (define-type align-type
+    (Class
+     (init (alignment-bits Integer))
+     (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
+     (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
+     (length (-> Integer Integer))))
   (define align%
     (class data-interface%
-      (init alignment-bits)
+      (init [alignment-bits : Integer])
+      (: the-alignment-bits Integer)
       (define the-alignment-bits alignment-bits)
       (super-new)
 
@@ -217,11 +231,13 @@
       (define/override (get-bytes current-address label-addresses)
         (make-bytes (get-byte-count-to-align current-address) 0))
 
+      (: get-byte-count-to-align (-> Integer Integer))
       (define (get-byte-count-to-align offset)
         (- (arithmetic-shift (arithmetic-shift (+ offset (arithmetic-shift 1 the-alignment-bits) -1) (- the-alignment-bits)) the-alignment-bits) offset))
 
       (define/override (length offset)
         (get-byte-count-to-align offset))))
 
+  (: align (-> Integer (Instance align-type)))
   (define (align alignment-bits)
     (new align% [alignment-bits alignment-bits])))
