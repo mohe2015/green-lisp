@@ -2,7 +2,8 @@
   (require typed/racket/unsafe)
   (unsafe-require/typed green-lisp/untyped-utils [dynamic (-> Any (Listof (List Symbol Integer)) Integer)])
   (provide
-   dynamic data-interface%
+   dynamic
+   data-interface% data-interface-type
    label% label
    data-unsigned% data-unsigned
    data-list% data-list
@@ -13,6 +14,10 @@
 
   (define-type data-interface-type
      (Class
+      (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
+      (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
+      (length (-> Integer Integer))))
+  (: data-interface% (Class
       (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
       (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
       (length (-> Integer Integer))))
