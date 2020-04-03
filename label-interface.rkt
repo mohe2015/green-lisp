@@ -208,7 +208,7 @@
       (define/override (length offset)
         (sum-length the-list offset))))
 
-  (: data-list (-> (Listof (Instance data-interface-type)) data-list-type))
+  (: data-list (-> (Instance data-interface-type) * (Instance data-list-type)))
   (define (data-list . list)
     (new data-list% [list list]))
 
