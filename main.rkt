@@ -1,4 +1,4 @@
-(module main racket
+(module main typed/racket
   (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
   (define (rodata)
@@ -85,7 +85,7 @@
        (label 'code-end))))
 
   (call-with-output-file "out.elf"
-    (lambda (out)
+    (lambda ([out : Output-Port])
       (let* ((base #x400000)
              (the-file (file base (code) (rodata) (data))))
       (write-bytes (send the-file get-bytes base (send the-file get-label-addresses base)) out))) #:mode 'binary #:exists 'truncate/replace)

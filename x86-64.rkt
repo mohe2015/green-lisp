@@ -79,10 +79,10 @@
      (length (-> Integer Integer))))
   (define mov-imm64%
     (class data-interface%
-      (init [register : Integer] [value : Integer])
+      (init [register : Integer] [value : Any])
       (: the-register Integer)
       (define the-register register)
-      (: the-value Integer)
+      (: the-value Any)
       (define the-value value)
       (super-new)
 
@@ -98,7 +98,7 @@
       (define/override (length offset)
         10)))
 
-  (: mov-imm64 (-> Integer Integer (Instance mov-imm64-type)))
+  (: mov-imm64 (-> Integer Any (Instance mov-imm64-type)))
   (define (mov-imm64 register value)
     (new mov-imm64% [register register] [value value]))
 
@@ -192,8 +192,8 @@
      (length (-> Integer Integer))))
   (define call%
     (class data-interface%
-      (init [address : Integer])
-      (: the-address Integer)
+      (init [address : Any])
+      (: the-address Any)
       (define the-address address)
       (super-new)
       
@@ -206,7 +206,7 @@
       (define/override (length offset)
         5)))
 
-  (: call (-> Integer (Instance call-type)))
+  (: call (-> Any (Instance call-type)))
   (define (call address)
     (new call% [address address]))
   
