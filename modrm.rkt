@@ -7,6 +7,14 @@
   ;; (register al) vs (register (part 1 eax)) or so
   ;; or maybe both
 
+  ;; alternative way
+  ;; (define rax (register 64 0))
+  ;; (define eax (register 32 0))
+  ;; ..
+  ;; so types can be checked by caller
+  ;; e.g. add may have different opcode depending on size
+  ;; or some opcode may not even work with wrong one
+  
   ;; todo different reg size e.g. al and ax for eax
   (define reg-to-binary
     (lambda (value)
