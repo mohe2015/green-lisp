@@ -1,8 +1,8 @@
-(module untyped-utils racket/base
-  (provide dynamic)
+#lang racket/base
+(provide dynamic)
   
-   (define (dynamic value label-addresses)
-    (eval
-     `(let ,label-addresses
-        ,value)
-     (make-base-namespace))))
+(define (dynamic value label-addresses)
+  (eval
+   `(let ,label-addresses
+      ,value)
+   (make-base-namespace)))
