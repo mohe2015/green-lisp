@@ -1,4 +1,4 @@
-(module elf racket
+(module elf typed/racket
   (require green-lisp/x86-64 green-lisp/label-interface)
   (provide file)
 
@@ -387,6 +387,7 @@
      (phdr-data)
      (label 'phdrs-end)))
 
+  (: phdr (-> (Instance data-list-type)))
   (define phdr
     (lambda ()
       (data-list
@@ -401,6 +402,7 @@
        (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-end))))
 
+  (: phdr-rodata (-> (Instance data-list-type)))
   (define phdr-rodata
     (lambda ()
       (data-list
@@ -415,6 +417,8 @@
        (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-rodata-end))))
 
+  
+  (: phdr-data (-> (Instance data-list-type)))
   (define phdr-data
     (lambda ()
       (data-list
@@ -429,6 +433,8 @@
        (data-unsigned 64 #x1000) ;; p_align
        (label 'phdr-data-end))))
 
+  
+  (: file (-> Integer (Instance data-list-type) (Instance data-list-type) (Instance data-list-type) (Instance data-list-type)))
   (define file
     (lambda (base code rodata data)
       (data-list

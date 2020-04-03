@@ -6,7 +6,7 @@
    data-interface% data-interface-type
    label% label
    data-unsigned% data-unsigned
-   data-list% data-list
+   data-list% data-list data-list-type
    data-string% data-string
    align% align
    data-array% data-array
@@ -76,10 +76,10 @@
      (length (-> Integer Integer))))
   (define data-unsigned%
     (class data-interface%
-      (init [bits : Integer] [value : Integer])
+      (init [bits : Integer] [value : Any])
       (: the-bits Integer) ;; TODO multiple of eight
       (define the-bits bits)
-      (: the-value Integer)
+      (: the-value Any)
       (define the-value value)
       (super-new)
       
@@ -92,7 +92,7 @@
       (define/override (length offset)
         (arithmetic-shift the-bits -3))))
 
-  (: data-unsigned (-> Integer Integer (Instance data-unsigned-type)))
+  (: data-unsigned (-> Integer Any (Instance data-unsigned-type)))
   (define (data-unsigned bits value)
     (new data-unsigned% [bits bits] [value value]))
 
