@@ -1,5 +1,5 @@
-(module modrm racket
-  (require racket/match)
+(module modrm typed/racket/base
+  (require green-lisp/utils racket/match)
   (provide mod11-to-binary)
   ;; (register eax)
   ;; (pointer (register eax))
@@ -16,20 +16,19 @@
   ;; or some opcode may not even work with wrong one
   
   ;; todo different reg size e.g. al and ax for eax
-  (define reg-to-binary
-    (lambda (value)
-      (match value
-        ['(register eax) 0]
-        ['(register ecx) 1]
-        ['(register edx) 2]
-        ['(register ebx) 3]
-        ['(register esp) 4]
-        ['(register ebp) 5]
-        ['(register esi) 6]
-        ['(register edi) 7]
-        [_ null]
-        )))
+  (: reg-to-binary (-> (Listof Symbol) Integer))
+  (define (reg-to-binary value)
+    (match value
+      ['(register eax) 0]
+      ['(register ecx) 1]
+      ['(register edx) 2]
+      ['(register ebx) 3]
+      ['(register esp) 4]
+      ['(register ebp) 5]
+      ['(register esi) 6]
+      ['(register edi) 7]))
 
+  (: mod11-rm-to-binary (-> (Listof Symbol) Integer))
   (define (mod11-rm-to-binary value)
     (match value
       ['(register eax) 0]
@@ -39,9 +38,9 @@
       ['(register esp) 4]
       ['(register ebp) 5]
       ['(register esi) 6]
-      ['(register edi) 7]
-      [_ null]))
-
+      ['(register edi) 7]))
+  
+  (: mod11-to-binary (-> (Listof Symbol) (Listof Symbol) Integer))
   (define (mod11-to-binary reg1 reg2)
     (let* ((mod #b11000000)
            (rm (mod11-rm-to-binary reg1))
