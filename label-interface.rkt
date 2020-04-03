@@ -1,4 +1,6 @@
 (module label-interface typed/racket
+  (require typed/racket/unsafe)
+  (unsafe-require/typed green-lisp/untyped-utils [dynamic (-> Any (Listof (List Symbol Integer)) Integer)])
   (provide
    dynamic data-interface%
    label% label
@@ -8,13 +10,6 @@
    align% align
    data-array% data-array
    )
-
-  (: dynamic (-> Any (Listof (List Symbol Integer)) Integer))
-  (define (dynamic value label-addresses)
-    (eval
-     `(let ,label-addresses
-        ,value)
-     (make-base-namespace)))
 
   (define-type data-interface-type
      (Class
