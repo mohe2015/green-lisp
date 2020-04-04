@@ -1,5 +1,6 @@
 #lang racket
 (require green-lisp/label-interface)
+(require (for-syntax racket/list))
 
 '(define-code
   (label 'code-start)
@@ -45,7 +46,7 @@
                              (local-expand c 'expression #f))
                            children))
             (size (map (lambda (c)
-                         (syntax-e c))
+                         (second (syntax-e c)))
                        expanded)))
 
            
