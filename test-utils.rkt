@@ -7,5 +7,5 @@
          (let ([symbol (car symbols)]
                [size (car sizes)])
            (append
-            (list symbol offset)
+            (if (eq? symbol 'null) (list) (list (list symbol offset)))
             (list->label-addresses (cdr symbols) (cdr sizes) (+ offset size))))]))

@@ -33,10 +33,11 @@
 ;; elf, section etc. are just macros that expand to the above things
 ;; think about whether this is the best way to implement it
 (define-syntax-rule (label2 symbol)
-  (list 0 symbol (begin)))
+  (list 0 symbol (bytes)))
 
+;; (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t))
 (define-syntax-rule (call2 target)
-  (list 5 null (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t))))
+  (list 5 null (bytes #xe8)))
 
 
 (define-syntax (list2 stx)
@@ -57,9 +58,7 @@
                        expanded))
             (labels (list->label-addresses symbols sizes 0))
             )
-
-           
-       (datum->syntax stx (format "~s" (syntax->datum (datum->syntax #f labels)))))
+       (datum->syntax stx #`(let #,labels (bytes-append #,@code))))
      ]))
 
 (list2
