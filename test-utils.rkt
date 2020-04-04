@@ -9,8 +9,8 @@
                 [size (car sizes)]
                 [code (car codes)])
            (let-values ([(cara carb) (if (eq? symbol 'null)
-                                         (values (list)                      (list code))
-                                         (values (list (list symbol offset)) (list code)))]
+                                         (values (list)                      `((,code ,offset)))
+                                         (values (list (list symbol offset)) `((,code ,offset))))]
                         [(cdra cdrb) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) (+ offset size))])
              (values
               (append cara cdra)

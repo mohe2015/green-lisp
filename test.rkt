@@ -13,7 +13,7 @@
   (list 0 symbol (lambda (current-address) (bytes))))
 
 (define-syntax-rule (call2 target)
-  (list 5 null (lambda (current-address) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t))))) ;; TODO 1337 current-address
+  (list 5 null (lambda (current-address) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))))
 
 (define-syntax (list2 stx)
   (syntax-case stx ()
@@ -24,8 +24,7 @@
             (symbols (map (lambda (c) (third c)) expanded))
             (codes (map (lambda (c) (fourth c)) expanded)))
        (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
-         (datum->syntax stx (format "~s" `,code))))]))
-       ;;(datum->syntax stx #`(let #,labels (bytes-append #,@code))))]))
+         (datum->syntax stx #`(let #,labels (bytes-append #,@code)))))]))
 
 (list2
  (label2 l1)
