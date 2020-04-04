@@ -6,7 +6,7 @@
 (define (define-label-addresses label-addresses)
   (map
    (lambda (v)
-     (namespace-set-variable-value! (first v) (second v) #f namespace #t))
+     (namespace-set-variable-value! (first v) (second v) #f namespace #f))
    label-addresses))
 
 (define (dynamic value)

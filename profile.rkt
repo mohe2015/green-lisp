@@ -94,6 +94,5 @@
          (the-file (file base (code) (rodata) (data)))
          (label-addresses (send the-file get-label-addresses base)))
     (define-label-addresses label-addresses)
-    (send the-file get-bytes base label-addresses)
-    null))
- #:delay 0.01 #:repeat 1 #:render render #:use-errortrace? #t)
+    (bytes-length (send the-file get-bytes base label-addresses))))
+ #:delay 0.01 #:repeat 10 #:render render #:use-errortrace? #t)
