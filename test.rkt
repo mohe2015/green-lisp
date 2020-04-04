@@ -1,4 +1,4 @@
-#lang typed/racket
+#lang racket
 (require green-lisp/label-interface)
 
 '(define-code
@@ -32,7 +32,7 @@
 ;; elf, section etc. are just macros that expand to the above things
 ;; think about whether this is the best way to implement it
 (define-syntax-rule (label2 symbol)
-  (list 0 'symbol (progn)))
+  (list 0 'symbol (begin)))
 
 (define-syntax-rule (call2 target)
   (list 5 null (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t))))
@@ -41,8 +41,9 @@
 (define-syntax (list2 stx)
   (syntax-case stx ()
     [(_ x ...)
-     (datum->syntax stx
-                    (format "~s" (syntax->datum (quasisyntax (progn (unsyntax-splicing (syntax (x ...))))))))
+     (let* ((children (quasisyntax (list (unsyntax-splicing (syntax (x ...))))))
+            (expanded (local-expand children 'expression #f)))
+       (datum->syntax stx (format "~s" (syntax->datum expanded))))
      ]))
 
 (list2
