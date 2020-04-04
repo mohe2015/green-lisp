@@ -1,6 +1,6 @@
 #lang racket
 (require green-lisp/label-interface)
-(require (for-syntax racket/list))
+(require (for-syntax racket/list) (for-syntax green-lisp/test-utils))
 
 '(define-code
   (label 'code-start)
@@ -38,19 +38,28 @@
 (define-syntax-rule (call2 target)
   (list 5 null (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t))))
 
+
 (define-syntax (list2 stx)
   (syntax-case stx ()
     [(_ x ...)
      (let* ((children (syntax-e #'(x ...)))
             (expanded (map (lambda (c)
-                             (local-expand c 'expression #f))
+                             (syntax->datum (local-expand c 'expression #f)))
                            children))
-            (size (map (lambda (c)
-                         (second (syntax-e c)))
-                       expanded)))
+            (sizes (map (lambda (c)
+                         (second c))
+                       expanded))
+            (symbols (map (lambda (c)
+                         (third c))
+                       expanded))
+            (code (map (lambda (c)
+                         (fourth c))
+                       expanded))
+            (labels (list->label-addresses symbols sizes 0))
+            )
 
            
-       (datum->syntax stx (format "~s" (syntax->datum (datum->syntax  #f size)))))
+       (datum->syntax stx (format "~s" (syntax->datum (datum->syntax #f labels)))))
      ]))
 
 (list2

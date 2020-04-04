@@ -147,6 +147,20 @@
 (define (data-array size)
   (new data-array% [size size]))
 
+
+(: list->label-addresses
+   (-> (Listof (Instance data-interface-type))
+       Integer
+       (Listof (List Symbol Integer))))
+(define (list->label-addresses a-list offset)
+  (cond [(null? a-list) '()]
+        [else
+         (let ([a (car a-list)])
+           (append
+            (send a get-label-addresses offset)
+            (list->label-addresses (cdr a-list) (+ offset (send a length offset)))))]))
+      
+
 (: list->bytes (-> (Listof (Instance data-interface-type))
                    Integer
                    (Listof (List Symbol Integer))
@@ -186,18 +200,6 @@
     ;; (list->label-addresses2 '(a b) 0)
     ;; (list->label-addresses2 '(a b c) 0)
 
-    (: list->label-addresses
-       (-> (Listof (Instance data-interface-type))
-           Integer
-           (Listof (List Symbol Integer))))
-    (define/private (list->label-addresses a-list offset)
-      (cond [(null? a-list) '()]
-            [else
-             (let ([a (car a-list)])
-               (append
-                (send a get-label-addresses offset)
-                (list->label-addresses (cdr a-list) (+ offset (send a length offset)))))]))
-      
     (define/override (get-label-addresses offset)
       (list->label-addresses the-list offset))
 
