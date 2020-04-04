@@ -93,7 +93,6 @@
   (let* ((base #x400000)
          (the-file (file base (code) (rodata) (data)))
          (label-addresses (send the-file get-label-addresses base)))
-    (print label-addresses)
     (define-label-addresses label-addresses)
     (send the-file get-bytes base label-addresses)
     null))
