@@ -1,5 +1,5 @@
 #lang racket
-(require green-lisp/label-interface)
+(require green-lisp/label-interface green-lisp/test-utils)
 (require (for-syntax racket/list) (for-syntax green-lisp/test-utils))
 
 '(define-file
@@ -22,9 +22,9 @@
             (expanded (map (lambda (c) (syntax->datum (local-expand c 'expression #f))) children))
             (sizes (map (lambda (c) (second c)) expanded)) ;; TODO size may depend on offset
             (symbols (map (lambda (c) (third c)) expanded))
-            (codes (map (lambda (c) (fourth c)) expanded))
-            (labels (list->label-addresses symbols sizes codes 0)))
-       (datum->syntax stx (format "~s" (syntax->datum (datum->syntax #f labels)))))]))
+            (codes (map (lambda (c) (fourth c)) expanded)))
+       (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
+         (datum->syntax stx (format "~s" (syntax->datum (datum->syntax #f labels))))))]))
        ;;(datum->syntax stx #`(let #,labels (bytes-append #,@code))))]))
 
 (list2

@@ -1,8 +1,9 @@
-#lang racket
+#lang typed/racket
 (provide list->label-addresses)
 
+(: list->label-addresses (-> (Listof Symbol) (Listof Integer) (Listof Any) Integer (Values (Listof Any) (Listof Any))))
 (define (list->label-addresses symbols sizes codes offset)
-  (cond [(null? symbols) (values (list) (list))]
+  (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
         [else
          (let* ([symbol (car symbols)]
                 [size (car sizes)]
