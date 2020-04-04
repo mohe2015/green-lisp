@@ -1,6 +1,6 @@
 #lang typed/racket/base
 
-(provide Opt)
+(provide Opt None Some)
 (struct None ())
 (struct (a) Some ([v : a]))
 (define-type (Opt a) (U None (Some a)))

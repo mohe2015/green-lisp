@@ -148,6 +148,27 @@
 (define (data-array size)
   (new data-array% [size size]))
 
+(: list->bytes (-> (Listof (Instance data-interface-type))
+                   Integer
+                   (Listof (List Symbol Integer))
+                   Bytes))
+(define (list->bytes a-list current-address label-addresses)
+  (cond [(null? a-list) (bytes)]
+        [else
+         (bytes-append
+          (send (first a-list) get-bytes current-address label-addresses)
+          (list->bytes (rest a-list) (+ current-address (send (first a-list) length current-address)) label-addresses))]))
+
+(: sum-length (-> (Listof (Instance data-interface-type))
+                  Integer
+                  Integer))
+(define (sum-length a-list offset)
+  (cond [(null? a-list) 0]
+        [else
+         (+
+          (send (first a-list) length offset)
+          (sum-length (rest a-list) (+ offset (send (first a-list) length offset))))]))
+
 (define-type data-list-type
   (Class
    (init (list (Listof (Instance data-interface-type))))
@@ -170,7 +191,7 @@
        (-> (Listof (Instance data-interface-type))
            Integer
            (Listof (List Symbol Integer))))
-    (define (list->label-addresses a-list offset)
+    (define/private (list->label-addresses a-list offset)
       (cond [(null? a-list) '()]
             [else
              (let ([a (car a-list)])
@@ -181,29 +202,8 @@
     (define/override (get-label-addresses offset)
       (list->label-addresses the-list offset))
 
-    (: list->bytes (-> (Listof (Instance data-interface-type))
-                       Integer
-                       (Listof (List Symbol Integer))
-                       Bytes))
-    (define (list->bytes a-list current-address label-addresses)
-      (cond [(null? a-list) (bytes)]
-            [else
-             (bytes-append
-              (send (first a-list) get-bytes current-address label-addresses)
-              (list->bytes (rest a-list) (+ current-address (send (first a-list) length current-address)) label-addresses))]))
-
     (define/override (get-bytes current-address label-addresses)
       (list->bytes the-list current-address label-addresses))
-
-    (: sum-length (-> (Listof (Instance data-interface-type))
-                      Integer
-                      Integer))
-    (define (sum-length a-list offset)
-      (cond [(null? a-list) 0]
-            [else
-             (+
-              (send (first a-list) length offset)
-              (sum-length (rest a-list) (+ offset (send (first a-list) length offset))))]))
       
     (define/override (length offset)
       (sum-length the-list offset))))
@@ -229,7 +229,7 @@
       (list))
     
     (: get-byte-count-to-align (-> Integer Integer))
-    (define (get-byte-count-to-align offset)
+    (define/private (get-byte-count-to-align offset)
       (- (arithmetic-shift (arithmetic-shift (+ offset (arithmetic-shift 1 the-alignment-bits) -1) (- the-alignment-bits)) the-alignment-bits) offset))
 
     (define/override (get-bytes current-address label-addresses)
