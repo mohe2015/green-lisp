@@ -32,18 +32,24 @@
 ;; elf, section etc. are just macros that expand to the above things
 ;; think about whether this is the best way to implement it
 (define-syntax-rule (label2 symbol)
-  (list 0 'symbol (begin)))
+  (list 0 symbol (begin)))
 
 (define-syntax-rule (call2 target)
   (list 5 null (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t))))
 
-;; (local-expand #'(x ...) 'expression #f)
 (define-syntax (list2 stx)
   (syntax-case stx ()
     [(_ x ...)
-     (let* ((children (quasisyntax (list (unsyntax-splicing (syntax (x ...))))))
-            (expanded (local-expand children 'expression #f)))
-       (datum->syntax stx (format "~s" (syntax->datum expanded))))
+     (let* ((children (syntax-e #'(x ...)))
+            (expanded (map (lambda (c)
+                             (local-expand c 'expression #f))
+                           children))
+            (size (map (lambda (c)
+                         (syntax-e c))
+                       expanded)))
+
+           
+       (datum->syntax stx (format "~s" (syntax->datum (datum->syntax  #f size)))))
      ]))
 
 (list2
