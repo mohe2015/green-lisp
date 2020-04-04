@@ -1,4 +1,7 @@
-#lang typed/racket
+#lang racket
+;; dot -oa.svg -Tsvg graphviz.txt && xdg-open a.svg
+(require profile)
+(require profile/render-graphviz)
 (require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
 
 (define (rodata)
@@ -84,9 +87,11 @@
        
      (label 'code-end))))
 
-(call-with-output-file "out.elf"
-  (lambda ([out : Output-Port])
-    (let* ((base #x400000)
+(profile-thunk
+ (thunk
+   (let* ((base #x400000)
            (the-file (file base (code) (rodata) (data))))
-      (write-bytes (send the-file get-bytes base (send the-file get-label-addresses base)) out))) #:mode 'binary #:exists 'truncate/replace)
-(file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit))
+     (send the-file get-bytes base
+           (send the-file get-label-addresses base))
+     null))
+ #:delay 0.01 #:repeat 1 #:render render #:use-errortrace? #t)
