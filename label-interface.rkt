@@ -1,8 +1,7 @@
 #lang typed/racket
 (require typed/racket/unsafe)
-(unsafe-require/typed green-lisp/untyped-utils [dynamic (-> Any (Listof (List Symbol Integer)) Integer)])
+(unsafe-require/typed green-lisp/untyped-utils [dynamic (-> Any Integer)])
 (provide
- dynamic
  data-interface% data-interface-type
  label% label
  data-unsigned% data-unsigned
@@ -87,7 +86,7 @@
       (list))
 
     (define/override (get-bytes current-address label-addresses)
-      (integer->integer-bytes (dynamic the-value label-addresses) (arithmetic-shift the-bits -3) #f))
+      (integer->integer-bytes (dynamic the-value) (arithmetic-shift the-bits -3) #f))
 
     (define/override (length offset)
       (arithmetic-shift the-bits -3))))

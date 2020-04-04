@@ -1,5 +1,7 @@
 #lang typed/racket
 (require green-lisp/label-interface green-lisp/modrm)
+(require typed/racket/unsafe)
+(unsafe-require/typed green-lisp/untyped-utils [dynamic (-> Any Integer)])
 (provide
  syscall% syscall
  mov-imm8% mov-imm8
@@ -62,7 +64,7 @@
        (if (= the-register 7)
            (unsigned 8 #x40)
            (bytes)) ; REX prefix to access dil instead of bh
-       (bytes (bitwise-ior #xb0 the-register) (dynamic the-value label-addresses))))
+       (bytes (bitwise-ior #xb0 the-register) (dynamic the-value))))
 
     (define/override (length offset)
       (if (= the-register 7) 3 2))))
@@ -93,7 +95,7 @@
       (bytes-append
        (unsigned 8 REX.W)
        (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
-       (unsigned 64 (dynamic the-value label-addresses)))) ;; value
+       (unsigned 64 (dynamic the-value)))) ;; value
     
     (define/override (length offset)
       10)))
@@ -119,7 +121,7 @@
       (list))
     
     (define/override (get-bytes current-address label-addresses)
-      (bytes-append (bytes #xeb) (integer->integer-bytes (dynamic the-displacement label-addresses) 1 #t)))
+      (bytes-append (bytes #xeb) (integer->integer-bytes (dynamic the-displacement) 1 #t)))
     
     (define/override (length offset)
       2)))
@@ -201,7 +203,7 @@
       (list))
 
     (define/override (get-bytes current-address label-addresses)
-      (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address label-addresses) current-address (length current-address)) 4 #t)))
+      (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t)))
 
     (define/override (length offset)
       5)))

@@ -2,7 +2,8 @@
 ;; dot -oa.svg -Tsvg graphviz.txt && xdg-open a.svg
 (require profile)
 (require profile/render-graphviz)
-(require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface)
+(require green-lisp/elf green-lisp/x86-64 green-lisp/label-interface
+         green-lisp/untyped-utils)
 
 (define (rodata)
   (data-list
@@ -89,9 +90,10 @@
 
 (profile-thunk
  (thunk
-   (let* ((base #x400000)
-           (the-file (file base (code) (rodata) (data))))
-     (send the-file get-bytes base
-           (send the-file get-label-addresses base))
-     null))
+  (let* ((base #x400000)
+         (the-file (file base (code) (rodata) (data)))
+         (label-addresses (send the-file get-label-addresses base)))
+    (define-label-addresses label-addresses)
+    (send the-file get-bytes base label-addresses)
+    null))
  #:delay 0.01 #:repeat 1 #:render render #:use-errortrace? #t)
