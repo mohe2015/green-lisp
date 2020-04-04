@@ -1,5 +1,7 @@
 #lang typed/racket
-(define-code
+(require green-lisp/label-interface)
+
+'(define-code
   (label 'code-start)
   (call 'code-start))
 
@@ -11,7 +13,7 @@
 ;; the object build functions as body
 ;; this can then be compiled:
 
-(let ((code-start 0))
+'(let ((code-start 0))
   (bytes-append*
    (nop)
    (generate-call code-start)))
@@ -20,7 +22,7 @@
 
 ;; ---------------------------------------------------------------------------------------------
 
-(define-file
+'(define-file
   (elf
    (section text
            ... code)
@@ -29,3 +31,20 @@
 
 ;; elf, section etc. are just macros that expand to the above things
 ;; think about whether this is the best way to implement it
+(define-syntax-rule (label2 symbol)
+  (list 0 'symbol (progn)))
+
+(define-syntax-rule (call2 target)
+  (list 5 null (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t))))
+
+;; (local-expand #'(x ...) 'expression #f)
+(define-syntax (list2 stx)
+  (syntax-case stx ()
+    [(_ x ...)
+     (datum->syntax stx
+                    (format "~s" (syntax->datum (quasisyntax (progn (unsyntax-splicing (syntax (x ...))))))))
+     ]))
+
+(list2
+ (label2 code-start)
+ (call2 code-start))
