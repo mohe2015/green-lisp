@@ -90,23 +90,6 @@
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
           (bytes REX.W 01 (mod11-to-binary destination source)))))
 
-
-(define-syntax (list->label-addresses stx)
-  (syntax-case stx ()
-    [(_ symbols sizes codes offset)
-     (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
-           [else
-            (let* ([symbol (car symbols)]
-                   [size ((car sizes) offset)]
-                   [code (car codes)])
-              (let-values ([(cara carb) (if (eq? symbol 'null)
-                                            (values (list)                      `((,code ,offset)))
-                                            (values (list (list symbol offset)) `((,code ,offset))))]
-                           [(cdra cdrb) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) (+ offset size))])
-                (values
-                 (append cara cdra)
-                 (append carb cdrb))))])]))
-
 (define-syntax (data-list stx)
   (syntax-case stx ()
     [(_ x ...)
