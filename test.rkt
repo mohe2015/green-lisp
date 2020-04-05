@@ -15,6 +15,23 @@
   (lambda (bits value)
     (integer->integer-bytes value (arithmetic-shift bits -3) #f)))
 
+(define-syntax-rule (data-unsigned bytes value)
+  (list bytes null (lambda (current-address) (integer->integer-bytes value bytes #f))))
+
+(define-syntax-rule (data-bytestring bytestring)
+  (list (bytes-length bytestring) null (lambda (_) bytestring)))
+
+(define-syntax-rule (data-filled-array size)
+  (list size null (lambda (_) (make-bytes size 0))))
+
+(define (get-byte-count-to-align alignment-bits offset)
+  (- (arithmetic-shift (arithmetic-shift (+ offset (arithmetic-shift 1 alignment-bits) -1) (- alignment-bits)) alignment-bits) offset))
+
+(define-syntax-rule (data-align alignment-bits)
+  (list (lambda (current-address) (get-byte-count-to-align alignment-bits current-address))
+        null
+        (lambda (current-address) (make-bytes (get-byte-count-to-align alignment-bits current-address) 0))))
+
 (define-syntax-rule (label symbol)
   (list 0 symbol (lambda (current-address) (bytes))))
 
