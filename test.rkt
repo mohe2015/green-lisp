@@ -33,7 +33,7 @@
   (list (lambda (_) 5) null (lambda (current-address) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))))
 
 (define-syntax-rule (syscall)
-  (list (lambda (_) 2) null (bytes #x0f #x05)))
+  (list (lambda (_) 2) null (lambda (_) (bytes #x0f #x05))))
 
 (define-syntax-rule (mov-imm8 register value)
   (list (lambda (_) (if (= register 7) 3 2))
@@ -65,14 +65,14 @@
   (list (lambda (_) 1)
         null
         (lambda (_)
-          (bytes (+ #x50 the-register)))))
+          (bytes (+ #x50 register)))))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1037&zoom=auto,-17,727
 (define-syntax-rule (pop register)
   (list (lambda (_) 1)
         null
         (lambda (_)
-          (bytes (+ #x58 the-register)))))
+          (bytes (+ #x58 register)))))
 ;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
  
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=133&zoom=100,-7,726
@@ -120,10 +120,63 @@
     (write-bytes
      (data-list
       (data-align 12)
-      (call symbol)
-      (call symbol)
-      (label symbol)
-      (call symbol)
-      (call symbol))
-      out))
+      (label code-start)
+
+      (mov-imm64 2 18)  ; dl / rdx: length of string
+      (mov-imm64 6 code-start) ;; rsi load string
+      (mov-imm64 0 1)  ; al / rax: set write to command
+      (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+      (syscall) ;; write(stdout, "Hello\n")
+      ;; TODO check return value?
+
+      (mov-imm64 2 1024) ;; rdx: buffer length?
+      (mov-imm64 6 code-start) ;; rsi: buffer?
+      (mov-imm64 7 1) ;; rdi: stdin?
+      (mov-imm64 0 0) ;; rax: read syscall
+      (syscall) ;; read(stdin, buffer, 1024)
+      ;; CHECK RETURN VALUE!
+
+      ;; write "Hello "
+      (mov-imm64 2 6)  ; dl / rdx: length of string
+      (mov-imm64 6 code-start) ;; rsi load string
+      (mov-imm64 0 1)  ; al / rax: set write to command
+      (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+      (syscall)
+
+
+      ;; echo
+      ;; TODO mov rdx, rax
+      (mov-imm64 2 1024)  ; dl / rdx: length of string
+
+      (mov-imm64 6 code-start) ;; rsi load string
+      (mov-imm64 0 1)  ; al / rax: set write to command
+      (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+      (syscall)
+
+      (mov-imm64 0 60) ;; rax: exit syscall
+      (mov-imm64 7 0)  ;; rdi: exit code
+      (syscall) ;; exit(0)
+
+      (push 1)
+      (pop 1)
+      (call code-start)
+      ;;(jmp -2) ;; size of jmp instruction
+
+      ;; TODO overflow
+      (label +)
+      (pop 0)
+      (pop 1)
+      ;(add '(register eax) '(register ecx))
+      (push 0)
+
+      ;; TODO .bss section for buffers etc.
+
+      ;; TODO conditionals
+
+      ;; memory allocation:
+      ;; https://linux.die.net/man/2/mmap2
+      ;; https://linux.die.net/man/2/mremap
+
+      (label code-end))
+     out))
   #:mode 'binary #:exists 'truncate/replace)
