@@ -86,7 +86,7 @@
         null
         (lambda (_)
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
-          (bytes REX.W 01 (mod11-to-binary the-destination the-source)))))
+          (bytes REX.W 01 (mod11-to-binary destination source)))))
 
 (define-syntax (data-list stx)
   (syntax-case stx ()
