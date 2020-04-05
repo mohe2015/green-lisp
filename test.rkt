@@ -115,10 +115,15 @@
        (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
          #`(let* #,labels (bytes-append #,@code))))]))
 
-(data-list
-  (data-align 12)
-  (label symbol)
-  (call symbol)
-  (call symbol)
-  (call symbol)
-  (call symbol))
+(call-with-output-file "out.bin"
+  (lambda (out)
+    (write-bytes
+     (data-list
+      (data-align 12)
+      (label symbol)
+      (call symbol)
+      (call symbol)
+      (call symbol)
+      (call symbol))
+      out))
+  #:mode 'binary #:exists 'truncate/replace)
