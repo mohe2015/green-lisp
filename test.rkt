@@ -107,7 +107,7 @@
   (syntax-case stx ()
     [(_ x ...)
      (let* ((children (syntax-e #'(x ...))) ;; list of syntax children
-            (expanded (map (lambda (c) (syntax-e (local-expand c 'expression #f))) children)) ;; TODO FIXME this local expand may fuck it up? check tainted. expanded list of children (with syntax elements)
+            (expanded (map (lambda (c) (syntax-e (local-transformer-expand c 'expression #f))) children)) ;; TODO FIXME this local expand may fuck it up? check tainted. expanded list of children (with syntax elements)
             (sizes (map (lambda (c) (second c)) expanded)) ;; syntax list of all sizes
             (symbols (map (lambda (c) (third c)) expanded)) ;; syntax list of all symbols
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
@@ -116,6 +116,16 @@
          #`#,(printf "~a" `,tainted)))]))
          ;;#`(let* #,labels (bytes-append #,@code))))]))
 
-(data-list
+;; https://lists.racket-lang.org/dev/archive/2011-June/006862.html
+(define-syntax (test stx)
+  (syntax-case stx ()
+    [(_ x ...)
+     ;; children of local-expand are tainted
+     ;;(syntax-tainted? (car (syntax-e #'(x ...))))])) ;; #f
+     (local-transformer-expand (car (syntax-e #'(x ...))) 'expression #f)]))
+
+(test (data-align 12))
+
+'(data-list
  (data-align 12)
  (label symbol))
