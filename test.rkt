@@ -166,7 +166,7 @@
       (label +)
       (pop 0)
       (pop 1)
-      ;(add '(register eax) '(register ecx))
+     ; (add (register eax) (register ecx))
       (push 0)
 
       ;; TODO .bss section for buffers etc.
