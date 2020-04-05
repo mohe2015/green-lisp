@@ -1,5 +1,9 @@
 ![CI](https://github.com/mohe2015/green-lisp/workflows/CI/badge.svg)
 
+# Important
+
+Racket itself is quite fast, just loading is slow
+
 # Setup
 
 ```bash
