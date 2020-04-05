@@ -39,12 +39,54 @@
 (define-syntax-rule (call target)
   (list 5 null (lambda (current-address) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))))
 
+(define-syntax-rule (syscall)
+  (list 2 null (bytes #x0f #x05)))
+
+(define-syntax-rule (mov-imm8 register value)
+  (list (if (= register 7) 3 2)
+        null
+        (lambda (current-address)
+          (bytes-append
+           (if (= the-register 7)
+               (unsigned 8 #x40)
+               (bytes)) ; REX prefix to access dil instead of bh
+           (bytes (bitwise-ior #xb0 the-register) (dynamic the-value))))))
+
 (define-syntax-rule (mov-imm64 register value)
   (list 10 null (lambda (current-address)
                   (bytes-append
                    (unsigned 8 REX.W)
                    (unsigned 8 (+ #xb8 register)) ;; opcode with register
                    (unsigned 64 value))))) ;; value
+
+(define-syntax-rule (jmp target)
+  (list 2
+        null
+        (lambda (current-address)
+          (bytes-append (bytes #xeb) (integer->integer-bytes (- target current-address 2) 1 #t)))))
+
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
+(define-syntax-rule (push register)
+  (list 1
+        null
+        (lambda (_)
+          (bytes (+ #x50 the-register)))))
+
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1037&zoom=auto,-17,727
+(define-syntax-rule (pop register)
+  (list 1
+        null
+        (lambda (_)
+          (bytes (+ #x58 the-register)))))
+;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
+ 
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=133&zoom=100,-7,726
+(define-syntax-rule (add destination source)
+  (list 3
+        null
+        (lambda (_)
+          ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
+          (bytes REX.W 01 (mod11-to-binary the-destination the-source)))))
 
 (define-syntax (data-list stx)
   (syntax-case stx ()
