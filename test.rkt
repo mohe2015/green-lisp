@@ -120,9 +120,9 @@
     (write-bytes
      (data-list
       (data-align 12)
+      (call symbol)
+      (call symbol)
       (label symbol)
-      (call symbol)
-      (call symbol)
       (call symbol)
       (call symbol))
       out))
