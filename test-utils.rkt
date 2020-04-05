@@ -6,7 +6,7 @@
   (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
         [else
          (let* ([symbol (car symbols)]
-                [size (car sizes)]
+                [size ((car sizes) offset)]
                 [code (car codes)])
            (let-values ([(cara carb) (if (eq? symbol 'null)
                                          (values (list)                      `((,code ,offset)))
