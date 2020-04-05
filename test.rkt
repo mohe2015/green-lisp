@@ -1,6 +1,7 @@
 #lang racket
 (require green-lisp/test-utils)
 (require (for-syntax racket/list) (for-syntax green-lisp/test-utils))
+(provide data-list data-align label mov-imm64 syscall push pop call add)
 
 (define REX.W #b01001000)
 
