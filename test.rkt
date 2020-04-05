@@ -90,16 +90,41 @@
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
           (bytes REX.W 01 (mod11-to-binary destination source)))))
 
+
+(define-syntax (list->label-addresses stx)
+  (syntax-case stx ()
+    [(_ symbols sizes codes offset)
+     (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
+           [else
+            (let* ([symbol (car symbols)]
+                   [size ((car sizes) offset)]
+                   [code (car codes)])
+              (let-values ([(cara carb) (if (eq? symbol 'null)
+                                            (values (list)                      `((,code ,offset)))
+                                            (values (list (list symbol offset)) `((,code ,offset))))]
+                           [(cdra cdrb) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) (+ offset size))])
+                (values
+                 (append cara cdra)
+                 (append carb cdrb))))])]))
+
 (define-syntax (data-list stx)
   (syntax-case stx ()
     [(_ x ...)
      (let* ((children (syntax-e #'(x ...)))
             (expanded (map (lambda (c) (syntax->datum (local-expand c 'expression #f))) children))
-            (sizes (map (lambda (c) (second c)) expanded)) ;; TODO size may depend on offset
+            (sizes (map (lambda (c) (second c)) expanded))
             (symbols (map (lambda (c) (third c)) expanded))
             (codes (map (lambda (c) (fourth c)) expanded)))
        (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
          (datum->syntax stx #`(let #,labels (bytes-append #,@code)))))]))
+
+;; I think this may work as the expressions don't get longer and longer that way
+'(let* ((start 0)
+        (element-0 (+ start     ((lambda (current-address) (get-byte-count-to-align alignment-bits current-address)) start)))
+        (element-1 (+ element-0 ((lambda (_) 0) element-0)))
+        (symbol element-1))
+   ((lambda (current-address) (make-bytes (get-byte-count-to-align alignment-bits current-address) 0)) element-0)
+   ((lambda (current-address) (bytes)) element-1))
 
 (data-list
  (data-align 12)
