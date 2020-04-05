@@ -11,62 +11,6 @@
  data-array% data-array
  )
 
-(define-type data-interface-type
-  (Class
-   (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-   (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-   (length (-> Integer Integer))))
-(: data-interface% (Class
-                    (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-                    (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-                    (length (-> Integer Integer))))
-(define data-interface%
-  (class object%
-    (super-new)
-
-    (: length (-> Integer Integer))
-    (define/public (length offset)
-      0)
-
-    (: get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-    (define/public (get-bytes current-address label-addresses)
-      (bytes))
-      
-    (: get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-    (define/public (get-label-addresses offset)
-      '())))
-
-(define-type label-type
-  (Class
-   (init (label Symbol))
-   (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-   (get-label (-> Symbol))
-   (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-   (length (-> Integer Integer))))
-(define label%
-  (class data-interface%
-    (init [label : Symbol])
-    (: the-label Symbol)
-    (define the-label label)
-    (super-new)
-
-    (: get-label (-> Symbol))
-    (define/public (get-label)
-      the-label)
-
-    (define/override (get-label-addresses offset)
-      (list (list the-label offset)))
-      
-    (define/override (get-bytes current-address label-addresses)
-      (bytes))
-    
-    (define/override (length offset)
-      0)))
-
-(: label (-> Symbol (Instance label-type)))
-(define (label label)
-  (new label% [label label]))
-
 (define-type data-unsigned-type
   (Class
    (init (bits Integer) (value Integer))
@@ -146,72 +90,6 @@
 (: data-array (-> Integer (Instance data-array-type)))
 (define (data-array size)
   (new data-array% [size size]))
-
-
-(: list->label-addresses
-   (-> (Listof (Instance data-interface-type))
-       Integer
-       (Listof (List Symbol Integer))))
-(define (list->label-addresses a-list offset)
-  (cond [(null? a-list) '()]
-        [else
-         (let ([a (car a-list)])
-           (append
-            (send a get-label-addresses offset)
-            (list->label-addresses (cdr a-list) (+ offset (send a length offset)))))]))
-      
-
-(: list->bytes (-> (Listof (Instance data-interface-type))
-                   Integer
-                   (Listof (List Symbol Integer))
-                   Bytes))
-(define (list->bytes a-list current-address label-addresses)
-  (cond [(null? a-list) (bytes)]
-        [else
-         (bytes-append
-          (send (first a-list) get-bytes current-address label-addresses)
-          (list->bytes (rest a-list) (+ current-address (send (first a-list) length current-address)) label-addresses))]))
-
-(: sum-length (-> (Listof (Instance data-interface-type))
-                  Integer
-                  Integer))
-(define (sum-length a-list offset)
-  (cond [(null? a-list) 0]
-        [else
-         (+
-          (send (first a-list) length offset)
-          (sum-length (rest a-list) (+ offset (send (first a-list) length offset))))]))
-
-(define-type data-list-type
-  (Class
-   (init (list (Listof (Instance data-interface-type))))
-   (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-   (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-   (length (-> Integer Integer))))
-(define data-list%
-  (class data-interface%
-    (init [list : (Listof (Instance data-interface-type))])
-    (: the-list (Listof (Instance data-interface-type)))
-    (define the-list list)
-    (super-new)
-
-    ;; (list->label-addresses2 '() 0)
-    ;; (list->label-addresses2 '(a) 0)
-    ;; (list->label-addresses2 '(a b) 0)
-    ;; (list->label-addresses2 '(a b c) 0)
-
-    (define/override (get-label-addresses offset)
-      (list->label-addresses the-list offset))
-
-    (define/override (get-bytes current-address label-addresses)
-      (list->bytes the-list current-address label-addresses))
-      
-    (define/override (length offset)
-      (sum-length the-list offset))))
-
-(: data-list (-> (Instance data-interface-type) * (Instance data-list-type)))
-(define (data-list . list)
-  (new data-list% [list list]))
 
 (define-type align-type
   (Class

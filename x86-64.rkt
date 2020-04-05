@@ -13,14 +13,6 @@
  add% add
  )
 
-(: REX.W Integer)
-(define REX.W #b01001000)
-
-(: unsigned (-> Integer Integer Bytes))
-(define unsigned
-  (lambda (bits value)
-    (integer->integer-bytes value (arithmetic-shift bits -3) #f)))
-
 (: syscall% (Class
              (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
              (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
@@ -72,37 +64,6 @@
 (: mov-imm8 (-> Integer Integer (Instance mov-imm8-type)))
 (define (mov-imm8 register value)
   (new mov-imm8% [register register] [value value]))
-
-(define-type mov-imm64-type
-  (Class
-   (init (register Integer) (value Integer))
-   (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-   (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-   (length (-> Integer Integer))))
-(define mov-imm64%
-  (class data-interface%
-    (init [register : Integer] [value : Any])
-    (: the-register Integer)
-    (define the-register register)
-    (: the-value Any)
-    (define the-value value)
-    (super-new)
-
-    (define/override (get-label-addresses offset)
-      (list))
-    
-    (define/override (get-bytes current-address label-addresses)
-      (bytes-append
-       (unsigned 8 REX.W)
-       (unsigned 8 (+ #xb8 the-register)) ;; opcode with register
-       (unsigned 64 (dynamic the-value)))) ;; value
-    
-    (define/override (length offset)
-      10)))
-
-(: mov-imm64 (-> Integer Any (Instance mov-imm64-type)))
-(define (mov-imm64 register value)
-  (new mov-imm64% [register register] [value value]))
 
 (define-type jmp-type
   (Class
@@ -185,32 +146,6 @@
 (define (pop register)
   (new pop% [register register]))
 
-;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=224&zoom=100,28,726
-(define-type call-type
-  (Class
-   (init (address Integer))
-   (get-bytes (-> Integer (Listof (List Symbol Integer)) Bytes))
-   (get-label-addresses (-> Integer (Listof (List Symbol Integer))))
-   (length (-> Integer Integer))))
-(define call%
-  (class data-interface%
-    (init [address : Any])
-    (: the-address Any)
-    (define the-address address)
-    (super-new)
-      
-    (define/override (get-label-addresses offset)
-      (list))
-
-    (define/override (get-bytes current-address label-addresses)
-      (bytes-append (bytes #xe8) (integer->integer-bytes (- (dynamic the-address) current-address (length current-address)) 4 #t)))
-
-    (define/override (length offset)
-      5)))
-
-(: call (-> Any (Instance call-type)))
-(define (call address)
-  (new call% [address address]))
   
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=133&zoom=100,-7,726
 (define-type add-type
