@@ -87,10 +87,10 @@
   (define (list->label-addresses symbols sizes codes offset)
     (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
           [else
-           (let* ([symbol (car symbols)] ;; syntax element
-                  [size #`(#,(car sizes) #,offset)] ;; syntax element of lambda call e.g. code that calculates alignment size
-                  [code (car codes)] ;; syntax element
-                  [current-element-symbol (car (generate-temporaries '(element)))]) ;; syntax element
+           (let* ([current-element-symbol (car (generate-temporaries '(element)))] ;; syntax element
+                  [symbol (car symbols)] ;; syntax element
+                  [size #`(#,(car sizes) #,current-element-symbol)] ;; syntax element of lambda call e.g. code that calculates alignment size
+                  [code (car codes)]) ;; syntax element)
              (let-values ([(cara carb) (if (eq? (syntax-e symbol) 'null)
                                            (values
                                             (list (list current-element-symbol offset))
@@ -118,4 +118,7 @@
 (data-list
   (data-align 12)
   (label symbol)
+  (call symbol)
+  (call symbol)
+  (call symbol)
   (call symbol))
