@@ -4,13 +4,6 @@
 
 (define REX.W #b01001000)
 
-'(define-file
-  (elf
-   (section text
-           ... code)
-   (section rodata
-            ...)))
-
 (define unsigned
   (lambda (bits value)
     (integer->integer-bytes value (arithmetic-shift bits -3) #f)))
@@ -89,21 +82,39 @@
         (lambda (_)
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
           (bytes REX.W 01 (mod11-to-binary destination source)))))
-'(data-list
-  (data-align 12)
-  (label symbol))
+
+(begin-for-syntax
+  (define (list->label-addresses symbols sizes codes offset)
+    (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
+          [else
+           (let* ([symbol (car symbols)] ;; syntax element
+                  [size #`(#,(car sizes) #,offset)] ;; syntax element of lambda call e.g. code that calculates alignment size
+                  [code (car codes)] ;; syntax element
+                  [current-element-symbol (car (generate-temporaries '(element)))]) ;; syntax element
+             (let-values ([(cara carb) (if (eq? (syntax-e symbol) 'null)
+                                           (values
+                                            (list (list current-element-symbol offset))
+                                            `(, #`(#,code #,current-element-symbol)))
+                                           (values
+                                            (list (list current-element-symbol offset) (list symbol current-element-symbol))
+                                            `(, #`(#,code #,current-element-symbol))))]
+                          [(cdra cdrb) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) #`(+ #,current-element-symbol #,size))])
+               (values
+                (append cara cdra)
+                (append carb cdrb))))])))
+
 (define-syntax (data-list stx)
   (syntax-case stx ()
     [(_ x ...)
      (let* ((children (syntax-e #'(x ...))) ;; list of syntax children
-            (expanded (map (lambda (c) (syntax-e (local-expand c 'expression #f))) children)) ;; expanded list of children (with syntax elements)
+            (expanded (map (lambda (c) (syntax-e (local-expand c 'expression #f))) children)) ;; TODO FIXME this local expand may fuck it up? check tainted. expanded list of children (with syntax elements)
             (sizes (map (lambda (c) (second c)) expanded)) ;; syntax list of all sizes
             (symbols (map (lambda (c) (third c)) expanded)) ;; syntax list of all symbols
-            (codes (map (lambda (c) (fourth c)) expanded))) ;; syntax list of all codes
+            (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
+            (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
        (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
-         (datum->syntax stx #`(let* #,labels (bytes-append #,@code)))))]))
-
-
+         #`#,(printf "~a" `,tainted)))]))
+         ;;#`(let* #,labels (bytes-append #,@code))))]))
 
 (data-list
  (data-align 12)
