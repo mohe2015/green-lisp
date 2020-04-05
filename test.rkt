@@ -1,6 +1,5 @@
 #lang racket
-(require green-lisp/test-utils)
-(require (for-syntax racket/list) (for-syntax green-lisp/test-utils))
+(require (for-syntax racket/list))
 (provide data-list data-align label mov-imm64 syscall push pop call add)
 
 (define REX.W #b01001000)
@@ -104,6 +103,7 @@
                 (append cara cdra)
                 (append carb cdrb))))])))
 
+;; TODO get offset and then return an object like all the other macros
 (define-syntax (data-list stx)
   (syntax-case stx ()
     [(_ x ...)
@@ -115,6 +115,23 @@
             (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
        (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
          #`(let* #,labels (bytes-append #,@code))))]))
+
+'(file
+  (label 'start)
+  (ehdr)
+  (phdrs)
+  (shdrs)
+  (symbols)
+  (shstrtab)
+  (strtab)
+  (code)
+  (rodata)
+  (data)
+  (label 'end))
+
+;; lambda macro should return object that accepts address and returns the code for that lambda
+;; locally resolves labels
+;; maybe labels not even required in some cases because they can be optimized away before
 
 (call-with-output-file "out.bin"
   (lambda (out)

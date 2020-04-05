@@ -110,7 +110,7 @@
      (data-unsigned 16 3)  ;; e_phnum p
      (data-unsigned 16 '(- null-shdr-end null-shdr-start)) ;; e_shentsize
      (data-unsigned 16 '(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
-     (data-unsigned 16 2)  ;; e_shstrndx TODO calculate
+     (data-unsigned 16 2)  ;; e_shstrndx section header string index TODO calculate
      (label 'ehdr-end))))
 
 ;;typedef struct elf64_shdr {
