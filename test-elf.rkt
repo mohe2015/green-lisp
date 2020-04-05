@@ -41,6 +41,8 @@
 
 ;; TODO DWARF
 
+;; also there should be an indermediate assembly language
+
 ;; code optimizations probably need objects for the assembly
 ;; also for dwarf it needs source information thats kept when optimizing
 
@@ -57,3 +59,16 @@
 ;; create shared object for every file, load them to import the file, can be reloaded by reloading shared object (live code reload)
 
 ;; FUNCTIONAL CODE IS THE MOST IMPORTANT PART!!! (this is hard for elf file as it is quite complicated)
+
+;; not really function but whatever
+'(let ((Button test (new Button "Hello")))
+   (text test))
+
+'((set r1 (allocate-memory-in-region region0 16))
+  (set (r1 0) BUTTON_TAG)
+  (set (r1 1) "H") ;; also add string size prefix
+  ...
+  (ret (r1 1))) ;; tell caller to also deallocate this memory
+
+'((;; x86 assembly
+   ))
