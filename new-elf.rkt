@@ -86,11 +86,35 @@
 (define-type elf-section-flag-type (U 'write 'alloc 'exec))
 (define [elf-section-flag : elf-section-flag-type] '(write alloc exec))
 
+(define-type elf-section%-type
+  (Class
+   (init (name Bytes)
+         (type elf-section-type-type)
+         (flags elf-section-flag-type)
+         (address Any)
+         (offset Any)
+         (size Any)
+         (link Any)
+         (info Any)
+         (alignemnt Any)
+         (entry-size Any))
+   (field (address Any)
+          (alignemnt Any)
+          (entry-size Any)
+          (flags elf-section-flag-type)
+          (info Any)
+          (link Any)
+          (name Bytes)
+          (offset Any)
+          (size Any)
+          (type elf-section-type-type))
+   (get-name (-> Bytes))))
+(: elf-section% elf-section%-type)
 (define elf-section% ;; typedef struct elf64_shdr Elf64_Shdr
   (class object%
     (super-new)
     (init-field 
-     name ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
+     [name : Bytes] ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
      [type : elf-section-type-type] ;; Elf64_Word sh_type;		/* Type of section */
      [flags : elf-section-flag-type] ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
      address ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
@@ -100,6 +124,9 @@
      info ;; Elf64_Word sh_info;		/* Additional section information */
      alignemnt ;; Elf64_Xword sh_addralign;	/* Section alignment */
      entry-size) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+
+    (define/public (get-name)
+      name)
     ))
 
 (define null-section-header (make-bytes 64)) ;; 64 bytes
@@ -109,7 +136,10 @@
 (define elf-string-table%
   (class object%
     (super-new)
-    (init-field strings)))
+    (init-field [strings : (Listof Bytes)])
+
+    (define/public (get-bytes)
+      (bytes-join strings #"\0"))))
 
 
 
@@ -141,17 +171,25 @@
   (class object%
     (super-new)
     (init-field ;elf-header
-              [sections '()] ;; TODO null section
+              [sections : (Listof (Instance elf-section%-type)) '()] ;; TODO null section
               [program-headers '()]
               [symbols '()]) ;; formally this is also just a section ;; TODO null symbol
 
     (define/public (merge that)
       null)
     
-    (define/public (get-bytes)
-      (bytes-append
-       (get-elf-header-bytes)
-       null-section-header))
+    (define/public (get-bytes)      
+      (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda ([section : (Instance elf-section%-type)]) (send section get-name)) sections))]))
+             (section-header-string-table-bytes (send section-header-string-table get-bytes))
+             ;(section-header-string-table-section-header (new elf-section% [name ".shstrtab"]))
+             ;(new-elf-file (new elf-file% [sections (list )]))
+             )
+            
+        (bytes-append
+         (get-elf-header-bytes)
+         null-section-header
+       ;  (section-header-string-table-section-header section-header-string-table)
+         )))
 
     (: get-elf-header-bytes (-> Bytes))
     (define/public (get-elf-header-bytes) ;; 64 bytes
