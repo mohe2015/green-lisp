@@ -41,16 +41,7 @@
   (lambda ()
     (data-list
      (label 'shstrtab-shdr-start)
-     (data-unsigned 32 '(- shstrtab-string shstrtab-start)) ;; sh_name:   section name, index in string table
-     (data-unsigned 32 SHT_STRTAB) ;; sh_type:   type of section
-     (data-unsigned 64 0) ;; sh_flags:  section attributes
-     (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
-     (data-unsigned 64 '(- shstrtab-start start)) ;; sh_offset: section file offset
-     (data-unsigned 64 '(- shstrtab-end shstrtab-start)) ;; sh_size:   size of section in bytes
-     (data-unsigned 32 0) ;; sh_link:   index of another section
-     (data-unsigned 32 0) ;; sh_info:   additional section information
-     (data-unsigned 64 1) ;; sh_addralign: section alignment
-     (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
+     
      (label 'shstrtab-shdr-end))))
   
 (define strtab

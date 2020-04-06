@@ -2,6 +2,7 @@
 (require racket/class)
 (require racket/bytes)
 (require racket/file)
+(require racket/list)
 ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 ;; Licensed under /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 
@@ -9,12 +10,12 @@
   (lambda (bits value)
      (integer->integer-bytes value (arithmetic-shift bits -3) #f)))
 
-(define [elf-symbol-binding : elf-symbol-binding-type] '(local global weak))
+(define elf-symbol-binding '(local global weak))
 ;#define STB_LOCAL  0
 ;#define STB_GLOBAL 1
 ;#define STB_WEAK   2
 
-(define [elf-symbol-type : elf-symbol-type-type] '(notype object func section file common tls))
+(define elf-symbol-type '(notype object func section file common tls))
 ;#define STT_NOTYPE  0
 ;#define STT_OBJECT  1
 ;#define STT_FUNC    2
@@ -95,7 +96,22 @@
      (link 0) ;; Elf64_Word sh_link;		/* Index of another section */
      (info 0) ;; Elf64_Word sh_info;		/* Additional section information */
      (alignment 1) ;; Elf64_Xword sh_addralign;	/* Section alignment */
-     (entry-size 0)))) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+     (entry-size 0))  ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+
+    (define/public (get-bytes offset section-name-string-table-index)
+      (bytes-append
+       (unsigned 32 section-name-string-table-index) ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
+       (unsigned 32 SHT_STRTAB) ;; Elf64_Word sh_type;		/* Type of section */
+       (unsigned 64 0) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
+       (unsigned 64 0) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+       (unsigned 64 offset) ;; Elf64_Off sh_offset;		/* Section file offset */
+       (unsigned 64 (bytes-length content)) ;; Elf64_Xword sh_size;		/* Size of section in bytes */
+       (unsigned 32 0) ;; Elf64_Word sh_link;		/* Index of another section */
+       (unsigned 32 0) ;; Elf64_Word sh_info;		/* Additional section information */
+       (unsigned 64 1) ;; Elf64_Xword sh_addralign;	/* Section alignment */
+       (unsigned 64 0) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+
+    ))))
   
 (define null-section-header (make-bytes 64)) ;; 64 bytes
 
@@ -105,7 +121,17 @@
     (init-field strings)
 
     (define/public (get-bytes)
-      (bytes-join strings #"\0"))))
+      (bytes-join strings #"\0"))
+
+    (define/public (get-string-offset string)
+      (let* ((strings-before (takef strings (lambda (s) (not (equal? s string)))))
+             (strings-length-before (map bytes-length strings-before))
+             (strings-length-before-plus-null-terminator (map (λ (l) (+ l 1)) strings-length-before))
+             (sum-strings-length-before (foldl + 0 strings-length-before-plus-null-terminator)))
+        sum-strings-length-before
+      ))
+      
+    ))
 
 (define ELFMAG0 #x7f) ;; /* EI_MAG */
 (define ELFMAG1 (char->integer #\E))
@@ -153,10 +179,15 @@
            [symbols (append symbols (get-field symbols that))]))
 
     (define/public (internal-get-bytes)
+      ;; calculate all the sections bytes
+      ;; (get-bytes offset section-name-string-table-index)
+      ;; (bytes-length (get-field content section))
+
+      ;; string table get offset of string
+      
       (bytes-append
-       (get-elf-header-bytes)
-       null-section-header))
-       ;  (section-header-string-table-section-header section-header-string-table)
+       (get-elf-header-bytes) ;; 64
+       null-section-header)) ;; 64
     
     (define/public (get-bytes)      
       (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda (section) (send section get-name)) sections))]))
