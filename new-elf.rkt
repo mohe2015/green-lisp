@@ -4,6 +4,10 @@
 ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 ;; Licensed under /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 
+(define unsigned
+  (lambda ([bits : Integer] [value : Integer])
+     (integer->integer-bytes value (arithmetic-shift bits -3) #f)))
+
 (define-type elf-symbol-binding-type (U 'local 'global 'weak))
 (define [elf-symbol-binding : elf-symbol-binding-type] '(local global weak))
 ;#define STB_LOCAL  0
@@ -47,6 +51,27 @@
      [value 0]
      [size 0])
 
+(define ELFMAG0 #x7f) ;; /* EI_MAG */
+(define ELFMAG1 (char->integer #\E))
+(define ELFMAG2 (char->integer #\L))
+(define ELFMAG3 (char->integer #\F))
+
+(define ELFCLASS64 2)
+
+(define ELFDATA2LSB 1) ;; TODO maybe also support msb???
+
+(define EV_CURRENT 1)
+
+(define ELFOSABI_SYSV 0)
+
+;; e_type
+(define ET_REL  1)
+(define ET_EXEC 2)
+(define ET_DYN  3)
+(define ET_CORE 4)
+
+(define EM_X86_64 62)
+
 ;; immutable elf class with merge function to create clean functional code
 (define elf-file%
   (class object%
@@ -84,15 +109,15 @@
        (unsigned 16 ET_EXEC) ;; e_type
        (unsigned 16 EM_X86_64) ;; e_machine
        (unsigned 32 EV_CURRENT) ;; e_version
-       (unsigned 64 'code-start) ;; aTODO entrypoint) ;; e_entry
-       (unsigned 64 '(- phdrs-start start)) ;; e_phoff aTODO phdr - $$
-       (unsigned 64 '(- phdrs-end start)) ;; e_shoff
+       (unsigned 64 0); 'code-start) ;; aTODO entrypoint) ;; e_entry
+       (unsigned 64 0); '(- phdrs-start start)) ;; e_phoff aTODO phdr - $$
+       (unsigned 64 0); '(- phdrs-end start)) ;; e_shoff
        (unsigned 32 0) ;; e_flags
-       (unsigned 16 '(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
-       (unsigned 16 '(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
+       (unsigned 16 0);'(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
+       (unsigned 16 0);'(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
        (unsigned 16 3)  ;; e_phnum p
-       (unsigned 16 '(- null-shdr-end null-shdr-start)) ;; e_shentsize
-       (unsigned 16 '(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
+       (unsigned 16 0);'(- null-shdr-end null-shdr-start)) ;; e_shentsize
+       (unsigned 16 0);'(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
        (unsigned 16 2)  ;; e_shstrndx section header string index TODO calculate
        ))
     
