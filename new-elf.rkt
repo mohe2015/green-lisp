@@ -76,7 +76,7 @@
 (define elf-file%
   (class object%
     (super-new)
-    (init-field elf-header
+    (init-field ;elf-header
               [sections '()] ;; TODO null section
               [program-headers '()]
               [symbols '()]) ;; formally this is also just a section ;; TODO null symbol
@@ -85,8 +85,9 @@
       null)
     
     (define/public (get-bytes)
-      null)
+      (get-elf-header-bytes))
 
+    (: get-elf-header-bytes (-> Bytes))
     (define/public (get-elf-header-bytes)
       (bytes-append
        (unsigned 8 ELFMAG0)
@@ -120,5 +121,6 @@
        (unsigned 16 0);'(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
        (unsigned 16 2)  ;; e_shstrndx section header string index TODO calculate
        ))
-    
     ))
+
+(send (new elf-file%) get-bytes)
