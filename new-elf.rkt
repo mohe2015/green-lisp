@@ -163,33 +163,58 @@
 (define EM_X86_64 62)
 
 ;; immutable elf class with merge function to create clean functional code
+(define-type elf-file%-type
+  (Class
+     (init (sections (Listof (Instance elf-section%-type)) #:optional)
+           (program-headers Any #:optional)
+           (symbols Any #:optional))
+     (field (program-headers Any)
+            (sections (Listof (Instance elf-section%-type)))
+            (symbols Any))
+     (get-bytes (-> Bytes))
+     (get-elf-header-bytes (-> Bytes))
+     (merge (-> Any Null))))
+(: elf-file% elf-file%-type)
 (define elf-file%
   (class object%
     (super-new)
     (init-field ;elf-header
               [sections : (Listof (Instance elf-section%-type)) '()] ;; TODO null section
-              [program-headers '()]
-              [symbols '()]) ;; formally this is also just a section ;; TODO null symbol
+              [program-headers : (Listof Integer) '()]
+              [symbols : (Listof Integer) '()]) ;; formally this is also just a section ;; TODO null symbol
 
+    (define/public (get-symbols)
+      symbols)
+
+    (define/public (get-sections)
+      sections)
+
+    (define/public (get-program-headers)
+      program-headers)
+    
+    (: merge (-> (Instance elf-file%-type) (Instance elf-file%-type)))
     (define/public (merge that)
-      null)
+      (new elf-file%
+           [sections (append sections (get-field sections that))]
+           [program-headers (append program-headers (get-field program-headers that))]
+           [symbols (append symbols (get-field symbols that))]))
+
+    (define/public (internal-get-bytes)
+      (bytes-append
+       (get-elf-header-bytes)
+       null-section-header))
+       ;  (section-header-string-table-section-header section-header-string-table)
     
     (define/public (get-bytes)      
       (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda ([section : (Instance elf-section%-type)]) (send section get-name)) sections))]))
              (section-header-string-table-bytes (send section-header-string-table get-bytes))
-             (section-header-string-table-section-header (new elf-section%
+             (section-header-string-table-section (new elf-section%
                                                               [name #".shstrtab"]
                                                               [type 'strtab]
                                                               [address 0]
                                                               [content section-header-string-table-bytes]))
-             ;(new-elf-file (new elf-file% [sections (list )]))
-             )
-            
-        (bytes-append
-         (get-elf-header-bytes)
-         null-section-header
-       ;  (section-header-string-table-section-header section-header-string-table)
-         )))
+             (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section)]))))
+        (send new-elf-file internal-get-bytes)))
 
     (: get-elf-header-bytes (-> Bytes))
     (define/public (get-elf-header-bytes) ;; 64 bytes
