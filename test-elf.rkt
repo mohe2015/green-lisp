@@ -60,7 +60,7 @@
 
 ;; FUNCTIONAL CODE IS THE MOST IMPORTANT PART!!! (this is hard for elf file as it is quite complicated)
 
-;; not really function but whatever
+;; not really functional but whatever
 '(let ((Button test (new Button "Hello")))
    (text test))
 
