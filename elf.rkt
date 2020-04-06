@@ -2,62 +2,6 @@
 (require green-lisp/x86-64 green-lisp/label-interface)
 (provide file)
 
-;;typedef struct elf64_shdr {
-;;  Elf64_Word sh_name;		/* Section name, index in string tbl */
-;;  Elf64_Word sh_type;		/* Type of section */
-;;  Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
-;;  Elf64_Addr sh_addr;		/* Section virtual addr at execution */
-;;  Elf64_Off sh_offset;		/* Section file offset */
-;;  Elf64_Xword sh_size;		/* Size of section in bytes */
-;;  Elf64_Word sh_link;		/* Index of another section */
-;;  Elf64_Word sh_info;		/* Additional section information */
-;;  Elf64_Xword sh_addralign;	/* Section alignment */
-;;  Elf64_Xword sh_entsize;	/* Entry size if section holds table */
-;;} Elf64_Shdr;
-
-;/* sh_type */
-(define SHT_NULL	0)
-(define SHT_PROGBITS	1)
-(define SHT_SYMTAB	2)
-(define SHT_STRTAB	3)
-(define SHT_RELA	4)
-(define SHT_HASH	5)
-(define SHT_DYNAMIC	6)
-(define SHT_NOTE	7)
-(define SHT_NOBITS	8)
-(define SHT_REL		9)
-(define SHT_SHLIB	10)
-(define SHT_DYNSYM	11)
-(define SHT_NUM		12)
-(define SHT_LOPROC	#x70000000)
-(define SHT_HIPROC	#x7fffffff)
-(define SHT_LOUSER	#x80000000)
-(define SHT_HIUSER	#xffffffff)
-
-(define null-shdr
-  (lambda ()
-    (data-list
-     (label 'null-shdr-start)
-     (data-unsigned 32 0) ;; sh_name:   section name, index in string table
-     (data-unsigned 32 SHT_NULL) ;; sh_type:   type of section
-     (data-unsigned 64 0) ;; sh_flags:  section attributes
-     (data-unsigned 64 0) ;; sh_addr:   section virtual address at execution
-     (data-unsigned 64 0) ;; sh_offset: section file offset
-     (data-unsigned 64 0) ;; sh_size:   size of section in bytes
-     (data-unsigned 32 0) ;; sh_link:   index of another section
-     (data-unsigned 32 0) ;; sh_info:   additional section information
-     (data-unsigned 64 0) ;; sh_addralign: section alignment
-     (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
-     (label 'null-shdr-end))))
-
-;; sh_flags
-(define SHF_WRITE		#x1)
-(define SHF_ALLOC		#x2)
-(define SHF_EXECINSTR		#x4)
-(define SHF_RELA_LIVEPATCH	#x00100000)
-(define SHF_RO_AFTER_INIT	#x00200000)
-(define SHF_MASKPROC		#xf0000000)
-  
 (define text-shdr
   (lambda ()
     (data-list
@@ -73,38 +17,6 @@
      (data-unsigned 64 1) ;; sh_addralign: section alignment
      (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
      (label 'text-shdr-end))))
-
-(define rodata-shdr
-  (lambda ()
-    (data-list
-     (label 'rodata-shdr-start)
-     (data-unsigned 32 '(- rodata-string shstrtab-start)) ;; sh_name:   section name, index in string table
-     (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
-     (data-unsigned 64 SHF_ALLOC) ;; sh_flags:  section attributes
-     (data-unsigned 64 'rodata-start) ;; sh_addr:   section virtual address at execution
-     (data-unsigned 64 '(- rodata-start start)) ;; sh_offset: section file offset
-     (data-unsigned 64 '(- rodata-end rodata-start)) ;; sh_size:   size of section in bytes
-     (data-unsigned 32 0) ;; sh_link:   index of another section
-     (data-unsigned 32 0) ;; sh_info:   additional section information
-     (data-unsigned 64 1) ;; sh_addralign: section alignment
-     (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
-     (label 'rodata-shdr-end))))
-
-(define data-shdr
-  (lambda ()
-    (data-list
-     (label 'data-shdr-start)
-     (data-unsigned 32 '(- data-string shstrtab-start)) ;; sh_name:   section name, index in string table
-     (data-unsigned 32 SHT_PROGBITS) ;; sh_type:   type of section
-     (data-unsigned 64 (+ SHF_ALLOC SHF_WRITE)) ;; sh_flags:  section attributes
-     (data-unsigned 64 'data-start) ;; sh_addr:   section virtual address at execution
-     (data-unsigned 64 '(- data-start start)) ;; sh_offset: section file offset
-     (data-unsigned 64 '(- data-end data-start)) ;; sh_size:   size of section in bytes
-     (data-unsigned 32 0) ;; sh_link:   index of another section
-     (data-unsigned 32 0) ;; sh_info:   additional section information
-     (data-unsigned 64 1) ;; sh_addralign: section alignment
-     (data-unsigned 64 0) ;; sh_entsize:   entry size if section holds table
-     (label 'data-shdr-end))))
   
 (define shstrtab
   (lambda ()
