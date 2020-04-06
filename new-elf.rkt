@@ -116,11 +116,16 @@
        (unsigned 32 0) ;; e_flags
        (unsigned 16 0);'(- ehdr-end ehdr-start)) ;; e_ehsize aTODO headersize
        (unsigned 16 0);'(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
-       (unsigned 16 3)  ;; e_phnum p
+       (unsigned 16 0)  ;; e_phnum number of program headers
        (unsigned 16 0);'(- null-shdr-end null-shdr-start)) ;; e_shentsize
        (unsigned 16 0);'(/ (- shdrs-end shdrs-start) (- null-shdr-end null-shdr-start)))  ;; e_shnum p
-       (unsigned 16 2)  ;; e_shstrndx section header string index TODO calculate
+       (unsigned 16 0)  ;; e_shstrndx section header string index TODO calculate
        ))
     ))
 
-(send (new elf-file%) get-bytes)
+(let ((bytes (send (new elf-file%) get-bytes)))
+  (call-with-output-file "out.elf"
+    (lambda ([out : Output-Port])
+      (write-bytes bytes out))
+    #:mode 'binary #:exists 'truncate/replace)
+  (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))
