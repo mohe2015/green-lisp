@@ -69,9 +69,9 @@
 (define SHT_HIPROC	#x7fffffff)
 (define SHT_LOUSER	#x80000000)
 (define SHT_HIUSER	#xffffffff)
-(define [elf-section-type : elf-section-type-type] '(null progbits symtab strtab rela
-                                                          hash dynamic note nobits
-                                                          rel shlib dynsym num))
+(define elf-section-type '(null progbits symtab strtab rela
+                                hash dynamic note nobits
+                                rel shlib dynsym num))
 
 ;; sh_flags
 (define SHF_WRITE		#x1)
