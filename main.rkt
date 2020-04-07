@@ -12,12 +12,11 @@
                              [name #".text"]
                              [type 'progbits]
                              [flags '(alloc exec)]
-                             [address #x400000]
                              [content .text]))
          (.text-program-header (new elf-program-header%
                                     [type 'load]
                                     [flags '(read execute)]
-
+                                    [sections (list .text-section)]
                                     ))
          (bytes (send (new elf-file% [sections (list .text-section)]) get-bytes)))
     (call-with-output-file "out.elf"

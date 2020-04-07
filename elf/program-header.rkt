@@ -1,5 +1,6 @@
 (module program-header racket
   (require green-lisp/utils)
+  (provide elf-program-header%)
   
   ;; /* These constants are for the segment types stored in the image headers */
   (define PT_NULL    0)
