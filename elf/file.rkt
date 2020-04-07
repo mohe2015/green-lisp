@@ -1,5 +1,6 @@
 (module file racket
-  (require green-lisp/utils)
+  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/string-table)
+  (provide elf-file%)
 
   (define ELFMAG0 #x7f) ;; /* EI_MAG */
   (define ELFMAG1 (char->integer #\E))

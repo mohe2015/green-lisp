@@ -1,6 +1,7 @@
 (module section racket
   (require green-lisp/utils)
-
+  (provide elf-section% null-section-header)
+  
   ;/* sh_type */
   (define SHT_NULL	0)
   (define SHT_PROGBITS	1)

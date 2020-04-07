@@ -1,5 +1,6 @@
 (module string-table racket
   (require green-lisp/utils)
+  (provide elf-string-table%)
   
   (define elf-string-table%
     (class object%

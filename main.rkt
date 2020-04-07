@@ -1,5 +1,6 @@
 (module main racket
-
+  (require green-lisp/elf/section)
+  (require green-lisp/elf/file)
   (require green-lisp/new-x86-64)
 
   ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
