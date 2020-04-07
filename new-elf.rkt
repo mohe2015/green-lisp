@@ -3,6 +3,7 @@
 (require racket/bytes)
 (require racket/file)
 (require racket/list)
+(require racket/match)
 
 (require green-lisp/new-x86-64)
 
@@ -75,6 +76,12 @@
 (define elf-section-type '(null progbits symtab strtab rela
                                 hash dynamic note nobits
                                 rel shlib dynsym num))
+(define (elf-section-type->byte type)
+  (match type
+    ['null SHT_NULL]
+    ['progbits SHT_PROGBITS]
+    ['symtab SHT_SYMTAB]
+    ['strtab SHT_STRTAB]))
 
 ;; sh_flags
 (define SHF_WRITE		#x1)
@@ -104,7 +111,7 @@
     (define/public (get-bytes offset section-name-string-table-index)
       (bytes-append
        (unsigned 32 section-name-string-table-index) ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
-       (unsigned 32 SHT_STRTAB) ;; Elf64_Word sh_type;		/* Type of section */
+       (unsigned 32 (elf-section-type->byte type)) ;; Elf64_Word sh_type;		/* Type of section */
        (unsigned 64 0) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
        (unsigned 64 0) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
        (unsigned 64 offset) ;; Elf64_Off sh_offset;		/* Section file offset */
