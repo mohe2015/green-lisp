@@ -121,7 +121,7 @@
     (init-field strings)
 
     (define/public (get-bytes)
-      (bytes-join strings #"\0"))
+      (bytes-append (bytes-join strings #"\0") #"\0")) ;; TODO last \0 is missing (and first)
 
     (define/public (get-string-offset string)
       (let* ((strings-before (takef strings (lambda (s) (not (equal? s string)))))
@@ -191,10 +191,11 @@
       ;; string table get offset of string
       (println sections)
       
-      (bytes-append
+      (bytes-append*
        (get-elf-header-bytes) ;; 64
        null-section-header ;; 64
-       (test section-header-string-table sections 128)
+       (test section-header-string-table sections (+ 128 (* 64 (length sections))))
+       (map (lambda (s) (get-field content s)) sections)
        ))
     
     (define/public (get-bytes)      
@@ -239,7 +240,7 @@
        (unsigned 16 0)  ;; e_phnum number of program headers
        (unsigned 16 64) ;; constant size per section header
        (unsigned 16 2)  ;; number of sections
-       (unsigned 16 0)))  ;; e_shstrndx section header string index TODO calculate
+       (unsigned 16 1)))  ;; e_shstrndx section header string index TODO calculate
        
     ))
 
