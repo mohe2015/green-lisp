@@ -124,8 +124,8 @@
     (init-field strings)
 
     (define/public (get-bytes)
-      (bytes-append #"\0" (bytes-join strings #"\0") #"\0")) ;; TODO last \0 is missing (and first)
-
+      (bytes-append #"\0" (bytes-join strings #"\0") #"\0"))
+    
     (define/public (get-string-offset string)
       (let* ((strings-before (takef strings (lambda (s) (not (equal? s string)))))
              (strings-length-before (map bytes-length strings-before))
@@ -183,9 +183,12 @@
       (cond [(null? remaining-sections) (bytes)]
             [else
              (let* ((current-section (car remaining-sections))
-                    (section-bytes (send current-section get-bytes current-offset (send section-header-string-table get-string-offset (get-field name current-section)))))
+                    (section-string-offset (send section-header-string-table get-string-offset (get-field name current-section)))
+                    (section-bytes (send current-section get-bytes current-offset section-string-offset)))
+               (println section-string-offset)
+               (println current-offset)
                (bytes-append section-bytes
-                             (test section-header-string-table (cdr remaining-sections) (+ current-offset (bytes-length section-bytes)))))]))
+                             (test section-header-string-table (cdr remaining-sections) (+ current-offset (bytes-length (get-field content current-section))))))]))
     
     (define/public (internal-get-bytes section-header-string-table)
       ;; calculate all the sections bytes
@@ -202,7 +205,7 @@
        ))
     
     (define/public (get-bytes)      
-      (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda (section) (send section get-name)) sections))]))
+      (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))]))
              (section-header-string-table-bytes (send section-header-string-table get-bytes))
              (section-header-string-table-section (new elf-section%
                                                               [name #".shstrtab"]
@@ -242,8 +245,8 @@
        (unsigned 16 0);'(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
        (unsigned 16 0)  ;; e_phnum number of program headers
        (unsigned 16 64) ;; constant size per section header
-       (unsigned 16 2)  ;; number of sections
-       (unsigned 16 1)))  ;; e_shstrndx section header string index TODO calculate
+       (unsigned 16 (+ 1 (length sections)))  ;; number of sections
+       (unsigned 16 2)))  ;; e_shstrndx section header string index TODO calculate
        
     ))
 
