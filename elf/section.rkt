@@ -53,9 +53,6 @@
        name ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
        type ;; Elf64_Word sh_type;		/* Type of section */
        (flags '()) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
-       (address 0) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
-       ;;offset ;; Elf64_Off sh_offset;		/* Section file offset */
-       ;;size ;; Elf64_Xword sh_size;		/* Size of section in bytes */
        (link 0) ;; Elf64_Word sh_link;		/* Index of another section */
        (info 0) ;; Elf64_Word sh_info;		/* Additional section information */
        (alignment 1) ;; Elf64_Xword sh_addralign;	/* Section alignment */
@@ -66,7 +63,7 @@
          (unsigned 32 section-name-string-table-index) ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
          (unsigned 32 (elf-section-type->byte type)) ;; Elf64_Word sh_type;		/* Type of section */
          (unsigned 64 (elf-section-flags->byte flags)) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
-         (unsigned 64 address) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+         (unsigned 64 offset) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
          (unsigned 64 offset) ;; Elf64_Off sh_offset;		/* Section file offset */
          (unsigned 64 (bytes-length content)) ;; Elf64_Xword sh_size;		/* Size of section in bytes */
          (unsigned 32 link) ;; Elf64_Word sh_link;		/* Index of another section */

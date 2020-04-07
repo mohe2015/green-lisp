@@ -1,5 +1,6 @@
 (module main racket
   (require green-lisp/elf/section)
+  (require green-lisp/elf/program-header)
   (require green-lisp/elf/file)
   (require green-lisp/new-x86-64)
 
@@ -13,6 +14,11 @@
                              [flags '(alloc exec)]
                              [address #x400000]
                              [content .text]))
+         (.text-program-header (new elf-program-header%
+                                    [type 'load]
+                                    [flags '(read execute)]
+
+                                    ))
          (bytes (send (new elf-file% [sections (list .text-section)]) get-bytes)))
     (call-with-output-file "out.elf"
       (lambda (out)
