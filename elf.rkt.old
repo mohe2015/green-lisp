@@ -1,16 +1,7 @@
 #lang typed/racket
 (require green-lisp/x86-64 green-lisp/label-interface)
 (provide file)
-  
-(define strtab
-  (lambda ()
-    (data-list
-     (label 'strtab-start)
-     (data-string #"\0")
-     (label 'message-string)
-     (data-string #"message\0")
-     (label 'strtab-end))))
-  
+
 (define strtab-shdr
   (lambda ()
     (data-list
@@ -42,18 +33,3 @@
      (data-unsigned 64 8) ;; sh_addralign: section alignment
      (data-unsigned 64 24) ;; TODO THIS IS THE SIZE OF ONE SYMBOL sh_entsize:   entry size if section holds table
      (label 'symtab-shdr-end))))
-
-(: phdr (-> (Instance data-list-type)))
-(define phdr
-  (lambda ()
-    (data-list
-     (label 'phdr-start)
-     (data-unsigned 32 1) ;; p_type
-     (data-unsigned 32 5) ;; p_flags ;; TODO read + execute
-     (data-unsigned 64 '(- code-start start)) ;; p_offset
-     (data-unsigned 64 'code-start) ;; p_vaddr aTODO current addr
-     (data-unsigned 64 'code-start) ;; p_paddr aTODO current addr
-     (data-unsigned 64 '(- code-end code-start)) ;; p_filesz aTODO filesize
-     (data-unsigned 64 '(- code-end code-start)) ;; p_memsz aTODO filesize
-     (data-unsigned 64 #x1000) ;; p_align
-     (label 'phdr-end))))

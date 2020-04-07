@@ -1,0 +1,116 @@
+(module file racket
+  (require green-lisp/utils)
+
+  (define ELFMAG0 #x7f) ;; /* EI_MAG */
+  (define ELFMAG1 (char->integer #\E))
+  (define ELFMAG2 (char->integer #\L))
+  (define ELFMAG3 (char->integer #\F))
+
+  (define ELFCLASS64 2)
+
+  (define ELFDATA2LSB 1) ;; TODO maybe also support msb???
+
+  (define EV_CURRENT 1)
+
+  (define ELFOSABI_SYSV 0)
+
+  ;; e_type
+  (define ET_REL  1)
+  (define ET_EXEC 2)
+  (define ET_DYN  3)
+  (define ET_CORE 4)
+
+  (define EM_X86_64 62)
+
+  ;; immutable elf class with merge function to create clean functional code
+  (define elf-file%
+    (class object%
+      (super-new)
+      (init-field ;elf-header
+       [sections'()] ;; TODO null section
+       [program-headers '()]
+       [symbols '()]) ;; formally this is also just a section ;; TODO null symbol
+
+      (define/public (get-symbols)
+        symbols)
+
+      (define/public (get-sections)
+        sections)
+
+      (define/public (get-program-headers)
+        program-headers)
+    
+      (define/public (merge that)
+        (new elf-file%
+             [sections (append sections (get-field sections that))]
+             [program-headers (append program-headers (get-field program-headers that))]
+             [symbols (append symbols (get-field symbols that))]))
+
+      (define (test section-header-string-table remaining-sections current-offset)
+        (cond [(null? remaining-sections) (bytes)]
+              [else
+               (let* ((current-section (car remaining-sections))
+                      (section-string-offset (send section-header-string-table get-string-offset (get-field name current-section)))
+                      (section-bytes (send current-section get-bytes current-offset section-string-offset)))
+                 (bytes-append section-bytes
+                               (test section-header-string-table (cdr remaining-sections) (+ current-offset (bytes-length (get-field content current-section))))))]))
+    
+      (define/public (internal-get-bytes section-header-string-table)
+        ;; calculate all the sections bytes
+        ;; (get-bytes offset section-name-string-table-index)
+        ;; (bytes-length (get-field content section))
+        ;; string table get offset of string
+      
+        (bytes-append*
+         (get-elf-header-bytes) ;; 64
+         null-section-header ;; 64
+         (test section-header-string-table sections (+ 128 (* 64 (length sections))))
+         (map (lambda (s) (get-field content s)) sections)
+         ))
+    
+      (define/public (get-bytes)      
+        (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))]))
+               (section-header-string-table-bytes (send section-header-string-table get-bytes))
+               (section-header-string-table-section (new elf-section%
+                                                         [name #".shstrtab"]
+                                                         [type 'strtab]
+                                                         [address 0]
+                                                         [content section-header-string-table-bytes]))
+               (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section)]))))
+          (send new-elf-file internal-get-bytes section-header-string-table)))
+
+      (define/public (get-elf-header-bytes) ;; 64 bytes
+        (bytes-append
+         (unsigned 8 ELFMAG0)
+         (unsigned 8 ELFMAG1)
+         (unsigned 8 ELFMAG2)
+         (unsigned 8 ELFMAG3)
+         (unsigned 8 ELFCLASS64)
+         (unsigned 8 ELFDATA2LSB)
+         (unsigned 8 EV_CURRENT)
+         (unsigned 8 ELFOSABI_SYSV)
+         (unsigned 8 0)
+         (unsigned 8 0)
+         (unsigned 8 0)
+         (unsigned 8 0)
+         (unsigned 8 0)
+         (unsigned 8 0)
+         (unsigned 8 0)
+         (unsigned 8 0)
+
+         (unsigned 16 ET_EXEC) ;; e_type
+         (unsigned 16 EM_X86_64) ;; e_machine
+         (unsigned 32 EV_CURRENT) ;; e_version
+         (unsigned 64 #x400000) ; 'code-start) ;; aTODO entrypoint) ;; e_entry
+         (unsigned 64 0); '(- phdrs-start start)) ;; e_phoff aTODO phdr - $$
+         (unsigned 64 64) ;; start of section headers
+         (unsigned 32 0) ;; e_flags
+         (unsigned 16 64) ;; constant headersize
+         (unsigned 16 0);'(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
+         (unsigned 16 0)  ;; e_phnum number of program headers
+         (unsigned 16 64) ;; constant size per section header
+         (unsigned 16 (+ 1 (length sections)))  ;; number of sections
+         (unsigned 16 2)))  ;; e_shstrndx section header string index TODO calculate
+       
+      ))
+  )
