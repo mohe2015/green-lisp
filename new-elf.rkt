@@ -128,9 +128,7 @@
              (strings-length-before (map bytes-length strings-before))
              (strings-length-before-plus-null-terminator (map (λ (l) (+ l 1)) strings-length-before))
              (sum-strings-length-before (foldl + 0 strings-length-before-plus-null-terminator)))
-        sum-strings-length-before
-      ))
-      
+        sum-strings-length-before))
     ))
 
 (define ELFMAG0 #x7f) ;; /* EI_MAG */
@@ -178,16 +176,26 @@
            [program-headers (append program-headers (get-field program-headers that))]
            [symbols (append symbols (get-field symbols that))]))
 
-    (define/public (internal-get-bytes)
+    (define (test section-header-string-table remaining-sections current-offset)
+      (cond [(null? remaining-sections) (bytes)]
+            [else
+             (let* ((current-section (car remaining-sections))
+                    (section-bytes (send current-section get-bytes current-offset (send section-header-string-table get-string-offset (get-field name current-section)))))
+               (bytes-append section-bytes
+                             (test section-header-string-table (cdr remaining-sections) (+ current-offset (bytes-length section-bytes)))))]))
+    
+    (define/public (internal-get-bytes section-header-string-table)
       ;; calculate all the sections bytes
       ;; (get-bytes offset section-name-string-table-index)
       ;; (bytes-length (get-field content section))
-
       ;; string table get offset of string
+      (println sections)
       
       (bytes-append
        (get-elf-header-bytes) ;; 64
-       null-section-header)) ;; 64
+       null-section-header ;; 64
+       (test section-header-string-table sections 128)
+       ))
     
     (define/public (get-bytes)      
       (let* ((section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda (section) (send section get-name)) sections))]))
@@ -198,7 +206,7 @@
                                                               [address 0]
                                                               [content section-header-string-table-bytes]))
              (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section)]))))
-        (send new-elf-file internal-get-bytes)))
+        (send new-elf-file internal-get-bytes section-header-string-table)))
 
     (define/public (get-elf-header-bytes) ;; 64 bytes
       (bytes-append
@@ -230,7 +238,7 @@
        (unsigned 16 0);'(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
        (unsigned 16 0)  ;; e_phnum number of program headers
        (unsigned 16 64) ;; constant size per section header
-       (unsigned 16 1)  ;; number of sections
+       (unsigned 16 2)  ;; number of sections
        (unsigned 16 0)))  ;; e_shstrndx section header string index TODO calculate
        
     ))
