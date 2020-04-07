@@ -125,7 +125,6 @@
 
 (define (get-the-code)
   (data-list
-   (data-align 12)
    (label code-start)
 
    (mov-imm64 2 18)  ; dl / rdx: length of string

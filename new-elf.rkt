@@ -90,7 +90,13 @@
 (define SHF_RELA_LIVEPATCH	#x00100000)
 (define SHF_RO_AFTER_INIT	#x00200000)
 (define SHF_MASKPROC		#xf0000000)
-(define [elf-section-flag : elf-section-flag-type] '(write alloc exec))
+(define elf-section-flag '(write alloc exec))
+(define (elf-section-flags->byte flags)
+  (match flags
+    ['() 0]
+    ['(alloc exec) (+ SHF_ALLOC SHF_EXECINSTR)]
+    ['(alloc) (+ SHF_ALLOC)]
+    ['(alloc write) (+ SHF_ALLOC SHF_WRITE)]))
 
 (define elf-section% ;; typedef struct elf64_shdr Elf64_Shdr
   (class object%
@@ -112,14 +118,14 @@
       (bytes-append
        (unsigned 32 section-name-string-table-index) ;; Elf64_Word sh_name;		/* Section name, index in string tbl */
        (unsigned 32 (elf-section-type->byte type)) ;; Elf64_Word sh_type;		/* Type of section */
-       (unsigned 64 0) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
-       (unsigned 64 0) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+       (unsigned 64 (elf-section-flags->byte flags)) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
+       (unsigned 64 address) ;; Elf64_Addr sh_addr;		/* Section virtual addr at execution */
        (unsigned 64 offset) ;; Elf64_Off sh_offset;		/* Section file offset */
        (unsigned 64 (bytes-length content)) ;; Elf64_Xword sh_size;		/* Size of section in bytes */
-       (unsigned 32 0) ;; Elf64_Word sh_link;		/* Index of another section */
-       (unsigned 32 0) ;; Elf64_Word sh_info;		/* Additional section information */
-       (unsigned 64 1) ;; Elf64_Xword sh_addralign;	/* Section alignment */
-       (unsigned 64 0) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
+       (unsigned 32 link) ;; Elf64_Word sh_link;		/* Index of another section */
+       (unsigned 32 info) ;; Elf64_Word sh_info;		/* Additional section information */
+       (unsigned 64 alignment) ;; Elf64_Xword sh_addralign;	/* Section alignment */
+       (unsigned 64 entry-size) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 
     ))))
   
@@ -244,7 +250,7 @@
        (unsigned 16 ET_EXEC) ;; e_type
        (unsigned 16 EM_X86_64) ;; e_machine
        (unsigned 32 EV_CURRENT) ;; e_version
-       (unsigned 64 0); 'code-start) ;; aTODO entrypoint) ;; e_entry
+       (unsigned 64 #x400000) ; 'code-start) ;; aTODO entrypoint) ;; e_entry
        (unsigned 64 0); '(- phdrs-start start)) ;; e_phoff aTODO phdr - $$
        (unsigned 64 64) ;; start of section headers
        (unsigned 32 0) ;; e_flags
@@ -261,6 +267,7 @@
        (.text-section (new elf-section%
                            [name #".text"]
                            [type 'progbits]
+                           [flags '(alloc exec)]
                            [address #x400000]
                            [content .text]))
        (bytes (send (new elf-file% [sections (list .text-section)]) get-bytes)))
