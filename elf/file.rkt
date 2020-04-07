@@ -27,7 +27,7 @@
   (define elf-file%
     (class object%
       (super-new)
-      (init-field ;elf-header
+      (init-field
        [sections'()] ;; TODO null section
        [program-headers '()]
        [symbols '()]) ;; formally this is also just a section ;; TODO null symbol
@@ -75,7 +75,6 @@
                (section-header-string-table-section (new elf-section%
                                                          [name #".shstrtab"]
                                                          [type 'strtab]
-                                                         [address 0]
                                                          [content section-header-string-table-bytes]))
                (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section)]))))
           (send new-elf-file internal-get-bytes section-header-string-table)))
@@ -107,8 +106,8 @@
          (unsigned 64 64) ;; start of section headers
          (unsigned 32 0) ;; e_flags
          (unsigned 16 64) ;; constant headersize
-         (unsigned 16 0);'(- phdr-end phdr-start)) ;; e_phentsize aTODO phdrsize
-         (unsigned 16 0)  ;; e_phnum number of program headers
+         (unsigned 16 56) ;; constant program header size
+         (unsigned 16 (length program-headers)) ;; number of program headers
          (unsigned 16 64) ;; constant size per section header
          (unsigned 16 (+ 1 (length sections)))  ;; number of sections
          (unsigned 16 2)))  ;; e_shstrndx section header string index TODO calculate

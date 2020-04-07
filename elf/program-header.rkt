@@ -37,7 +37,7 @@
       (init-field
        type ;; Elf64_Word p_type;
        flags ;; Elf64_Word p_flags;
-       (sections '())
+       section
        (alignment 1)) ;; Elf64_Xword p_align;		/* Segment alignment, file & memory */
 
       (define/public (get-bytes offset size)

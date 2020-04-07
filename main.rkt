@@ -16,9 +16,11 @@
          (.text-program-header (new elf-program-header%
                                     [type 'load]
                                     [flags '(read execute)]
-                                    [sections (list .text-section)]
+                                    [section .text-section]
                                     ))
-         (bytes (send (new elf-file% [sections (list .text-section)]) get-bytes)))
+         (bytes (send (new elf-file%
+                           [sections (list .text-section)]
+                           [program-headers (list .text-program-header)]) get-bytes)))
     (call-with-output-file "out.elf"
       (lambda (out)
         (write-bytes bytes out))
