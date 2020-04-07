@@ -3,6 +3,9 @@
 (require racket/bytes)
 (require racket/file)
 (require racket/list)
+
+(require green-lisp/new-x86-64)
+
 ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 ;; Licensed under /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 
@@ -244,7 +247,13 @@
        
     ))
 
-(let ((bytes (send (new elf-file%) get-bytes)))
+(let* ((.text (get-the-code))
+       (.text-section (new elf-section%
+                           [name #".text"]
+                           [type 'progbits]
+                           [address #x400000]
+                           [content .text]))
+       (bytes (send (new elf-file% [sections (list .text-section)]) get-bytes)))
   (call-with-output-file "out.elf"
     (lambda (out)
       (write-bytes bytes out))
