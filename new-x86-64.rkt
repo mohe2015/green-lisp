@@ -11,21 +11,21 @@
 (define-syntax-rule (data-unsigned bytes value)
   (list (lambda (_) bytes)
         null
-        (lambda (current-address) (integer->integer-bytes value bytes #f))
+        (lambda (current-address rodata-addresses) (integer->integer-bytes value bytes #f))
         (list)
         ))
 
 (define-syntax-rule (data-bytestring bytestring)
   (list (lambda (_) (bytes-length bytestring))
         null
-        (lambda (_) bytestring)
+        (lambda (_ rodata-addresses) bytestring)
         (list)
         ))
 
 (define-syntax-rule (data-filled-array size)
   (list (lambda (_) size)
         null
-        (lambda (_) (make-bytes size 0))
+        (lambda (_ rodata-addresses) (make-bytes size 0))
         (list)
         ))
 
@@ -35,14 +35,14 @@
 (define-syntax-rule (data-align alignment-bits)
   (list (lambda (current-address) (get-byte-count-to-align alignment-bits current-address))
         null
-        (lambda (current-address) (make-bytes (get-byte-count-to-align alignment-bits current-address) 0))
+        (lambda (current-address rodata-addresses) (make-bytes (get-byte-count-to-align alignment-bits current-address) 0))
         (list)
         ))
 
 (define-syntax-rule (label symbol)
   (list (lambda (_) 0)
         symbol
-        (lambda (current-address) (bytes))
+        (lambda (current-address rodata-addresses) (bytes))
         (list)
         ))
 
@@ -50,20 +50,20 @@
 (define-syntax-rule (call target)
   (list (lambda (_) 5)
         null
-        (lambda (current-address) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
+        (lambda (current-address rodata-addresses) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
         (list)
         ))
 
 (define-syntax-rule (syscall)
   (list (lambda (_) 2)
         null
-        (lambda (_) (bytes #x0f #x05))
+        (lambda (_ rodata-addresses) (bytes #x0f #x05))
         (list)))
 
 (define-syntax-rule (mov-imm8 register value)
   (list (lambda (_) (if (= register 7) 3 2))
         null
-        (lambda (current-address)
+        (lambda (current-address rodata-addresses)
           (bytes-append
            (if (= the-register 7)
                (unsigned 8 #x40)
@@ -75,7 +75,7 @@
 (define-syntax-rule (mov-imm64 register value)
   (list (lambda (_) 10)
         null
-        (lambda (current-address)
+        (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
            (unsigned 8 (+ #xb8 register)) ;; opcode with register
@@ -86,7 +86,7 @@
 (define-syntax-rule (mov-string register value)
   (list (lambda (_) 10)
         null
-        (lambda (current-address) ;; rodata-addresses TODO
+        (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
            (unsigned 8 (+ #xb8 register)) ;; opcode with register
@@ -97,7 +97,7 @@
 (define-syntax-rule (jmp target)
   (list (lambda (_) 2)
         null
-        (lambda (current-address)
+        (lambda (current-address rodata-addresses)
           (bytes-append (bytes #xeb) (integer->integer-bytes (- target current-address 2) 1 #t)))
         (list)
         ))
@@ -106,7 +106,7 @@
 (define-syntax-rule (push register)
   (list (lambda (_) 1)
         null
-        (lambda (_)
+        (lambda (_ rodata-addresses)
           (bytes (+ #x50 register)))
         (list)
         ))
@@ -115,7 +115,7 @@
 (define-syntax-rule (pop register)
   (list (lambda (_) 1)
         null
-        (lambda (_)
+        (lambda (_ rodata-addresses)
           (bytes (+ #x58 register)))
         (list)
         ))
@@ -125,14 +125,14 @@
 (define-syntax-rule (add destination source)
   (list (lambda (_) 3)
         null
-        (lambda (_)
+        (lambda (_ rodata-addresses)
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
           (bytes REX.W 01 (mod11-to-binary destination source)))
         (list)
         ))
 
 (begin-for-syntax
-  (define (list->label-addresses symbols sizes codes rodatas offset)
+  (define (list->label-addresses symbols sizes codes rodatas offset rodata-offset)
     (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list)
                                                                     (list)
                                                                     (list) ;; .rodata
@@ -142,19 +142,29 @@
                   [symbol (car symbols)] ;; syntax element
                   [size #`(#,(car sizes) #,current-element-symbol)] ;; syntax element of lambda call e.g. code that calculates alignment size
                   [code (car codes)]
-                  [rodata (car rodatas)]) ;; syntax element)
+                  [rodata (car rodatas)]
+                  [current-rodata-size-symbol (car (generate-temporaries '(rodata-size)))]
+                  [rodata-size #`(foldl + 0 (map (lambda (a) (bytes-length a)) #,rodatas))]
+                  ) ;; syntax element)
              (let-values ([(cara carb carc) (if (eq? (syntax-e symbol) 'null)
                                            (values
-                                            (list (list current-element-symbol offset))
-                                            `(, #`(#,code #,current-element-symbol))
+                                            (list (list current-element-symbol offset) (list current-rodata-size-symbol rodata-offset))
+                                            `(, #`(#,code #,current-element-symbol ))
                                             `((rodata)) ;; .rodata
                                             )
                                            (values
-                                            (list (list current-element-symbol offset) (list symbol current-element-symbol))
+                                            (list (list current-element-symbol offset) (list current-rodata-size-symbol rodata-offset) (list symbol current-element-symbol))
                                             `(, #`(#,code #,current-element-symbol))
                                             `((rodata)) ;; .rodata
                                             ))]
-                          [(cdra cdrb cdrc) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) (cdr rodatas) #`(+ #,current-element-symbol #,size))])
+                          [(cdra cdrb cdrc) (list->label-addresses
+                                             (cdr symbols)
+                                             (cdr sizes)
+                                             (cdr codes)
+                                             (cdr rodatas)
+                                             #`(+ #,current-element-symbol #,size)
+                                             #`(+ #,current-rodata-size-symbol #,rodata-size) ;; rodata-offset
+                                             )])
                (values
                 (append cara cdra) ;; labels
                 (append carb cdrb) ;; code
@@ -172,7 +182,7 @@
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
             (rodatas (map (lambda (c) (fifth c)) expanded)) ;; syntax list of .rodata
             (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
-       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0)])
+       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0 0)])
          #`(let* #,labels
              ;;(println #,rodata)
              (bytes-append #,@code))))]))
