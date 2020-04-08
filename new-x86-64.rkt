@@ -193,14 +193,14 @@
    (label code-start)
 
    (mov-imm64 2 18)  ; dl / rdx: length of string
-   (mov-string 6 #"test\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (mov-string 6 #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
    ;; TODO check return value?
 
-   (mov-imm64 2 1024) ;; rdx: buffer length?
-   (mov-imm64 6 code-start) ;; rsi: buffer?
+   (mov-imm64 2 32) ;; rdx: buffer length?
+   (mov-string 6 #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
    (mov-imm64 7 1) ;; rdi: stdin?
    (mov-imm64 0 0) ;; rax: read syscall
    (syscall) ;; read(stdin, buffer, 1024)
@@ -208,7 +208,7 @@
 
    ;; write "Hello "
    (mov-imm64 2 6)  ; dl / rdx: length of string
-   (mov-imm64 6 code-start) ;; rsi load string
+   (mov-string 6 #"Hello \0") ;; rsi load string
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
@@ -218,7 +218,7 @@
    ;; TODO mov rdx, rax
    (mov-imm64 2 1024)  ; dl / rdx: length of string
 
-   (mov-imm64 6 code-start) ;; rsi load string
+   (mov-imm64 6 code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
