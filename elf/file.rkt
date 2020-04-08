@@ -47,25 +47,35 @@
              [program-headers (append program-headers (get-field program-headers that))]
              [symbols (append symbols (get-field symbols that))]))
 
-      (define (test section-header-string-table remaining-sections current-offset)
+      (define (get-sections-bytes section-header-string-table remaining-sections current-offset)
         (cond [(null? remaining-sections) (bytes)]
               [else
                (let* ((current-section (car remaining-sections))
                       (section-string-offset (send section-header-string-table get-string-offset (get-field name current-section)))
                       (section-bytes (send current-section get-bytes current-offset section-string-offset)))
                  (bytes-append section-bytes
-                               (test section-header-string-table (cdr remaining-sections) (+ current-offset (bytes-length (get-field content current-section))))))]))
-    
-      (define/public (internal-get-bytes section-header-string-table)
-        ;; calculate all the sections bytes
-        ;; (get-bytes offset section-name-string-table-index)
-        ;; (bytes-length (get-field content section))
-        ;; string table get offset of string
+                               (get-sections-bytes section-header-string-table (cdr remaining-sections) (+ current-offset (bytes-length (get-field content current-section))))))]))
+
+      ;; not every section has a program header (at least in our simplified implementation)
+      (define (get-program-headers-bytes remaining-sections remaining-program-headers current-offset)
+        (cond [(null? remaining-program-headers) (bytes)]
+              [else
+               (let ((current-section (car remaining-sections))
+                      (current-program-header (car remaining-program-headers)))
+                 (cond [(eq? (get-field section current-program-header) current-section)
+                       (let* ((program-header-bytes (send current-program-header get-bytes current-offset (bytes-length (get-field content current-section)))))
+                         (bytes-append program-header-bytes
+                                       (get-program-headers-bytes (cdr remaining-sections) (cdr remaining-program-headers) (+ current-offset (bytes-length (get-field content current-section))))))]
+                       [else
+                        (get-program-headers-bytes (cdr remaining-sections) remaining-program-headers (+ current-offset (bytes-length (get-field content current-section))))]
+                       ))]))
       
+      (define/public (internal-get-bytes section-header-string-table)
         (bytes-append*
          (get-elf-header-bytes) ;; 64
          null-section-header ;; 64
-         (test section-header-string-table sections (+ 128 (* 64 (length sections))))
+         (get-sections-bytes section-header-string-table sections (+ 128 (* 64 (length sections)) (* 56 (length program-headers))))
+         (get-program-headers-bytes sections program-headers (+ 128 (* 64 (length sections)) (* 56 (length program-headers))))
          (map (lambda (s) (get-field content s)) sections)
          ))
     
@@ -102,7 +112,7 @@
          (unsigned 16 EM_X86_64) ;; e_machine
          (unsigned 32 EV_CURRENT) ;; e_version
          (unsigned 64 #x400000) ; 'code-start) ;; aTODO entrypoint) ;; e_entry
-         (unsigned 64 0); '(- phdrs-start start)) ;; e_phoff aTODO phdr - $$
+         (unsigned 64 (+ 128 (* 64 (length sections)))) ;; program headers offset
          (unsigned 64 64) ;; start of section headers
          (unsigned 32 0) ;; e_flags
          (unsigned 16 64) ;; constant headersize
@@ -110,7 +120,7 @@
          (unsigned 16 (length program-headers)) ;; number of program headers
          (unsigned 16 64) ;; constant size per section header
          (unsigned 16 (+ 1 (length sections)))  ;; number of sections
-         (unsigned 16 2)))  ;; e_shstrndx section header string index TODO calculate
+         (unsigned 16 2)))  ;;  TODO calculate e_shstrndx section header string index
        
       ))
   )
