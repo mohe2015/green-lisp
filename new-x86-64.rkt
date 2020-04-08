@@ -196,7 +196,7 @@
   (data-list
    (label code-start)
 
-   (mov-imm64 2 18)  ; dl / rdx: length of string
+   (mov-imm64 2 19)  ; dl / rdx: length of string
    (mov-string 6 #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
