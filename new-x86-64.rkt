@@ -184,9 +184,9 @@
             (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
        (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0 0)])
          #`(let* #,labels
-             (println
-              (bytes-append #,@rodata))
-             (bytes-append #,@code))))]))
+             (values
+              (bytes-append #,@code)
+              (bytes-append #,@rodata)))))]))
 
 (define (get-the-code)
   (data-list
