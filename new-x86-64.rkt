@@ -54,6 +54,18 @@
            (unsigned 8 (+ #xb8 register)) ;; opcode with register
            (unsigned 64 value))))) ;; value
 
+(define-syntax-rule (mov-string register value)
+  (list (lambda (_) 10)
+        null
+        (lambda (current-address data-addresses rodata-addresses)
+          (bytes-append
+           (unsigned 8 REX.W)
+           (unsigned 8 (+ #xb8 register)) ;; opcode with register
+           (unsigned 64 (first data-addresses))))
+        (list value) ;; .data
+        (list value) ;; rodata
+        )) ;; value
+
 (define-syntax-rule (jmp target)
   (list (lambda (_) 2)
         null
@@ -128,7 +140,7 @@
    (label code-start)
 
    (mov-imm64 2 18)  ; dl / rdx: length of string
-   (mov-imm64 6 code-start) ;; rsi load string
+   (mov-string 6 "test") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
