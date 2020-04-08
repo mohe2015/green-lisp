@@ -54,6 +54,19 @@
            (unsigned 8 (+ #xb8 register)) ;; opcode with register
            (unsigned 64 value))))) ;; value
 
+;; alternative proposal
+'(define-method test (jo)
+   "hi")
+;; returns a function object
+;; has fields like symbols (test, jo), code, data (), rodata ("hi"), size
+;; compiler gets those and combines them
+;; can also optimize by moving around things etc., dead code elimination, etc,
+;; then it calls the objects get-bytes with data map as parameter from which get-bytes can get the addresses (what about PIE?)
+
+;; macroexpanding, ... before all that, automated code rewriting, ...
+
+;; but maybe this is the quick proposal? (no, do it right the first time)
+
 (define-syntax-rule (mov-string register value)
   (list (lambda (_) 10)
         null
