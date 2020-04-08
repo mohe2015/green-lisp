@@ -133,23 +133,32 @@
 
 (begin-for-syntax
   (define (list->label-addresses symbols sizes codes rodatas offset)
-    (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list) (list))]
+    (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list)
+                                                                    (list)
+                                                                    null ;; rodata
+                                                                    )]
           [else
            (let* ([current-element-symbol (car (generate-temporaries '(element)))] ;; syntax element
                   [symbol (car symbols)] ;; syntax element
                   [size #`(#,(car sizes) #,current-element-symbol)] ;; syntax element of lambda call e.g. code that calculates alignment size
                   [code (car codes)]) ;; syntax element)
-             (let-values ([(cara carb) (if (eq? (syntax-e symbol) 'null)
+             (let-values ([(cara carb carc) (if (eq? (syntax-e symbol) 'null)
                                            (values
                                             (list (list current-element-symbol offset))
-                                            `(, #`(#,code #,current-element-symbol)))
+                                            `(, #`(#,code #,current-element-symbol))
+                                            null ;; rodata
+                                            )
                                            (values
                                             (list (list current-element-symbol offset) (list symbol current-element-symbol))
-                                            `(, #`(#,code #,current-element-symbol))))]
-                          [(cdra cdrb) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) (cdr rodatas) #`(+ #,current-element-symbol #,size))])
+                                            `(, #`(#,code #,current-element-symbol))
+                                            null ;; rodata
+                                            ))]
+                          [(cdra cdrb cdrc) (list->label-addresses (cdr symbols) (cdr sizes) (cdr codes) (cdr rodatas) #`(+ #,current-element-symbol #,size))])
                (values
-                (append cara cdra)
-                (append carb cdrb))))])))
+                (append cara cdra) ;; labels
+                (append carb cdrb) ;; code
+                null ;; .rodata
+                )))])))
 
 ;; TODO get offset and then return an object like all the other macros
 (define-syntax (data-list stx)
@@ -162,7 +171,7 @@
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
             (rodatas (map (lambda (c) (fifth c)) expanded)) ;; syntax list of .rodata
             (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
-       (let-values ([(labels code) (list->label-addresses symbols sizes codes rodatas 0)])
+       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0)])
          #`(let* #,labels (bytes-append #,@code))))]))
 
 (define (get-the-code)
