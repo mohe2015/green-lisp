@@ -114,7 +114,14 @@
 
          ;; TODO entrypoint needs to be big so the stack can grow below
          ;; currently the first program header needs to be the entrypoint 
-         (unsigned 64 (+ BASE (+ 128 (* 64 (length sections)) (* 56 (length program-headers)))))
+         (unsigned 64 (+ BASE
+                         (+ 128 (* 64 (length sections)) (* 56 (length program-headers)))
+
+                         ;; TODO section alignment!!!
+                         
+                        (foldl + 0 (map (lambda (s) (bytes-length (get-field content s))) (takef sections (lambda (s) (not (equal? (get-field name s) #".text"))))))
+                         
+                         )) ;; TODO calculate
 
          (unsigned 64 (+ 128 (* 64 (length sections)))) ;; program headers offset
          (unsigned 64 64) ;; start of section headers
