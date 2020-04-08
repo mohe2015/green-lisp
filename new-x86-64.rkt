@@ -144,17 +144,17 @@
                   [code (car codes)]
                   [rodata (car rodatas)]
                   [current-rodata-size-symbol (car (generate-temporaries '(rodata-size)))]
-                  [rodata-size #`(foldl + 0 (map (lambda (a) (bytes-length a)) #,rodatas))]
+                  [rodata-size #`(foldl + 0 (map (lambda (a) (bytes-length a)) #,rodata))]
                   ) ;; syntax element)
              (let-values ([(cara carb carc) (if (eq? (syntax-e symbol) 'null)
                                            (values
                                             (list (list current-element-symbol offset) (list current-rodata-size-symbol rodata-offset))
-                                            `(, #`(#,code #,current-element-symbol ))
+                                            `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol))
                                             `((rodata)) ;; .rodata
                                             )
                                            (values
                                             (list (list current-element-symbol offset) (list current-rodata-size-symbol rodata-offset) (list symbol current-element-symbol))
-                                            `(, #`(#,code #,current-element-symbol))
+                                            `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol))
                                             `((rodata)) ;; .rodata
                                             ))]
                           [(cdra cdrb cdrc) (list->label-addresses
@@ -192,7 +192,7 @@
    (label code-start)
 
    (mov-imm64 2 18)  ; dl / rdx: length of string
-   (mov-string 6 "test") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (mov-string 6 #"test") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
