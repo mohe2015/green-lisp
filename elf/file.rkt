@@ -111,7 +111,11 @@
          (unsigned 16 ET_EXEC) ;; e_type
          (unsigned 16 EM_X86_64) ;; e_machine
          (unsigned 32 EV_CURRENT) ;; e_version
-         (unsigned 64 #x400000) ; 'code-start) ;; aTODO entrypoint) ;; e_entry
+
+         ;; TODO entrypoint needs to be big so the stack can grow below
+         ;; currently the first program header needs to be the entrypoint 
+         (unsigned 64 (+ BASE (+ 128 (* 64 (length sections)) (* 56 (length program-headers)))))
+
          (unsigned 64 (+ 128 (* 64 (length sections)))) ;; program headers offset
          (unsigned 64 64) ;; start of section headers
          (unsigned 32 0) ;; e_flags
@@ -121,6 +125,5 @@
          (unsigned 16 64) ;; constant size per section header
          (unsigned 16 (+ 1 (length sections)))  ;; number of sections
          (unsigned 16 2)))  ;;  TODO calculate e_shstrndx section header string index
-       
       ))
   )
