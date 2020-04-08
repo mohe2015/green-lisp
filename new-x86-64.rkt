@@ -54,6 +54,60 @@
            (unsigned 8 (+ #xb8 register)) ;; opcode with register
            (unsigned 64 value))))) ;; value
 
+;; alternative proposal
+'(define-method test (jo)
+   "hi")
+;; returns a function object
+;; has fields like symbols (test, jo), code, data (), rodata ("hi"), size, .bss ()
+;; compiler gets those and combines them
+;; can also optimize by moving around things etc., dead code elimination, etc,
+;; then it calls the objects get-bytes with data map as parameter from which get-bytes can get the addresses (what about PIE?)
+
+;; macroexpanding, ... before all that, automated code rewriting, ..., inlining
+
+;; but still source code location needs to be preserved so maybe store it inside of the objects
+
+;; lambda macro should return object that accepts address and returns the code for that lambda
+;; locally resolves labels
+;; maybe labels not even required in some cases because they can be optimized away before
+
+;; should be PIE code so the offset should be irrelevant?
+;; except for strings its currently not absolute
+
+;; TODO conditionals
+;; (if (= a 1) 1 0)
+;; converted into cmp, ... by the if macro?
+
+;; variable itself are hard to implement...
+;; with macros? - check how (maybe stack with currently live variables), but functional...
+
+;; jumps to symbols are hard to implement (global jumps to other function, local jumps for loops etc.) - functional...
+
+;; memory allocation:
+;; https://linux.die.net/man/2/mmap2
+;; https://linux.die.net/man/2/mremap
+;; (new test-object%)
+;; -> (call allocate-bytes 10)
+;; check for 0
+;; (initialize-test-object pointer)
+;; done
+
+;; http://matt.might.net/articles/implementing-a-programming-language/
+
+;; but maybe this is the quick proposal? (no, do it right the first time)
+
+(define-syntax-rule (mov-string register value)
+  (list (lambda (_) 10)
+        null
+        (lambda (current-address data-addresses rodata-addresses)
+          (bytes-append
+           (unsigned 8 REX.W)
+           (unsigned 8 (+ #xb8 register)) ;; opcode with register
+           (unsigned 64 (first data-addresses))))
+        (list value) ;; .data
+        (list value) ;; rodata
+        )) ;; value
+
 (define-syntax-rule (jmp target)
   (list (lambda (_) 2)
         null
@@ -116,19 +170,12 @@
        (let-values ([(labels code) (list->label-addresses symbols sizes codes 0)])
          #`(let* #,labels (bytes-append #,@code))))]))
 
-;; lambda macro should return object that accepts address and returns the code for that lambda
-;; locally resolves labels
-;; maybe labels not even required in some cases because they can be optimized away before
-
-;; should be PIE code so the offset should be irrelevant?
-;; except for strings its currently not absolute
-
 (define (get-the-code)
   (data-list
    (label code-start)
 
    (mov-imm64 2 18)  ; dl / rdx: length of string
-   (mov-imm64 6 code-start) ;; rsi load string
+   (mov-string 6 "test") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
@@ -173,13 +220,5 @@
    (pop 1)
    ; (add (register eax) (register ecx))
    (push 0)
-
-   ;; TODO .bss section for buffers etc.
-
-   ;; TODO conditionals
-
-   ;; memory allocation:
-   ;; https://linux.die.net/man/2/mmap2
-   ;; https://linux.die.net/man/2/mremap
 
    (label code-end)))

@@ -124,6 +124,6 @@
          (unsigned 16 (length program-headers)) ;; number of program headers
          (unsigned 16 64) ;; constant size per section header
          (unsigned 16 (+ 1 (length sections)))  ;; number of sections
-         (unsigned 16 2)))  ;;  TODO calculate e_shstrndx section header string index
+         (unsigned 16 (+ 1 (index-where sections (lambda (s) (equal? (get-field name s) #".shstrtab"))))))) ;; section header string index
       ))
   )
