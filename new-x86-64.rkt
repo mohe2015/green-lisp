@@ -90,7 +90,7 @@
           (bytes-append
            (unsigned 8 REX.W)
            (unsigned 8 (+ #xb8 register)) ;; opcode with register
-           (unsigned 64 1))) ;; (first rodata-addresses)
+           (unsigned 64 rodata-addresses)))
         (list value) ;; .rodata
         ))
 
@@ -150,12 +150,12 @@
                                            (values
                                             (list (list current-element-symbol offset) (list current-rodata-size-symbol rodata-offset))
                                             `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol))
-                                            `((rodata)) ;; .rodata
+                                            `(, #`(bytes-append* #,rodata)) ;; .rodata
                                             )
                                            (values
                                             (list (list current-element-symbol offset) (list current-rodata-size-symbol rodata-offset) (list symbol current-element-symbol))
                                             `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol))
-                                            `((rodata)) ;; .rodata
+                                             `(, #`(bytes-append* #,rodata)) ;; .rodata
                                             ))]
                           [(cdra cdrb cdrc) (list->label-addresses
                                              (cdr symbols)
@@ -184,7 +184,8 @@
             (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
        (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0 0)])
          #`(let* #,labels
-             ;;(println #,rodata)
+             (println
+              (bytes-append #,@rodata))
              (bytes-append #,@code))))]))
 
 (define (get-the-code)
