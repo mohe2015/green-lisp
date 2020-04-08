@@ -182,7 +182,7 @@
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
             (rodatas (map (lambda (c) (fifth c)) expanded)) ;; syntax list of .rodata
             (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
-       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0 0)])
+       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0 #x400278)]) ;; TODO calculate this shit
          #`(let* #,labels
              (values
               (bytes-append #,@code)
@@ -193,7 +193,7 @@
    (label code-start)
 
    (mov-imm64 2 18)  ; dl / rdx: length of string
-   (mov-string 6 #"test") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (mov-string 6 #"test\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 0 1)  ; al / rax: set write to command
    (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
