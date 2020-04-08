@@ -181,14 +181,18 @@
             (symbols (map (lambda (c) (third c)) expanded)) ;; syntax list of all symbols
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
             (rodatas (map (lambda (c) (fifth c)) expanded)) ;; syntax list of .rodata
-            (tainted (map (lambda (c) (syntax-tainted? c)) sizes)))
-       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas 0 #x400278)]) ;; TODO calculate this shit
-         #`(let* #,labels
-             (values
-              (bytes-append #,@code)
-              (bytes-append #,@rodata)))))]))
+            (tainted (map (lambda (c) (syntax-tainted? c)) sizes))
+            (.code-base-symbol (car (generate-temporaries '(.code-base))))
+            (.rodata-base-symbol (car (generate-temporaries '(.rodata-base))))
+            )
+       (let-values ([(labels code rodata) (list->label-addresses symbols sizes codes rodatas .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
+         #`(lambda (#,.code-base-symbol #,.rodata-base-symbol)
+             (let* #,labels
+               (values
+                (bytes-append #,@code)
+                (bytes-append #,@rodata))))))]))
 
-(define (get-the-code)
+(define get-the-code
   (data-list
    (label code-start)
 

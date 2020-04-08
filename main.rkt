@@ -7,7 +7,7 @@
   ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
   ;; Licensed under /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 
-  (let-values ([(.text .rodata) (get-the-code)])
+  (let-values ([(.text .rodata) (get-the-code 0 #x400278)])
     (let* ((.text-section (new elf-section%
                                [name #".text"]
                                [type 'progbits]
