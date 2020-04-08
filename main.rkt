@@ -14,7 +14,7 @@
   ;; otherwise we can't because of alignment etc.
   ;; for the data we should try to use a constant address
 
-  (let ((rodata-base-address (+ BASE 128 (* 64 2) (* 56 2)))) ;; TODO change this design as there will be multiple sections
+  (let ((rodata-base-address (+ BASE 128 (* 64 3) (* 56 2)))) ;; TODO change this design as there will be multiple sections
     (let-values ([(.text .rodata) (get-the-code 0 rodata-base-address)])
       (let* ((.text-section (new elf-section%
                                  [name #".text"]
