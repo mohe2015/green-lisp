@@ -8,30 +8,30 @@
   ;; Licensed under /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 
   (let* ((.text (get-the-code))
-         (.data #"Hello world!\n\0")
+         (.rodata #"Hello world!\n\0")
          (.text-section (new elf-section%
                              [name #".text"]
                              [type 'progbits]
                              [flags '(alloc exec)]
                              [content .text]))
-         (.data-section (new elf-section%
-                             [name #".data"]
+         (.rodata-section (new elf-section%
+                             [name #".rodata"]
                              [type 'progbits]
                              [flags '(alloc write)]
-                             [content .data]))
+                             [content .rodata]))
          (.text-program-header (new elf-program-header%
                                     [type 'load]
                                     [flags '(read execute)]
                                     [section .text-section]
                                     ))
-         (.data-program-header (new elf-program-header%
+         (.rodata-program-header (new elf-program-header%
                                     [type 'load]
                                     [flags '(read write)]
-                                    [section .data-section]
+                                    [section .rodata-section]
                                     ))
          (bytes (send (new elf-file%
-                           [sections (list .text-section .data-section)]
-                           [program-headers (list .text-program-header .data-program-header)]) get-bytes)))
+                           [sections (list .text-section .rodata-section)]
+                           [program-headers (list .text-program-header .rodata-program-header)]) get-bytes)))
     (call-with-output-file "out.elf"
       (lambda (out)
         (write-bytes bytes out))
