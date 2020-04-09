@@ -6,6 +6,8 @@
 ;; important pages:
 ;; interpreting the instruction reference pages:
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=103&zoom=auto,-17,575
+;; introduction
+;; https://software.intel.com/en-us/articles/introduction-to-x64-assembly
 
 (define REX.W #b01001000)
 
