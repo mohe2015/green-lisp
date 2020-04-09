@@ -3,7 +3,7 @@
   (require green-lisp/elf/section)
   (require green-lisp/elf/program-header)
   (require green-lisp/elf/file)
-  (require green-lisp/new-x86-64)
+  (require green-lisp/x86-64/index)
 
   ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
   ;; Licensed under /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
@@ -13,6 +13,8 @@
   ;; except when we map them in memory with a big distance
   ;; otherwise we can't because of alignment etc.
   ;; for the data we should try to use a constant address
+
+  ;; TODO what about the data with PIE?
 
   (let ((rodata-base-address (+ BASE 128 (* 64 3) (* 56 2)))) ;; TODO change this design as there will be multiple sections
     (let-values ([(.text .rodata) (get-the-code 0 rodata-base-address)])

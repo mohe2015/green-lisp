@@ -128,7 +128,7 @@
         null
         (lambda (_ rodata-addresses)
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
-          (bytes REX.W 01 (mod11-to-binary destination source)))
+          (bytes REX.W 01 (mod11-to-binary 'destination 'source)))
         (list)
         ))
 
@@ -241,7 +241,7 @@
    (label +)
    (pop 0)
    (pop 1)
-   ; (add (register eax) (register ecx))
+   (add (register eax) (register ecx))
    (push 0)
 
    (label code-end)))
