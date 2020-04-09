@@ -91,7 +91,7 @@
         (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
-           (unsigned 8 (+ #xb8 register)) ;; opcode with register
+           (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
            (unsigned 64 value)))
         (list)
         )) ;; value
@@ -102,7 +102,7 @@
         (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
-           (unsigned 8 (+ #xb8 register)) ;; opcode with register
+           (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
            (unsigned 64 rodata-addresses)))
         (list value) ;; .rodata
         ))
@@ -201,39 +201,39 @@
   (data-list
    (label code-start)
 
-   (mov-imm64 2 19)  ; dl / rdx: length of string
-   (mov-string 6 #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
-   (mov-imm64 0 1)  ; al / rax: set write to command
-   (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 (register rdx) 19)  ; dl / rdx: length of string
+   (mov-string (register rsi) #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (mov-imm64 (register rax) 1)  ; al / rax: set write to command
+   (mov-imm64 (register rdi) 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
    ;; TODO check return value?
 
-   (mov-imm64 2 32) ;; rdx: buffer length?
-   (mov-string 6 #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
-   (mov-imm64 7 1) ;; rdi: stdin?
-   (mov-imm64 0 0) ;; rax: read syscall
+   (mov-imm64 (register rdx) 32) ;; rdx: buffer length?
+   (mov-string (register rsi) #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
+   (mov-imm64 (register rdi) 1) ;; rdi: stdin?
+   (mov-imm64 (register rax) 0) ;; rax: read syscall
    (syscall) ;; read(stdin, buffer, 1024)
    ;; CHECK RETURN VALUE!
 
    ;; write "Hello "
-   (mov-imm64 2 6)  ; dl / rdx: length of string
-   (mov-string 6 #"Hello \0") ;; rsi load string
-   (mov-imm64 0 1)  ; al / rax: set write to command
-   (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 (register rdx) 6)  ; dl / rdx: length of string
+   (mov-string (register rsi) #"Hello \0") ;; rsi load string
+   (mov-imm64 (register rax) 1)  ; al / rax: set write to command
+   (mov-imm64 (register rdi) 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
 
 
    ;; echo
    ;; TODO mov rdx, rax
-   (mov-imm64 2 1024)  ; dl / rdx: length of string
+   (mov-imm64 (register rdx) 1024)  ; dl / rdx: length of string
 
-   (mov-imm64 6 code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
-   (mov-imm64 0 1)  ; al / rax: set write to command
-   (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 (register rsi) code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
+   (mov-imm64 (register rax) 1)  ; al / rax: set write to command
+   (mov-imm64 (register rdi) 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
 
-   (mov-imm64 0 60) ;; rax: exit syscall
-   (mov-imm64 7 0)  ;; rdi: exit code
+   (mov-imm64 (register rax) 60) ;; rax: exit syscall
+   (mov-imm64 (register rdi) 0)  ;; rdi: exit code
    (syscall) ;; exit(0)
 
    (push (register rcx))
