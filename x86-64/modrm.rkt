@@ -1,5 +1,5 @@
-#lang typed/racket
-(require green-lisp/utils)
+#lang racket/base
+(require racket/match)
 (provide mod11-to-binary)
 
 ;; alternative way
@@ -11,41 +11,30 @@
 ;; or some opcode may not even work with wrong one
   
 ;; todo different reg size e.g. al and ax for eax
-(: reg-to-binary (-> (Listof Symbol) (Opt Byte)))
 (define (reg-to-binary value)
-  (if (eq? (first value) 'register)
-      (let ((register (second value)))
-        (cond
-          [(eq? register 'eax) (Some 0)]
-          [(eq? register 'ecx) (Some 1)]
-          [(eq? register 'edx) (Some 2)]
-          [(eq? register 'ebx) (Some 3)]
-          [(eq? register 'esp) (Some 4)]
-          [(eq? register 'ebp) (Some 5)]
-          [(eq? register 'esi) (Some 6)]
-          [(eq? register 'edi) (Some 7)]
-          [else (None)]))
-    (None)))
+  (match value
+    ['(register eax) 0]
+    ['(register ecx) 1]
+    ['(register edx) 2]
+    ['(register ebx) 3]
+    ['(register esp) 4]
+    ['(register ebp) 5]
+    ['(register esi) 6]
+    ['(register edi) 7]))
 
-(: mod11-rm-to-binary (-> (Listof Symbol) (Opt Byte)))
 (define (mod11-rm-to-binary value)
-  (if (eq? (first value) 'register)
-      (let ((register (second value)))
-        (cond
-          [(eq? register 'eax) (Some 0)]
-          [(eq? register 'ecx) (Some 1)]
-          [(eq? register 'edx) (Some 2)]
-          [(eq? register 'ebx) (Some 3)]
-          [(eq? register 'esp) (Some 4)]
-          [(eq? register 'ebp) (Some 5)]
-          [(eq? register 'esi) (Some 6)]
-          [(eq? register 'edi) (Some 7)]
-          [else (None)]))
-    (None)))
-  
-(: mod11-to-binary (-> (Listof Symbol) (Listof Symbol) Integer))
+  (match value
+    ['(register eax) 0]
+    ['(register ecx) 1]
+    ['(register edx) 2]
+    ['(register ebx) 3]
+    ['(register esp) 4]
+    ['(register ebp) 5]
+    ['(register esi) 6]
+    ['(register edi) 7]))
+
 (define (mod11-to-binary reg1 reg2)
   (let* ((mod #b11000000)
          (rm (mod11-rm-to-binary reg1))
          (reg (reg-to-binary reg2)))
-    (+ mod (arithmetic-shift (Some-v (cast reg (Some Byte))) 3) (Some-v (cast rm (Some Byte))))))
+    (+ mod (arithmetic-shift reg 3) rm)))
