@@ -1,6 +1,11 @@
 #lang racket
+(require green-lisp/x86-64/modrm green-lisp/x86-64/rd)
 (require (for-syntax racket/list))
 (provide get-the-code data-list data-align label mov-imm64 syscall push pop call add)
+
+;; important pages:
+;; interpreting the instruction reference pages:
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=103&zoom=auto,-17,575
 
 (define REX.W #b01001000)
 
@@ -54,6 +59,14 @@
         (list)
         ))
 
+(define-syntax-rule (jmp target)
+  (list (lambda (_) 5)
+        null
+        (lambda (current-address rodata-addresses)
+          (bytes-append (bytes #xe9) (integer->integer-bytes (- target current-address 5) 4 #t)))
+        (list)
+        ))
+
 (define-syntax-rule (syscall)
   (list (lambda (_) 2)
         null
@@ -78,7 +91,7 @@
         (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
-           (unsigned 8 (+ #xb8 register)) ;; opcode with register
+           (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
            (unsigned 64 value)))
         (list)
         )) ;; value
@@ -89,17 +102,9 @@
         (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
-           (unsigned 8 (+ #xb8 register)) ;; opcode with register
+           (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
            (unsigned 64 rodata-addresses)))
         (list value) ;; .rodata
-        ))
-
-(define-syntax-rule (jmp target)
-  (list (lambda (_) 2)
-        null
-        (lambda (current-address rodata-addresses)
-          (bytes-append (bytes #xeb) (integer->integer-bytes (- target current-address 2) 1 #t)))
-        (list)
         ))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
@@ -107,7 +112,7 @@
   (list (lambda (_) 1)
         null
         (lambda (_ rodata-addresses)
-          (bytes (+ #x50 register)))
+          (bytes (+ #x50 (rd64-to-binary 'register))))
         (list)
         ))
 
@@ -116,7 +121,7 @@
   (list (lambda (_) 1)
         null
         (lambda (_ rodata-addresses)
-          (bytes (+ #x58 register)))
+          (bytes (+ #x58 (rd64-to-binary 'register))))
         (list)
         ))
 ;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
@@ -127,7 +132,7 @@
         null
         (lambda (_ rodata-addresses)
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
-          (bytes REX.W 01 (mod11-to-binary destination source)))
+          (bytes REX.W 01 (mod11-to-binary 'destination 'source)))
         (list)
         ))
 
@@ -196,57 +201,53 @@
   (data-list
    (label code-start)
 
-   (mov-imm64 2 19)  ; dl / rdx: length of string
-   (mov-string 6 #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
-   (mov-imm64 0 1)  ; al / rax: set write to command
-   (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 rdx 19)  ; dl / rdx: length of string
+   (mov-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (mov-imm64 rax 1)  ; al / rax: set write to command
+   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
    ;; TODO check return value?
 
-   (mov-imm64 2 32) ;; rdx: buffer length?
-   (mov-string 6 #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
-   (mov-imm64 7 1) ;; rdi: stdin?
-   (mov-imm64 0 0) ;; rax: read syscall
+   (mov-imm64 rdx 32) ;; rdx: buffer length?
+   (mov-string rsi #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
+   (mov-imm64 rdi 1) ;; rdi: stdin?
+   (mov-imm64 rax 0) ;; rax: read syscall
    (syscall) ;; read(stdin, buffer, 1024)
    ;; CHECK RETURN VALUE!
 
    ;; write "Hello "
-   (mov-imm64 2 6)  ; dl / rdx: length of string
-   (mov-string 6 #"Hello \0") ;; rsi load string
-   (mov-imm64 0 1)  ; al / rax: set write to command
-   (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 rdx 6)  ; dl / rdx: length of string
+   (mov-string rsi #"Hello \0") ;; rsi load string
+   (mov-imm64 rax 1)  ; al / rax: set write to command
+   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
-
 
    ;; echo
    ;; TODO mov rdx, rax
-   (mov-imm64 2 1024)  ; dl / rdx: length of string
+   (mov-imm64 rdx 1024)  ; dl / rdx: length of string
 
-   (mov-imm64 6 code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
-   (mov-imm64 0 1)  ; al / rax: set write to command
-   (mov-imm64 7 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 rsi code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
+   (mov-imm64 rax 1)  ; al / rax: set write to command
+   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
 
-   (mov-imm64 0 60) ;; rax: exit syscall
-   (mov-imm64 7 0)  ;; rdi: exit code
+   (mov-imm64 rax 60) ;; rax: exit syscall
+   (mov-imm64 rdi 0)  ;; rdi: exit code
    (syscall) ;; exit(0)
 
-   (push 1)
-   (pop 1)
+   (push rcx)
+   (pop rcx)
    (call code-start)
-   ;;(jmp -2) ;; size of jmp instruction
+   (jmp code-start) ;; size of jmp instruction
 
    ;; TODO overflow
    (label +)
-   (pop 0)
-   (pop 1)
-   ; (add (register eax) (register ecx))
-   (push 0)
+   (pop rax)
+   (pop rcx)
+   (add rax rcx)
+   (push rax)
 
    (label code-end)))
-
-
-
 
 ;; alternative proposal
 ;;'(define-method test (jo)
