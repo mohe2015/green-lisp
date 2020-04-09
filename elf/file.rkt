@@ -87,12 +87,12 @@
                                           [type 'strtab]
                                           [content symbols-string-table-bytes]))
 
-               (symbols-table-bytes (map (lambda (symbol)
-                                           (send symbol get-bytes
-                                                 ;; TODO section index
-                                                 (send symbols-string-table get-string-offset (get-field name symbol))
-                                                 ))
-                                         symbols))
+               (symbols-table-bytes (bytes-append* (map (lambda (symbol)
+                                                          (send symbol get-bytes
+                                                                (index-where sections (lambda (s) (equal? s (get-field section symbol))))
+                                                                (send symbols-string-table get-string-offset (get-field name symbol))
+                                                                ))
+                                                        symbols)))
                (symbols-table-section (new elf-section%
                                            [name #".symtab"]
                                            [type 'symtab]
