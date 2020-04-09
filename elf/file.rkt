@@ -96,6 +96,9 @@
                (symbols-table-section (new elf-section%
                                            [name #".symtab"]
                                            [type 'symtab]
+                                           [link (+ (length sections) 2)]
+                                           [info (length symbols)] ;; index of start of global symbols
+                                           [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
                
                (section-header-string-table (new elf-string-table% [strings (cons #".strtab" (cons #".symtab" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))))]))
