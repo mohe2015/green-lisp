@@ -38,9 +38,12 @@
                                           [flags '(read write)]
                                           [section .rodata-section]
                                           ))
+             (test-symbol (new elf-symbol% [name "_start"] [type 'func] [binding 'local] [section .text-section] [value #x40100] [size 0]))
              (bytes (send (new elf-file%
                                [sections (list .rodata-section .text-section)]
-                               [program-headers (list .rodata-program-header .text-program-header)]) get-bytes)))
+                               [program-headers (list .rodata-program-header .text-program-header)]
+                               [symbols (list test-symbol)]
+                               ) get-bytes)))
         (call-with-output-file "out.elf"
           (lambda (out)
             (write-bytes bytes out))
