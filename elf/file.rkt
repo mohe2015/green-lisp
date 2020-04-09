@@ -82,18 +82,23 @@
       (define/public (get-bytes)      
         (let* ((symbols-string-table (new elf-string-table% [strings (map (lambda (symbol) (get-field name symbol)) symbols)]))
                (symbols-string-table-bytes (send symbols-string-table get-bytes))
-               (symbol-table-section (new elf-section%
-                                          [name #".symtab"]
-                                          [type 'symtab]
+               (symbols-string-table-section (new elf-section%
+                                          [name #".strtab"]
+                                          [type 'strtab]
                                           [content symbols-string-table-bytes]))
+               
+               ;(symbol-table-section (new elf-section%
+               ;                           [name #".symtab"]
+               ;                           [type 'symtab]
+               ;                           [content symbols-string-table-bytes]))
                              
-               (section-header-string-table (new elf-string-table% [strings (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))]))
+               (section-header-string-table (new elf-string-table% [strings (cons #".strtab" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections)))]))
                (section-header-string-table-bytes (send section-header-string-table get-bytes))
                (section-header-string-table-section (new elf-section%
                                                          [name #".shstrtab"]
                                                          [type 'strtab]
                                                          [content section-header-string-table-bytes]))
-               (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section symbol-table-section)]))))
+               (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section symbols-string-table-section)]))))
           (send new-elf-file internal-get-bytes section-header-string-table)))
 
       (define/public (get-elf-header-bytes) ;; 64 bytes

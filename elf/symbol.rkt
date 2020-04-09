@@ -1,5 +1,6 @@
 (module symbol racket
   (require green-lisp/utils)
+  (provide elf-symbol%)
   
   (define elf-symbol-binding '(local global weak))
   (define STB_LOCAL 0)

@@ -3,6 +3,7 @@
   (require green-lisp/elf/section)
   (require green-lisp/elf/program-header)
   (require green-lisp/elf/file)
+  (require green-lisp/elf/symbol)
   (require green-lisp/x86-64/index)
 
   ;; Derived from: https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
@@ -38,7 +39,7 @@
                                           [flags '(read write)]
                                           [section .rodata-section]
                                           ))
-             (test-symbol (new elf-symbol% [name "_start"] [type 'func] [binding 'local] [section .text-section] [value #x40100] [size 0]))
+             (test-symbol (new elf-symbol% [name #"_start"] [type 'func] [binding 'local] [section .text-section] [value #x40100] [size 0]))
              (bytes (send (new elf-file%
                                [sections (list .rodata-section .text-section)]
                                [program-headers (list .rodata-program-header .text-program-header)]
