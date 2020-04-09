@@ -13,25 +13,25 @@
 ;; todo different reg size e.g. al and ax for eax
 (define (reg-to-binary value)
   (match value
-    ['(register eax) 0]
-    ['(register ecx) 1]
-    ['(register edx) 2]
-    ['(register ebx) 3]
-    ['(register esp) 4]
-    ['(register ebp) 5]
-    ['(register esi) 6]
-    ['(register edi) 7]))
+    ['(register rax) 0]
+    ['(register rcx) 1]
+    ['(register rdx) 2]
+    ['(register rbx) 3]
+    ['(register rsp) 4]
+    ['(register rbp) 5]
+    ['(register rsi) 6]
+    ['(register rdi) 7]))
 
 (define (mod11-rm-to-binary value)
   (match value
-    ['(register eax) 0]
-    ['(register ecx) 1]
-    ['(register edx) 2]
-    ['(register ebx) 3]
-    ['(register esp) 4]
-    ['(register ebp) 5]
-    ['(register esi) 6]
-    ['(register edi) 7]))
+    ['(register rax) 0]
+    ['(register rcx) 1]
+    ['(register rdx) 2]
+    ['(register rbx) 3]
+    ['(register rsp) 4]
+    ['(register rbp) 5]
+    ['(register rsi) 6]
+    ['(register rdi) 7]))
 
 (define (mod11-to-binary reg1 reg2)
   (let* ((mod #b11000000)

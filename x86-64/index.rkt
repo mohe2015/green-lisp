@@ -1,7 +1,11 @@
 #lang racket
-(require green-lisp/x86-64/modrm)
+(require green-lisp/x86-64/modrm green-lisp/x86-64/rd)
 (require (for-syntax racket/list))
 (provide get-the-code data-list data-align label mov-imm64 syscall push pop call add)
+
+;; important pages:
+;; interpreting the instruction reference pages:
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=103&zoom=auto,-17,575
 
 (define REX.W #b01001000)
 
@@ -55,6 +59,14 @@
         (list)
         ))
 
+(define-syntax-rule (jmp target)
+  (list (lambda (_) 5)
+        null
+        (lambda (current-address rodata-addresses)
+          (bytes-append (bytes #xe9) (integer->integer-bytes (- target current-address 5) 4 #t)))
+        (list)
+        ))
+
 (define-syntax-rule (syscall)
   (list (lambda (_) 2)
         null
@@ -95,20 +107,12 @@
         (list value) ;; .rodata
         ))
 
-(define-syntax-rule (jmp target)
-  (list (lambda (_) 2)
-        null
-        (lambda (current-address rodata-addresses)
-          (bytes-append (bytes #xeb) (integer->integer-bytes (- target current-address 2) 1 #t)))
-        (list)
-        ))
-
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
 (define-syntax-rule (push register)
   (list (lambda (_) 1)
         null
         (lambda (_ rodata-addresses)
-          (bytes (+ #x50 register)))
+          (bytes (+ #x50 (rd64-to-binary 'register))))
         (list)
         ))
 
@@ -117,7 +121,7 @@
   (list (lambda (_) 1)
         null
         (lambda (_ rodata-addresses)
-          (bytes (+ #x58 register)))
+          (bytes (+ #x58 (rd64-to-binary 'register))))
         (list)
         ))
 ;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
@@ -232,17 +236,17 @@
    (mov-imm64 7 0)  ;; rdi: exit code
    (syscall) ;; exit(0)
 
-   (push 1)
-   (pop 1)
+   (push (register rcx))
+   (pop (register rcx))
    (call code-start)
-   ;;(jmp -2) ;; size of jmp instruction
+   (jmp code-start) ;; size of jmp instruction
 
    ;; TODO overflow
    (label +)
-   (pop 0)
-   (pop 1)
-   (add (register eax) (register ecx))
-   (push 0)
+   (pop (register rax))
+   (pop (register rcx))
+   (add (register rax) (register rcx))
+   (push (register rax))
 
    (label code-end)))
 
