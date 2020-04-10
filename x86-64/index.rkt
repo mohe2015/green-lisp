@@ -234,7 +234,7 @@
             (.rodata-base-symbol (car (generate-temporaries '(.rodata-base))))
             )
        (let-values ([(code-labels rodata-labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
-         #`(values
+         #`(list
             (lambda ()
               (bytes-append #,@rodata))
             
