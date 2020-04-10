@@ -70,8 +70,18 @@
                         (get-program-headers-bytes (cdr remaining-sections) remaining-program-headers (+ current-offset (bytes-length (get-field content current-section))))]
                        ))]))
       
-      (define/public (internal-get-bytes section-header-string-table)
-        (let* ((.dynamic
+      (define/public (internal-get-bytes)
+        (let* (
+
+               (section-header-string-table (new elf-string-table% [strings (cons #".dynamic" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections)))]))
+               (section-header-string-table-bytes (send section-header-string-table get-bytes))
+               (section-header-string-table-section (new elf-section%
+                                                         [name #".shstrtab"]
+                                                         [type 'strtab]
+                                                         [content section-header-string-table-bytes]))
+
+
+               (.dynamic
                 (list
                  ;; TODO .gnu hash
                  (new elf-dyn% [tag 'strtab] [value (get-section-offset #".dynstr")]) ;; .dynstr offset
@@ -87,7 +97,7 @@
                                       [link (- (length sections) 1)] ;; TODO FIXME
                                       [entry-size #x10]
                                       [content .dynamic-bytes]))
-               (new-elf-file (merge (new elf-file% [sections (list .dynamic-section)]))))
+               (new-elf-file (merge (new elf-file% [sections (list .dynamic-section section-header-string-table-section)]))))
           (send new-elf-file internal-get-bytes2 section-header-string-table)))
       
       (define/public (internal-get-bytes2 section-header-string-table)        
@@ -123,16 +133,8 @@
                                            [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
-               
-               (section-header-string-table (new elf-string-table% [strings (cons #".dynstr" (cons #".dynsym" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))))]))
-               (section-header-string-table-bytes (send section-header-string-table get-bytes))
-               (section-header-string-table-section (new elf-section%
-                                                         [name #".shstrtab"]
-                                                         [type 'strtab]
-                                                         [content section-header-string-table-bytes]))
-
-               (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section symbols-string-table-section symbols-table-section)]))))
-          (send new-elf-file internal-get-bytes section-header-string-table)))
+               (new-elf-file (merge (new elf-file% [sections (list symbols-string-table-section symbols-table-section)]))))
+          (send new-elf-file internal-get-bytes)))
 
         (define/public (get-section-by-name section-name)
           (findf (lambda (s) (not (equal? (get-field name s) section-name))) sections))
