@@ -42,7 +42,7 @@
              (bytes (send (new elf-file%
                                [sections (list .rodata-section .text-section)]
                                [program-headers (list .rodata-program-header .text-program-header)]
-                               [symbols (list )]
+                               [symbols real-symbols]
                                ) get-bytes)))
         (call-with-output-file "out.elf"
           (lambda (out)

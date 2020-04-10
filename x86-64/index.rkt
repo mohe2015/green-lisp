@@ -1,5 +1,5 @@
 #lang racket
-(require green-lisp/x86-64/modrm green-lisp/x86-64/rd)
+(require green-lisp/x86-64/modrm green-lisp/x86-64/rd green-lisp/elf/symbol)
 (require (for-syntax racket/list))
 (provide get-the-code data-list data-align label mov-imm64 syscall push pop call add)
 
@@ -20,7 +20,7 @@
         null
         (lambda (current-address rodata-addresses) (integer->integer-bytes value bytes #f))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define-syntax-rule (data-bytestring bytestring)
@@ -28,7 +28,7 @@
         null
         (lambda (_ rodata-addresses) bytestring)
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define-syntax-rule (data-filled-array size)
@@ -36,7 +36,7 @@
         null
         (lambda (_ rodata-addresses) (make-bytes size 0))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define (get-byte-count-to-align alignment-bits offset)
@@ -47,26 +47,38 @@
         null
         (lambda (current-address rodata-addresses) (make-bytes (get-byte-count-to-align alignment-bits current-address) 0))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
-(define-syntax-rule (label symbol)
-  (list (lambda (_) 0)
-        symbol
-        (lambda (current-address rodata-addresses) (bytes))
-        (list)
-        (lambda (current-address section)
-          (list (new elf-symbol% [name symbol] [type 'func] [binding 'local] [section section] [value current-address] [size 0])))
-        ))
+(define-syntax (label stx)
+  (syntax-case stx ()
+    [(global-symbol symbol)
+     #`(list (lambda (_) 0)
+             symbol
+             (lambda (current-address rodata-addresses) (bytes))
+             (list)
+             (lambda (current-address)
+               (list (new elf-symbol% [name #,(symbol->string 'symbol)] [type 'func] [binding 'local] [section #".text"] [value current-address] [size 0])))
+             )]))
 
-(define-syntax-rule (global-symbol symbol)
-  (list (lambda (_) 0)
-        symbol
-        (lambda (current-address rodata-addresses) (bytes))
-        (list)
-        (lambda (current-address section)
-          (list (new elf-symbol% [name symbol] [type 'func] [binding 'global] [section section] [value current-address] [size 0])))
-        ))
+(define-syntax (global-symbol stx)
+  (syntax-case stx ()
+    [(global-symbol symbol)
+     #`(list (lambda (_) 0)
+             symbol
+             (lambda (current-address rodata-addresses) (bytes))
+             (list)
+             (lambda (current-address)
+               (list (new elf-symbol% [name #,(symbol->string (syntax->datum #'symbol))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size 0])))
+             )]))
+
+
+(define-syntax (aaa stx)
+  (syntax-case stx ()
+    [(aaa symbol)
+     #`#,(symbol->string (syntax->datum #'symbol))
+     ]))
+ 
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=224&zoom=100,28,726
 (define-syntax-rule (call target)
@@ -74,7 +86,7 @@
         null
         (lambda (current-address rodata-addresses) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define-syntax-rule (jmp target)
@@ -83,7 +95,7 @@
         (lambda (current-address rodata-addresses)
           (bytes-append (bytes #xe9) (integer->integer-bytes (- target current-address 5) 4 #t)))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define-syntax-rule (syscall)
@@ -91,7 +103,7 @@
         null
         (lambda (_ rodata-addresses) (bytes #x0f #x05))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define-syntax-rule (mov-imm8 register value)
@@ -104,7 +116,7 @@
                (bytes)) ; REX prefix to access dil instead of bh
            (bytes (bitwise-ior #xb0 the-register) (dynamic the-value))))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (define-syntax-rule (mov-imm64 register value)
@@ -116,7 +128,7 @@
            (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
            (unsigned 64 value)))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         )) ;; value
 
 (define-syntax-rule (mov-string register value)
@@ -128,7 +140,7 @@
            (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
            (unsigned 64 rodata-addresses)))
         (list value) ;; .rodata
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
@@ -138,7 +150,7 @@
         (lambda (_ rodata-addresses)
           (bytes (+ #x50 (rd64-to-binary 'register))))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1037&zoom=auto,-17,727
@@ -148,7 +160,7 @@
         (lambda (_ rodata-addresses)
           (bytes (+ #x58 (rd64-to-binary 'register))))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 ;; (bytes-append (bytes #x8f) (integer->integer-bytes the-register 1 #f)))
  
@@ -160,7 +172,7 @@
           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=40&zoom=100,28,745
           (bytes REX.W 01 (mod11-to-binary 'destination 'source)))
         (list)
-        (lambda (_ _) (list))
+        (lambda (_) (list))
         ))
 
 (begin-for-syntax
@@ -190,7 +202,7 @@
                                                   (list symbol current-element-symbol)))
                                              `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol)) ;; code
                                              `(, #`(bytes-append* #,rodata)) ;; .rodata
-                                             `() ;; real symbols
+                                             `(, #`(#,real-symbol #,current-element-symbol)) ;; real symbols
                                              )]
                           [(cdra cdrb cdrc cdrd) (list->label-addresses
                                              (cdr symbols)
@@ -229,7 +241,7 @@
                (values
                 (bytes-append #,@code)
                 (bytes-append #,@rodata)
-                (list #,@real-symbols)
+                (append #,@real-symbols)
                 )))))]))
 
 (define get-the-code
