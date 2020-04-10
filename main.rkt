@@ -44,9 +44,9 @@
                                [program-headers (list .rodata-program-header .text-program-header)]
                                [symbols real-symbols]
                                ) get-bytes)))
-        (call-with-output-file "out.elf"
+        (call-with-output-file "libgreen-lisp.so"
           (lambda (out)
             (write-bytes bytes out))
           #:mode 'binary #:exists 'truncate/replace)
-        (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))))
+        (file-or-directory-permissions "libgreen-lisp.so" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))))
   )
