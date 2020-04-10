@@ -1,5 +1,6 @@
 #include "random.h"
 
 int main() {
-    return get_random_number();
+	return 0;
+//    return get_random_number();
 }

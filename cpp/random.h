@@ -1,1 +1,1 @@
-int get_random_number();
+const char * get_random_number();
