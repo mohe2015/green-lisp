@@ -1,5 +1,5 @@
 (module file racket
-  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/string-table green-lisp/elf/dynamic)
+  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/program-header green-lisp/elf/string-table green-lisp/elf/dynamic)
   (provide elf-file%)
 
   (define ELFMAG0 #x7f) ;; /* EI_MAG */
@@ -98,7 +98,17 @@
                                       [link (- (length sections) 1)] ;; TODO FIXME
                                       [entry-size #x10]
                                       [content .dynamic-bytes]))
-               (new-elf-file (merge (new elf-file% [sections (list .dynamic-section section-header-string-table-section)]))))
+
+
+               (.dynamic-program-header (new elf-program-header%
+                                          [type 'dynamic]
+                                          [flags '(read write)]
+                                          [section .dynamic-section]
+                                          ))
+               
+               (new-elf-file (merge (new elf-file%
+                                         [sections (list .dynamic-section section-header-string-table-section)]
+                                         [program-headers (list .dynamic-program-header)]))))
           (send new-elf-file internal-get-bytes2 section-header-string-table)))
       
       (define/public (internal-get-bytes2 section-header-string-table)        
