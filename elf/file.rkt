@@ -129,7 +129,7 @@
                (symbols-table-section (new elf-section%
                                            [name #".dynsym"]
                                            [type 'dynsym]
-                                           [link (+ (length sections) 2)] ;; TODO FIXME
+                                           [link (+ (length sections) 1)] ;; TODO FIXME
                                            [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
