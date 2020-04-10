@@ -1,1 +1,1 @@
-const char * get_random_number();
+const char * green_lisp_demo();

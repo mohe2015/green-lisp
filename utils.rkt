@@ -1,7 +1,7 @@
 (module utils racket
   (provide unsigned signed BASE)
 
-  (define BASE #x400000)
+  (define BASE 0)
   
   (define unsigned
     (lambda (bits value)

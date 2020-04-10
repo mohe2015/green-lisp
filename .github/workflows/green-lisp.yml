@@ -26,4 +26,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: program
-        path: ./out.elf
+        path: ./libgreen-lisp.so

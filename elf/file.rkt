@@ -1,5 +1,5 @@
 (module file racket
-  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/string-table)
+  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/program-header green-lisp/elf/string-table green-lisp/elf/dynamic)
   (provide elf-file%)
 
   (define ELFMAG0 #x7f) ;; /* EI_MAG */
@@ -70,7 +70,48 @@
                         (get-program-headers-bytes (cdr remaining-sections) remaining-program-headers (+ current-offset (bytes-length (get-field content current-section))))]
                        ))]))
       
-      (define/public (internal-get-bytes section-header-string-table)
+      (define/public (internal-get-bytes)
+        (let* (
+
+               (section-header-string-table (new elf-string-table% [strings (cons #".dynamic" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections)))]))
+               (section-header-string-table-bytes (send section-header-string-table get-bytes))
+               (section-header-string-table-section (new elf-section%
+                                                         [name #".shstrtab"]
+                                                         [type 'strtab]
+                                                         [content section-header-string-table-bytes]))
+
+
+               (.dynamic
+                (list
+                 ;; TODO .gnu hash
+                 (new elf-dyn% [tag 'strtab] [value (get-section-offset #".dynstr")]) ;; .dynstr offset
+                 (new elf-dyn% [tag 'symtab] [value (get-section-offset #".dynsym")]) ;; .dynsym offset
+                 (new elf-dyn% [tag 'strsz] [value (bytes-length (get-field content (get-section-by-name #".dynstr")))]) ;; size of .dynstr
+                 (new elf-dyn% [tag 'syment] [value 24]) ;; size of symbol
+                 (new elf-dyn% [tag 'null] [value 0])))
+               (.dynamic-bytes (bytes-append*
+                                (map (lambda (dyn) (send dyn get-bytes)) .dynamic)))
+               (.dynamic-section (new elf-section%
+                                      [name #".dynamic"]
+                                      [type 'dynamic]
+                                      [flags '(write alloc)]
+                                      [link (- (length sections) 1)] ;; TODO FIXME
+                                      [entry-size #x10]
+                                      [content .dynamic-bytes]))
+
+
+               (.dynamic-program-header (new elf-program-header%
+                                          [type 'dynamic]
+                                          [flags '(read write)]
+                                          [section .dynamic-section]
+                                          ))
+               
+               (new-elf-file (merge (new elf-file%
+                                         [sections (list .dynamic-section section-header-string-table-section)]
+                                         [program-headers (list .dynamic-program-header)]))))
+          (send new-elf-file internal-get-bytes2 section-header-string-table)))
+      
+      (define/public (internal-get-bytes2 section-header-string-table)        
         (bytes-append*
          (get-elf-header-bytes) ;; 64
          null-section-header ;; 64
@@ -85,6 +126,7 @@
                (symbols-string-table-section (new elf-section%
                                           [name #".dynstr"]
                                           [type 'strtab]
+                                          [flags '(alloc)]
                                           [content symbols-string-table-bytes]))
 
                (symbols-table-bytes (bytes-append*
@@ -99,20 +141,25 @@
                (symbols-table-section (new elf-section%
                                            [name #".dynsym"]
                                            [type 'dynsym]
-                                           [link (+ (length sections) 2)]
+                                           [flags '(alloc)]
+                                           [link (+ (length sections) 1)] ;; TODO FIXME
                                            [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
-               
-               (section-header-string-table (new elf-string-table% [strings (cons #".dynstr" (cons #".dynsym" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))))]))
-               (section-header-string-table-bytes (send section-header-string-table get-bytes))
-               (section-header-string-table-section (new elf-section%
-                                                         [name #".shstrtab"]
-                                                         [type 'strtab]
-                                                         [content section-header-string-table-bytes]))
-               (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section symbols-string-table-section symbols-table-section)]))))
-          (send new-elf-file internal-get-bytes section-header-string-table)))
+               (new-elf-file (merge (new elf-file% [sections (list symbols-string-table-section symbols-table-section)]))))
+          (send new-elf-file internal-get-bytes)))
 
+        (define/public (get-section-by-name section-name)
+          (findf (lambda (s) (not (equal? (get-field name s) section-name))) sections))
+        
+        (define/public (get-section-offset section-name)
+          (+ 
+           128
+           (* 64 (length sections))
+           (* 56 (length program-headers))
+           (foldl + 0 (map (lambda (s) (bytes-length (get-field content s))) (takef sections (lambda (s) (not (equal? (get-field name s) section-name))))))     
+           ))
+        
       (define/public (get-elf-header-bytes) ;; 64 bytes
         (bytes-append
          (unsigned 8 ELFMAG0)
@@ -138,14 +185,7 @@
 
          ;; TODO entrypoint needs to be big so the stack can grow below
          ;; currently the first program header needs to be the entrypoint 
-         (unsigned 64 (+ BASE
-                         (+ 128 (* 64 (length sections)) (* 56 (length program-headers)))
-
-                         ;; TODO section alignment!!!
-                         
-                        (foldl + 0 (map (lambda (s) (bytes-length (get-field content s))) (takef sections (lambda (s) (not (equal? (get-field name s) #".text"))))))
-                         
-                         )) ;; TODO calculate
+         (unsigned 64 (+ BASE (get-section-offset #".text"))) ;; TODO calculate
 
          (unsigned 64 (+ 128 (* 64 (length sections)))) ;; program headers offset
          (unsigned 64 64) ;; start of section headers
