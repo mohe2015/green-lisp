@@ -1,5 +1,5 @@
 #lang racket
-(require green-lisp/x86-64/modrm green-lisp/x86-64/rd green-lisp/elf/symbol)
+(require green-lisp/x86-64/modrm green-lisp/x86-64/rd green-lisp/elf/symbol green-lisp/utils)
 (require (for-syntax racket/list))
 (provide get-the-code data-list data-align label mov-imm64 syscall push pop call add)
 
@@ -10,10 +10,6 @@
 ;; https://software.intel.com/en-us/articles/introduction-to-x64-assembly
 
 (define REX.W #b01001000)
-
-(define unsigned
-  (lambda (bits value)
-    (integer->integer-bytes value (arithmetic-shift bits -3) #f)))
 
 (define-syntax-rule (data-unsigned bytes value)
   (list (lambda (_) bytes)
@@ -123,14 +119,19 @@
         (lambda (_) (list))
         )) ;; value
 
-(define-syntax-rule (mov-string register value)
-  (list (lambda (_) 10)
+(define-syntax-rule (lea-string register value)
+  (list (lambda (_) 7)
         null
         (lambda (current-address rodata-addresses)
           (bytes-append
            (unsigned 8 REX.W)
-           (unsigned 8 (+ #xb8 (rd64-to-binary 'register))) ;; opcode with register
-           (unsigned 64 rodata-addresses)))
+           (unsigned 8 #x8d) ;; opcode with register
+
+           (unsigned 8 (mod00-to-binary 'register '(displacement32 rip)))
+
+           ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=37&zoom=100,28,269
+           (signed 32 (- rodata-addresses current-address 7)) ;; displacement
+          ))
         (list value) ;; .rodata
         (lambda (_) (list))
         ))
@@ -253,14 +254,14 @@
    (global-symbol green-lisp-demo)
 
    (mov-imm64 rdx 19)  ; dl / rdx: length of string
-   (mov-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (lea-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
    (mov-imm64 rax 1)  ; al / rax: set write to command
    (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall) ;; write(stdout, "Hello\n")
    ;; TODO check return value?
 
    (mov-imm64 rdx 32) ;; rdx: buffer length?
-   (mov-string rsi #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
+   (lea-string rsi #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
    (mov-imm64 rdi 1) ;; rdi: stdin?
    (mov-imm64 rax 0) ;; rax: read syscall
    (syscall) ;; read(stdin, buffer, 1024)
@@ -268,7 +269,7 @@
 
    ;; write "Hello "
    (mov-imm64 rdx 6)  ; dl / rdx: length of string
-   (mov-string rsi #"Hello \0") ;; rsi load string
+   (lea-string rsi #"Hello \0") ;; rsi load string
    (mov-imm64 rax 1)  ; al / rax: set write to command
    (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
