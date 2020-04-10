@@ -110,6 +110,16 @@
                                                          [name #".shstrtab"]
                                                          [type 'strtab]
                                                          [content section-header-string-table-bytes]))
+
+               (dynamic-content (list
+                                 ;; TODO .gnu hash
+                                 (new elf-dyn% [tag 'strtab] [value #x238]) ;; .dynstr offset
+                                      (new elf-dyn% [tag 'symtab] [value #x208]) ;; .dynsym offset
+                                      (new elf-dyn% [tag 'strsz] [value 19]) ;; size of .dynstr
+                                      (new elf-dyn% [tag 'syment] [value 24]) ;; size of symbol
+                                      (new elf-dyn% [tag 'null] [value 0])
+                                      ))
+               
                (new-elf-file (merge (new elf-file% [sections (list section-header-string-table-section symbols-string-table-section symbols-table-section)]))))
           (send new-elf-file internal-get-bytes section-header-string-table)))
 
