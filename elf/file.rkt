@@ -89,7 +89,7 @@
 
                (symbols-table-bytes (bytes-append* (map (lambda (symbol)
                                                           (send symbol get-bytes
-                                                                (index-where sections (lambda (s) (equal? s (get-field section symbol))))
+                                                                (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol))))
                                                                 (send symbols-string-table get-string-offset (get-field name symbol))
                                                                 ))
                                                         symbols)))

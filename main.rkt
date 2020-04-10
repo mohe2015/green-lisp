@@ -18,7 +18,7 @@
   ;; TODO what about the data with PIE?
 
   (let ((rodata-base-address (+ BASE 128 (* 64 3) (* 56 2)))) ;; TODO change this design as there will be multiple sections
-    (let-values ([(.text .rodata) (get-the-code 0 rodata-base-address)])
+    (let-values ([(.text .rodata real-symbols) (get-the-code 0 rodata-base-address)])
       (let* ((.text-section (new elf-section%
                                  [name #".text"]
                                  [type 'progbits]
@@ -39,11 +39,10 @@
                                           [flags '(read write)]
                                           [section .rodata-section]
                                           ))
-             (test-symbol (new elf-symbol% [name #"_start"] [type 'func] [binding 'local] [section .text-section] [value #x40100] [size 0]))
              (bytes (send (new elf-file%
                                [sections (list .rodata-section .text-section)]
                                [program-headers (list .rodata-program-header .text-program-header)]
-                               [symbols (list test-symbol)]
+                               [symbols real-symbols]
                                ) get-bytes)))
         (call-with-output-file "out.elf"
           (lambda (out)
