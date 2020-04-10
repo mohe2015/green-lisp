@@ -28,7 +28,10 @@
       ['null SHT_NULL]
       ['progbits SHT_PROGBITS]
       ['symtab SHT_SYMTAB]
-      ['strtab SHT_STRTAB]))
+      ['strtab SHT_STRTAB]
+      ['dynsym SHT_DYNSYM]
+      ['dynamic SHT_DYNAMIC]
+      ))
 
   ;; sh_flags
   (define SHF_WRITE		#x1)

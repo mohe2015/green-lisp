@@ -171,6 +171,7 @@
   (define (list->label-addresses symbols sizes codes rodatas real-symbols offset rodata-offset)
     (cond [(or (null? symbols) (null? sizes) (null? codes)) (values (list)
                                                                     (list)
+                                                                    (list)
                                                                     (list) ;; .rodata
                                                                     (list)
                                                                     )]
@@ -184,32 +185,37 @@
                   [current-rodata-size-symbol (car (generate-temporaries '(rodata-size)))]
                   [rodata-size #`(foldl + 0 (map (lambda (a) (bytes-length a)) #,rodata))]
                   ) ;; syntax element)
-             (let-values ([(cara carb carc card) (values
-                                             (if (eq? (syntax-e symbol) 'null)
-                                                 (list (list current-element-symbol offset)
-                                                       (list current-rodata-size-symbol rodata-offset)) ;; labels
-                                                 (list  ;; labels
-                                                  (list current-element-symbol offset)
-                                                  (list current-rodata-size-symbol rodata-offset)
-                                                  (list symbol current-element-symbol)))
-                                             `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol)) ;; code
-                                             `(, #`(bytes-append* #,rodata)) ;; .rodata
-                                             `(, #`(#,real-symbol #,current-element-symbol)) ;; real symbols
-                                             )]
-                          [(cdra cdrb cdrc cdrd) (list->label-addresses
-                                             (cdr symbols)
-                                             (cdr sizes)
-                                             (cdr codes)
-                                             (cdr rodatas)
-                                             (cdr real-symbols)
-                                             #`(+ #,current-element-symbol #,size)
-                                             #`(+ #,current-rodata-size-symbol #,rodata-size) ;; rodata-offset
-                                             )])
+             (let-values ([(cara carb carc card care)
+                           (values
+                            (if (eq? (syntax-e symbol) 'null)
+                                (list ;; data labels
+                                 (list current-element-symbol offset))
+                                (list ;; data labels
+                                 (list current-element-symbol offset)
+                                 (list symbol current-element-symbol)))
+                                             
+                            (list (list current-rodata-size-symbol rodata-offset)) ;; rodata labels
+                                             
+                            `(, #`(#,code #,current-element-symbol #,current-rodata-size-symbol)) ;; code
+                            `(, #`(bytes-append* #,rodata)) ;; .rodata
+                            `(, #`(#,real-symbol #,current-element-symbol)) ;; real symbols
+                            )]
+                          [(cdra cdrb cdrc cdrd cdre)
+                           (list->label-addresses
+                            (cdr symbols)
+                            (cdr sizes)
+                            (cdr codes)
+                            (cdr rodatas)
+                            (cdr real-symbols)
+                            #`(+ #,current-element-symbol #,size)
+                            #`(+ #,current-rodata-size-symbol #,rodata-size) ;; rodata-offset
+                            )])
                (values
-                (append cara cdra) ;; labels
-                (append carb cdrb) ;; code
-                (append carc cdrc) ;; .rodata
-                (append card cdrd) ;; real symbols
+                (append cara cdra) ;; code labels
+                (append carb cdrb) ;; rodata labels
+                (append carc cdrc) ;; code
+                (append card cdrd) ;; .rodata
+                (append care cdre) ;; real symbols
                 )))])))
 
 ;; TODO get offset and then return an object like all the other macros
@@ -227,19 +233,24 @@
             (.code-base-symbol (car (generate-temporaries '(.code-base))))
             (.rodata-base-symbol (car (generate-temporaries '(.rodata-base))))
             )
-       (let-values ([(labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
-         #`(lambda (#,.code-base-symbol #,.rodata-base-symbol)
-             (let* #,labels
-               (values
-                (bytes-append #,@code)
-                (bytes-append #,@rodata)
-                (append #,@real-symbols)
-                )))))]))
+       (let-values ([(code-labels rodata-labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
+         #`(list
+            (lambda ()
+              (bytes-append #,@rodata))
+            
+            (lambda (#,.code-base-symbol #,.rodata-base-symbol)
+              (let* (#,@code-labels #,@rodata-labels)
+                (bytes-append #,@code)))
+            
+            (lambda (#,.code-base-symbol)
+              (let* #,code-labels
+                (append #,@real-symbols)))
+            
+            )))]))
 
 (define get-the-code
   (data-list
-   (global-symbol test)
-   (label code-start)
+   (global-symbol green-lisp-demo)
 
    (mov-imm64 rdx 19)  ; dl / rdx: length of string
    (mov-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
@@ -266,7 +277,7 @@
    ;; TODO mov rdx, rax
    (mov-imm64 rdx 1024)  ; dl / rdx: length of string
 
-   (mov-imm64 rsi code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
+   (mov-imm64 rsi green-lisp-demo) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
    (mov-imm64 rax 1)  ; al / rax: set write to command
    (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
@@ -277,17 +288,16 @@
 
    (push rcx)
    (pop rcx)
-   (call code-start)
-   (jmp code-start) ;; size of jmp instruction
-
    ;; TODO overflow
-   (label +)
+   (global-symbol +)
    (pop rax)
    (pop rcx)
    (add rax rcx)
    (push rax)
 
-   (label code-end)))
+   (call green-lisp-demo)
+   (jmp green-lisp-demo) ;; size of jmp instruction
+   ))
 
 ;; alternative proposal
 ;;'(define-method test (jo)

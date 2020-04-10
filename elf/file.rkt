@@ -83,25 +83,28 @@
         (let* ((symbols-string-table (new elf-string-table% [strings (map (lambda (symbol) (get-field name symbol)) symbols)]))
                (symbols-string-table-bytes (send symbols-string-table get-bytes))
                (symbols-string-table-section (new elf-section%
-                                          [name #".strtab"]
+                                          [name #".dynstr"]
                                           [type 'strtab]
                                           [content symbols-string-table-bytes]))
 
-               (symbols-table-bytes (bytes-append* (map (lambda (symbol)
+               (symbols-table-bytes (bytes-append*
+                                     (make-bytes 24) ;; NULL SYMBOL
+                                     (map (lambda (symbol)
                                                           (send symbol get-bytes
                                                                 (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol))))
                                                                 (send symbols-string-table get-string-offset (get-field name symbol))
                                                                 ))
                                                         symbols)))
+               
                (symbols-table-section (new elf-section%
-                                           [name #".symtab"]
-                                           [type 'symtab]
+                                           [name #".dynsym"]
+                                           [type 'dynsym]
                                            [link (+ (length sections) 2)]
-                                           [info (length symbols)] ;; index of start of global symbols
+                                           [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
                
-               (section-header-string-table (new elf-string-table% [strings (cons #".strtab" (cons #".symtab" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))))]))
+               (section-header-string-table (new elf-string-table% [strings (cons #".dynstr" (cons #".dynsym" (cons #".shstrtab" (map (lambda (section) (get-field name section)) sections))))]))
                (section-header-string-table-bytes (send section-header-string-table get-bytes))
                (section-header-string-table-section (new elf-section%
                                                          [name #".shstrtab"]
@@ -129,7 +132,7 @@
          (unsigned 8 0)
          (unsigned 8 0)
 
-         (unsigned 16 ET_EXEC) ;; e_type
+         (unsigned 16 ET_DYN) ;; e_type
          (unsigned 16 EM_X86_64) ;; e_machine
          (unsigned 32 EV_CURRENT) ;; e_version
 

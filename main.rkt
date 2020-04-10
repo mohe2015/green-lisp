@@ -17,9 +17,13 @@
 
   ;; TODO what about the data with PIE?
 
-  (let ((rodata-base-address (+ BASE 128 (* 64 3) (* 56 2)))) ;; TODO change this design as there will be multiple sections
-    (let-values ([(.text .rodata real-symbols) (get-the-code 0 rodata-base-address)])
-      (let* ((.text-section (new elf-section%
+  (let ((rodata-base-address (+ BASE 128 (* 64 5) (* 56 2)))) ;; TODO change this design as there will be multiple sections
+    (match-let ([(list rodata-lambda code-lambda real-symbols-lambda) get-the-code])
+      (let* ((.rodata (rodata-lambda))
+             (code-base-address (+ rodata-base-address (bytes-length .rodata)))
+             (.text (code-lambda code-base-address rodata-base-address))
+             (real-symbols (real-symbols-lambda code-base-address))
+             (.text-section (new elf-section%
                                  [name #".text"]
                                  [type 'progbits]
                                  [flags '(alloc exec)]
@@ -44,9 +48,9 @@
                                [program-headers (list .rodata-program-header .text-program-header)]
                                [symbols real-symbols]
                                ) get-bytes)))
-        (call-with-output-file "out.elf"
+        (call-with-output-file "libgreen-lisp.so"
           (lambda (out)
             (write-bytes bytes out))
           #:mode 'binary #:exists 'truncate/replace)
-        (file-or-directory-permissions "out.elf" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))))
+        (file-or-directory-permissions "libgreen-lisp.so" (bitwise-ior user-read-bit user-write-bit user-execute-bit)))))
   )
