@@ -40,7 +40,7 @@
                                         ))
              (.rodata-program-header (new elf-program-header%
                                           [type 'load]
-                                          [flags '(read write)]
+                                          [flags '(read)]
                                           [section .rodata-section]
                                           ))
              (bytes (send (new elf-file%

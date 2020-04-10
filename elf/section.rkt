@@ -46,7 +46,8 @@
       ['() 0]
       ['(alloc exec) (+ SHF_ALLOC SHF_EXECINSTR)]
       ['(alloc) (+ SHF_ALLOC)]
-      ['(alloc write) (+ SHF_ALLOC SHF_WRITE)]))
+      ['(alloc write) (+ SHF_ALLOC SHF_WRITE)]
+      ['(write alloc) (+ SHF_ALLOC SHF_WRITE)]))
 
   (define elf-section% ;; typedef struct elf64_shdr Elf64_Shdr
     (class object%

@@ -94,6 +94,7 @@
                (.dynamic-section (new elf-section%
                                       [name #".dynamic"]
                                       [type 'dynamic]
+                                      [flags '(write alloc)]
                                       [link (- (length sections) 1)] ;; TODO FIXME
                                       [entry-size #x10]
                                       [content .dynamic-bytes]))
@@ -115,6 +116,7 @@
                (symbols-string-table-section (new elf-section%
                                           [name #".dynstr"]
                                           [type 'strtab]
+                                          [flags '(alloc)]
                                           [content symbols-string-table-bytes]))
 
                (symbols-table-bytes (bytes-append*
@@ -129,6 +131,7 @@
                (symbols-table-section (new elf-section%
                                            [name #".dynsym"]
                                            [type 'dynsym]
+                                           [flags '(alloc)]
                                            [link (+ (length sections) 1)] ;; TODO FIXME
                                            [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
