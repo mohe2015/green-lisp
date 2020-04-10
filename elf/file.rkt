@@ -87,17 +87,20 @@
                                           [type 'strtab]
                                           [content symbols-string-table-bytes]))
 
-               (symbols-table-bytes (bytes-append* (map (lambda (symbol)
+               (symbols-table-bytes (bytes-append*
+                                     (make-bytes 24) ;; NULL SYMBOL
+                                     (map (lambda (symbol)
                                                           (send symbol get-bytes
                                                                 (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol))))
                                                                 (send symbols-string-table get-string-offset (get-field name symbol))
                                                                 ))
                                                         symbols)))
+               
                (symbols-table-section (new elf-section%
                                            [name #".symtab"]
                                            [type 'symtab]
                                            [link (+ (length sections) 2)]
-                                           [info (length symbols)] ;; index of start of global symbols
+                                           [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
                

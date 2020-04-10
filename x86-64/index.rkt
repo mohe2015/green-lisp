@@ -238,8 +238,7 @@
 
 (define get-the-code
   (data-list
-   (global-symbol test)
-   (label code-start)
+   (global-symbol green-lisp-demo)
 
    (mov-imm64 rdx 19)  ; dl / rdx: length of string
    (mov-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
@@ -266,7 +265,7 @@
    ;; TODO mov rdx, rax
    (mov-imm64 rdx 1024)  ; dl / rdx: length of string
 
-   (mov-imm64 rsi code-start) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
+   (mov-imm64 rsi green-lisp-demo) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
    (mov-imm64 rax 1)  ; al / rax: set write to command
    (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
@@ -277,17 +276,16 @@
 
    (push rcx)
    (pop rcx)
-   (call code-start)
-   (jmp code-start) ;; size of jmp instruction
-
    ;; TODO overflow
-   (label +)
+   (global-symbol +)
    (pop rax)
    (pop rcx)
    (add rax rcx)
    (push rax)
 
-   (label code-end)))
+   (call green-lisp-demo)
+   (jmp green-lisp-demo) ;; size of jmp instruction
+   ))
 
 ;; alternative proposal
 ;;'(define-method test (jo)
