@@ -17,7 +17,7 @@
 
   ;; TODO what about the data with PIE?
 
-  (let ((rodata-base-address (+ BASE 128 (* 64 3) (* 56 2)))) ;; TODO change this design as there will be multiple sections
+  (let ((rodata-base-address (+ BASE 128 (* 64 5) (* 56 2)))) ;; TODO change this design as there will be multiple sections
     (match-let ([(list rodata-lambda code-lambda real-symbols-lambda) get-the-code])
       (let* ((.rodata (rodata-lambda))
              (code-base-address (+ rodata-base-address (bytes-length .rodata)))
