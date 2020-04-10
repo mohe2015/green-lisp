@@ -58,7 +58,7 @@
              (lambda (current-address rodata-addresses) (bytes))
              (list)
              (lambda (current-address)
-               (list (new elf-symbol% [name #,(symbol->string 'symbol)] [type 'func] [binding 'local] [section #".text"] [value current-address] [size 0])))
+               (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'local] [section #".text"] [value current-address] [size 0])))
              )]))
 
 (define-syntax (global-symbol stx)
@@ -69,16 +69,8 @@
              (lambda (current-address rodata-addresses) (bytes))
              (list)
              (lambda (current-address)
-               (list (new elf-symbol% [name #,(symbol->string (syntax->datum #'symbol))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size 0])))
+               (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size 0])))
              )]))
-
-
-(define-syntax (aaa stx)
-  (syntax-case stx ()
-    [(aaa symbol)
-     #`#,(symbol->string (syntax->datum #'symbol))
-     ]))
- 
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=224&zoom=100,28,726
 (define-syntax-rule (call target)
