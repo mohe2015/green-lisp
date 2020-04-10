@@ -55,6 +55,8 @@
       ['hash DT_HASH]
       ['strtab DT_STRTAB]
       ['symtab DT_SYMTAB]
+      ['strsz DT_STRSZ]
+      ['syment DT_SYMENT]
       ))
 
 (define elf-dyn% ;; typedef struct { } Elf64_Dyn;
