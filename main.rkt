@@ -17,12 +17,14 @@
 
   ;; TODO what about the data with PIE?
 
-  (let ((rodata-base-address (+ BASE 128 (* 64 5) (* 56 2)))) ;; TODO change this design as there will be multiple sections
+  (let* ((rodata-base-address (+ BASE 128 (* 64 5) (* 56 2)))
+         (aligned-rodata-base-address (+ rodata-base-address (get-byte-count-to-align 12 rodata-base-address)))) ;; TODO change this design as there will be multiple sections
     (match-let ([(list rodata-lambda code-lambda real-symbols-lambda) get-the-code])
       (let* ((.rodata (rodata-lambda))
-             (code-base-address (+ rodata-base-address (bytes-length .rodata))) ;; TODO FIXME IMPORTANT
-             (.text (code-lambda code-base-address rodata-base-address)) ;; TODO FIXME IMPORTANT
-             (real-symbols (real-symbols-lambda code-base-address))
+             (code-base-address (+ aligned-rodata-base-address (bytes-length .rodata)))
+             (aligned-code-base-address (+ code-base-address (get-byte-count-to-align 12 code-base-address)))
+             (.text (code-lambda aligned-code-base-address aligned-rodata-base-address))
+             (real-symbols (real-symbols-lambda aligned-code-base-address))
              (.text-section (new elf-section%
                                  [name #".text"]
                                  [type 'progbits]
