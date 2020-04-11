@@ -174,11 +174,14 @@
               [else
                (let* ((current-section (car remaining-sections))
                       (current-aligned-offset (+ current-offset (get-byte-count-to-align (get-field alignment current-section) current-offset))))
-                 (get-section-offset-internal (cdr remaining-sections) (+ current-aligned-offset (bytes-length (get-field content current-section)))))]))
-
+                 (if (null? (cdr remaining-sections)) ;; last one
+                     current-aligned-offset
+                     (get-section-offset-internal
+                      (cdr remaining-sections)
+                      (+ current-aligned-offset (bytes-length (get-field content current-section))))))]))
       
       (define/public (get-section-offset section-name)
-        (get-section-offset-internal (takef sections (lambda (s) (not (equal? (get-field name s) section-name))))
+        (get-section-offset-internal (take sections (+ 1 (index-where sections (lambda (s) (equal? (get-field name s) section-name)))))
                                      (+ 128
                                         (* 64 (length sections))
                                         (* 56 (length program-headers)))))
