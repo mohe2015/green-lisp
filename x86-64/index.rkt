@@ -35,9 +35,6 @@
         (lambda (_) (list))
         ))
 
-(define (get-byte-count-to-align alignment-bits offset)
-  (- (arithmetic-shift (arithmetic-shift (+ offset (arithmetic-shift 1 alignment-bits) -1) (- alignment-bits)) alignment-bits) offset))
-
 (define-syntax-rule (data-align alignment-bits)
   (list (lambda (current-address) (get-byte-count-to-align alignment-bits current-address))
         null

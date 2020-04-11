@@ -27,6 +27,7 @@
                                  [name #".text"]
                                  [type 'progbits]
                                  [flags '(alloc exec)]
+                                 [alignment 12]
                                  [content .text]))
              (.rodata-section (new elf-section%
                                    [name #".rodata"]

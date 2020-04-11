@@ -47,6 +47,7 @@
              [program-headers (append program-headers (get-field program-headers that))]
              [symbols (append symbols (get-field symbols that))]))
 
+      ;; get-byte-count-to-align
       (define (get-sections-bytes section-header-string-table remaining-sections current-offset)
         (cond [(null? remaining-sections) (bytes)]
               [else

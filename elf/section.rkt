@@ -72,7 +72,7 @@
          (unsigned 64 (bytes-length content)) ;; Elf64_Xword sh_size;		/* Size of section in bytes */
          (unsigned 32 link) ;; Elf64_Word sh_link;		/* Index of another section */
          (unsigned 32 info) ;; Elf64_Word sh_info;		/* Additional section information */
-         (unsigned 64 alignment) ;; Elf64_Xword sh_addralign;	/* Section alignment */
+         (unsigned 64 (arithmetic-shift 1 alignment)) ;; Elf64_Xword sh_addralign;	/* Section alignment */
          (unsigned 64 entry-size) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 
          ))))
