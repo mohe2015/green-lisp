@@ -111,6 +111,14 @@
                                           ))
 
                (.dynamic-program-header2 (new elf-program-header%
+                                          [type 'dynamic]
+                                          [flags '(read write)]
+                                          [start-section .dynamic-section]
+                                          [end-section .dynamic-section]
+                                          [alignment 8]
+                                          ))
+               
+               (.dynamic-program-header3 (new elf-program-header%
                                           [type 'gnu-relro]
                                           [flags '(read)]
                                           [start-section .dynamic-section]
@@ -120,7 +128,7 @@
                
                (new-elf-file (merge (new elf-file%
                                          [sections (list .dynamic-section section-header-string-table-section)]
-                                         [program-headers (list .dynamic-program-header)]))))
+                                         [program-headers (list .dynamic-program-header .dynamic-program-header2 .dynamic-program-header3)]))))
           (send new-elf-file internal-get-bytes2 section-header-string-table)))
 
       (define (get-sections-content-bytes remaining-sections current-offset)
