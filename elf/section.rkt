@@ -59,7 +59,7 @@
        (flags '()) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
        (link 0) ;; Elf64_Word sh_link;		/* Index of another section */
        (info 0) ;; Elf64_Word sh_info;		/* Additional section information */
-       (alignment 0) ;; Elf64_Xword sh_addralign;	/* Section alignment */
+       (alignment 3) ;; Elf64_Xword sh_addralign;	/* Section alignment */
        (entry-size 0))  ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 
       (define/public (get-bytes offset section-name-string-table-index)

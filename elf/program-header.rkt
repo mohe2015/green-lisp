@@ -11,11 +11,15 @@
   (define PT_SHLIB   5)
   (define PT_PHDR    6)
   (define PT_TLS     7)
+  (define PT_GNU_EH_FRAME #x6474e550)
+  (define PT_GNU_STACK #x6474e551)
+  (define PT_GNU_RELRO #x6474e552)
   (define elf-program-header-type '(null load dynamic interp note shlib phdr tls))
   (define (elf-program-header-type->byte type)
     (match type
       ['null PT_NULL]
       ['load PT_LOAD]
+      ['gnu-relro PT_GNU_RELRO]
       ['dynamic PT_DYNAMIC]
       ['interp PT_INTERP]))
 
