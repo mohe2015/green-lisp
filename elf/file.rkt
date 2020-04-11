@@ -167,7 +167,7 @@
           (send new-elf-file internal-get-bytes)))
 
       (define/public (get-section-by-name section-name)
-        (findf (lambda (s) (not (equal? (get-field name s) section-name))) sections))
+        (findf (lambda (s) (equal? (get-field name s) section-name)) sections))
 
       (define (get-section-offset-internal remaining-sections current-offset)
         (cond [(null? remaining-sections) current-offset]
