@@ -49,11 +49,13 @@
                                           [section .rodata-section]
                                           [alignment 4096]
                                           ))
-             (bytes (send (new elf-file%
+             (elf-file (new elf-file%
                                [sections (list .rodata-section .text-section)]
                                [program-headers (list .rodata-program-header .text-program-header)]
                                [symbols real-symbols]
-                               ) get-bytes)))
+                               ))
+             
+             (bytes (send elf-file get-bytes)))
         (call-with-output-file "libgreen-lisp.so"
           (lambda (out)
             (write-bytes bytes out))

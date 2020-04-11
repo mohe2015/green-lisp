@@ -105,8 +105,15 @@
 
 
                (.dynamic-program-header (new elf-program-header%
-                                          [type 'dynamic]
+                                          [type 'load]
                                           [flags '(read write)]
+                                          [section .dynamic-section]
+                                          [alignment #x1000]
+                                          ))
+
+               (.dynamic-program-header2 (new elf-program-header%
+                                          [type 'gnu-relro]
+                                          [flags '(read)]
                                           [section .dynamic-section]
                                           [alignment 8]
                                           ))
@@ -163,7 +170,24 @@
                                            [info 1] ;; TODO index of start of global symbols
                                            [entry-size 24] ;; size of one symbol
                                            [content symbols-table-bytes]))
-               (new-elf-file (merge (new elf-file% [sections (list symbols-string-table-section symbols-table-section)]))))
+
+               (.dynstr-program-header (new elf-program-header%
+                                             [type 'load]
+                                             [flags '(read)]
+                                             [section symbols-string-table-section]
+                                             [alignment #x1000]
+                                             ))
+
+               (.dynsym-program-header (new elf-program-header%
+                                             [type 'load]
+                                             [flags '(read)]
+                                             [section symbols-table-section]
+                                             [alignment #x1000]
+                                             ))
+               
+               (new-elf-file (merge (new elf-file%
+                                         [sections (list symbols-string-table-section symbols-table-section)]
+                                         [program-headers (list .dynstr-program-header .dynsym-program-header)]))))
           (send new-elf-file internal-get-bytes)))
 
       (define/public (get-section-by-name section-name)
