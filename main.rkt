@@ -33,6 +33,7 @@
                                    [name #".rodata"]
                                    [type 'progbits]
                                    [flags '(alloc write)]
+                                   [alignment 12]
                                    [content .rodata]))
              (.text-program-header (new elf-program-header%
                                         [type 'load]
@@ -44,6 +45,7 @@
                                           [type 'load]
                                           [flags '(read)]
                                           [section .rodata-section]
+                                          [alignment 4096]
                                           ))
              (bytes (send (new elf-file%
                                [sections (list .rodata-section .text-section)]
