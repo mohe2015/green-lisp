@@ -199,11 +199,17 @@
                                              [alignment #x1000]
                                              ))
 
+               (new-elf-file2 (send new-elf-file
+                                    merge
+                                    (new elf-file%
+                                         [sections (list symbols-table-section)]
+                                         [program-headers (list .dynsym-program-header)])))
+
                (.gnu.hash-section (new elf-section%
                                            [name #".gnu.hash"]
                                            [type 'gnu-hash]
                                            [flags '(alloc)]
-                                           [link (+ (length sections) 1)] ;; TODO FIXME
+                                           [link (+ 1 (index-where (get-field sections new-elf-file2) (lambda (s) (equal? (get-field name s) #".dynsym"))))]
                                            [content #"THIS IS A TEST"]))
 
                (.gnu.hash-program-header (new elf-program-header%
@@ -215,13 +221,13 @@
                                              ))
 
                
-               (new-elf-file2
-                (send new-elf-file
+               (new-elf-file3
+                (send new-elf-file2
                       merge
                       (new elf-file%
-                           [sections (list symbols-table-section .gnu.hash-section)]
-                           [program-headers (list .dynsym-program-header .gnu.hash-program-header)]))))
-          (send new-elf-file2 internal-get-bytes)))
+                           [sections (list .gnu.hash-section)]
+                           [program-headers (list .gnu.hash-program-header)]))))
+          (send new-elf-file3 internal-get-bytes)))
 
       (define/public (get-section-by-name section-name)
         (findf (lambda (s) (equal? (get-field name s) section-name)) sections))
