@@ -194,10 +194,26 @@
                                              [end-section symbols-table-section]
                                              [alignment #x1000]
                                              ))
+
+               (.gnu.hash-section (new elf-section%
+                                           [name #".gnu.hash"]
+                                           [type 'gnu-hash]
+                                           [flags '(alloc)]
+                                           [link (+ (length sections) 1)] ;; TODO FIXME
+                                           [content #"THIS IS A TEST"]))
+
+               (.gnu.hash-program-header (new elf-program-header%
+                                             [type 'load]
+                                             [flags '(read)]
+                                             [start-section .gnu.hash-section]
+                                             [end-section .gnu.hash-section]
+                                             [alignment #x8]
+                                             ))
+
                
                (new-elf-file (merge (new elf-file%
-                                         [sections (list symbols-string-table-section symbols-table-section)]
-                                         [program-headers (list .dynstr-program-header .dynsym-program-header)]))))
+                                         [sections (list symbols-string-table-section symbols-table-section .gnu.hash-section)]
+                                         [program-headers (list .dynstr-program-header .dynsym-program-header .gnu.hash-program-header)]))))
           (send new-elf-file internal-get-bytes)))
 
       (define/public (get-section-by-name section-name)

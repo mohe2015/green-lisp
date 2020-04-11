@@ -16,6 +16,7 @@
   (define SHT_SHLIB	10)
   (define SHT_DYNSYM	11)
   (define SHT_NUM		12)
+  (define SHT_GNU_HASH  #x6ffffff6)
   (define SHT_LOPROC	#x70000000)
   (define SHT_HIPROC	#x7fffffff)
   (define SHT_LOUSER	#x80000000)
@@ -31,6 +32,7 @@
       ['strtab SHT_STRTAB]
       ['dynsym SHT_DYNSYM]
       ['dynamic SHT_DYNAMIC]
+      ['gnu-hash SHT_GNU_HASH]
       ))
 
   ;; sh_flags
