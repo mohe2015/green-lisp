@@ -1,5 +1,5 @@
 #include "random.h"
 
-const char* get_random_number(void) {
+const char* green_lisp_demo(void) {
     return "test";
 }

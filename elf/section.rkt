@@ -59,7 +59,7 @@
        (flags '()) ;; Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
        (link 0) ;; Elf64_Word sh_link;		/* Index of another section */
        (info 0) ;; Elf64_Word sh_info;		/* Additional section information */
-       (alignment 1) ;; Elf64_Xword sh_addralign;	/* Section alignment */
+       (alignment 0) ;; Elf64_Xword sh_addralign;	/* Section alignment */
        (entry-size 0))  ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 
       (define/public (get-bytes offset section-name-string-table-index)
@@ -72,7 +72,7 @@
          (unsigned 64 (bytes-length content)) ;; Elf64_Xword sh_size;		/* Size of section in bytes */
          (unsigned 32 link) ;; Elf64_Word sh_link;		/* Index of another section */
          (unsigned 32 info) ;; Elf64_Word sh_info;		/* Additional section information */
-         (unsigned 64 alignment) ;; Elf64_Xword sh_addralign;	/* Section alignment */
+         (unsigned 64 (arithmetic-shift 1 alignment)) ;; Elf64_Xword sh_addralign;	/* Section alignment */
          (unsigned 64 entry-size) ;; Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 
          ))))
