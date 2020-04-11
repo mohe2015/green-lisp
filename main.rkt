@@ -38,6 +38,7 @@
                                         [type 'load]
                                         [flags '(read execute)]
                                         [section .text-section]
+                                        [alignment 4096]
                                         ))
              (.rodata-program-header (new elf-program-header%
                                           [type 'load]
