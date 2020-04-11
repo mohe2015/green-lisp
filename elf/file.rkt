@@ -105,10 +105,10 @@
 
 
                (.dynamic-program-header (new elf-program-header%
-                                          [type 'dynamic]
+                                          [type 'load]
                                           [flags '(read write)]
                                           [section .dynamic-section]
-                                          [alignment 8]
+                                          [alignment #x1000]
                                           ))
 
                (.dynamic-program-header2 (new elf-program-header%
@@ -175,14 +175,14 @@
                                              [type 'load]
                                              [flags '(read)]
                                              [section symbols-string-table-section]
-                                             [alignment 8]
+                                             [alignment #x1000]
                                              ))
 
                (.dynsym-program-header (new elf-program-header%
                                              [type 'load]
                                              [flags '(read)]
                                              [section symbols-table-section]
-                                             [alignment 8]
+                                             [alignment #x1000]
                                              ))
                
                (new-elf-file (merge (new elf-file%
