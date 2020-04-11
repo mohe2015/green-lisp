@@ -41,17 +41,18 @@
       (init-field
        type ;; Elf64_Word p_type;
        flags ;; Elf64_Word p_flags;
-       section
+       start-section
+       end-section
        (alignment 1)) ;; Elf64_Xword p_align;		/* Segment alignment, file & memory */
 
-      (define/public (get-bytes offset size)
+      (define/public (get-bytes offset offset-end)
         (bytes-append
          (unsigned 32 (elf-program-header-type->byte type)) ;; Elf64_Word p_type;
          (unsigned 32 (elf-program-header-flags->byte flags)) ;; Elf64_Word p_flags;
          (unsigned 64 offset) ;; Elf64_Off p_offset;		/* Segment file offset */
          (unsigned 64 (+ BASE offset)) ;; Elf64_Addr p_vaddr;		/* Segment virtual address */
          (unsigned 64 (+ BASE offset)) ;; Elf64_Addr p_paddr;		/* Segment physical address */
-         (unsigned 64 size) ;; Elf64_Xword p_filesz;		/* Segment size in file */
-         (unsigned 64 size) ;; Elf64_Xword p_memsz;		/* Segment size in memory */
+         (unsigned 64 (- offset-end offset)) ;; Elf64_Xword p_filesz;		/* Segment size in file */
+         (unsigned 64 (- offset-end offset)) ;; Elf64_Xword p_memsz;		/* Segment size in memory */
          (unsigned 64 alignment) ;; Elf64_Xword p_align;		/* Segment alignment, file & memory */
         )))))
