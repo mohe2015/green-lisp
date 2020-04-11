@@ -40,13 +40,15 @@
              (.text-program-header (new elf-program-header%
                                         [type 'load]
                                         [flags '(read execute)]
-                                        [section .text-section]
+                                        [start-section .text-section]
+                                        [end-section .text-section]
                                         [alignment 4096]
                                         ))
              (.rodata-program-header (new elf-program-header%
                                           [type 'load]
                                           [flags '(read)]
-                                          [section .rodata-section]
+                                          [start-section .rodata-section]
+                                          [end-section .rodata-section]
                                           [alignment 4096]
                                           ))
              (elf-file (new elf-file%

@@ -58,20 +58,18 @@
                                (get-sections-bytes section-header-string-table (cdr remaining-sections) (+ current-aligned-offset (bytes-length (get-field content current-section))))))]))
 
       ;; not every section has a program header (at least in our simplified implementation)
-      (define (get-program-headers-bytes remaining-sections remaining-program-headers current-offset)
-        (cond [(null? remaining-program-headers) (bytes)]
-              [else
-               (let* ((current-section (car remaining-sections))
-                     (current-program-header (car remaining-program-headers))
-                     (current-aligned-offset (+ current-offset (get-byte-count-to-align (get-field alignment current-section) current-offset)))
-                     )
-                 (cond [(eq? (get-field section current-program-header) current-section)
-                        (let* ((program-header-bytes (send current-program-header get-bytes current-aligned-offset (bytes-length (get-field content current-section)))))
-                         (bytes-append program-header-bytes
-                                       (get-program-headers-bytes (cdr remaining-sections) (cdr remaining-program-headers) (+ current-aligned-offset (bytes-length (get-field content current-section))))))]
-                       [else
-                        (get-program-headers-bytes (cdr remaining-sections) remaining-program-headers (+ current-aligned-offset (bytes-length (get-field content current-section))))]
-                       ))]))
+      ;; TODO a section can have multiple program headers
+      ;; TODO a program header can contain multiple sections
+      ;; (get-section-offset section-name)
+      ;; (get-section-offset-end section-name)
+      (define (get-program-headers-bytes)
+        (bytes-append*
+         (map (lambda (program-header)
+                (send program-header
+                      get-bytes
+                      (get-section-offset (get-field name (get-field start-section program-header)))
+                      (get-section-offset-end (get-field name (get-field end-section program-header)))))
+              program-headers)))
       
       (define/public (internal-get-bytes)
         (let* (
@@ -107,20 +105,30 @@
                (.dynamic-program-header (new elf-program-header%
                                           [type 'load]
                                           [flags '(read write)]
-                                          [section .dynamic-section]
+                                          [start-section .dynamic-section]
+                                          [end-section .dynamic-section]
                                           [alignment #x1000]
                                           ))
 
                (.dynamic-program-header2 (new elf-program-header%
+                                          [type 'dynamic]
+                                          [flags '(read write)]
+                                          [start-section .dynamic-section]
+                                          [end-section .dynamic-section]
+                                          [alignment 8]
+                                          ))
+               
+               (.dynamic-program-header3 (new elf-program-header%
                                           [type 'gnu-relro]
                                           [flags '(read)]
-                                          [section .dynamic-section]
+                                          [start-section .dynamic-section]
+                                          [end-section .dynamic-section]
                                           [alignment 8]
                                           ))
                
                (new-elf-file (merge (new elf-file%
                                          [sections (list .dynamic-section section-header-string-table-section)]
-                                         [program-headers (list .dynamic-program-header)]))))
+                                         [program-headers (list .dynamic-program-header .dynamic-program-header2 .dynamic-program-header3)]))))
           (send new-elf-file internal-get-bytes2 section-header-string-table)))
 
       (define (get-sections-content-bytes remaining-sections current-offset)
@@ -139,7 +147,7 @@
          (get-elf-header-bytes) ;; 64
          null-section-header ;; 64
          (get-sections-bytes section-header-string-table sections (+ 128 (* 64 (length sections)) (* 56 (length program-headers))))
-         (get-program-headers-bytes sections program-headers (+ 128 (* 64 (length sections)) (* 56 (length program-headers))))
+         (get-program-headers-bytes)
 
          (get-sections-content-bytes sections (+ 128 (* 64 (length sections)) (* 56 (length program-headers))))
          ))
@@ -174,14 +182,16 @@
                (.dynstr-program-header (new elf-program-header%
                                              [type 'load]
                                              [flags '(read)]
-                                             [section symbols-string-table-section]
+                                             [start-section symbols-string-table-section]
+                                             [end-section symbols-string-table-section]
                                              [alignment #x1000]
                                              ))
 
                (.dynsym-program-header (new elf-program-header%
                                              [type 'load]
                                              [flags '(read)]
-                                             [section symbols-table-section]
+                                             [start-section symbols-table-section]
+                                             [end-section symbols-table-section]
                                              [alignment #x1000]
                                              ))
                
@@ -209,6 +219,22 @@
                                      (+ 128
                                         (* 64 (length sections))
                                         (* 56 (length program-headers)))))
+
+      (define (get-section-offset-end-internal remaining-sections current-offset)
+        (cond [(null? remaining-sections) current-offset]
+              [else
+               (let* ((current-section (car remaining-sections))
+                      (current-aligned-offset (+ current-offset (get-byte-count-to-align (get-field alignment current-section) current-offset))))
+                 (get-section-offset-end-internal
+                  (cdr remaining-sections)
+                  (+ current-aligned-offset (bytes-length (get-field content current-section)))))]))
+      
+      (define/public (get-section-offset-end section-name)
+        (get-section-offset-end-internal (take sections (+ 1 (index-where sections (lambda (s) (equal? (get-field name s) section-name)))))
+                                         (+ 128
+                                            (* 64 (length sections))
+                                            (* 56 (length program-headers)))))
+        
         
       (define/public (get-elf-header-bytes) ;; 64 bytes
         (bytes-append
