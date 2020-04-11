@@ -100,6 +100,7 @@
                                       [flags '(write alloc)]
                                       [link (- (length sections) 1)] ;; TODO FIXME
                                       [entry-size #x10]
+                                      [alignment 3]
                                       [content .dynamic-bytes]))
 
 
@@ -107,6 +108,7 @@
                                           [type 'dynamic]
                                           [flags '(read write)]
                                           [section .dynamic-section]
+                                          [alignment 8]
                                           ))
                
                (new-elf-file (merge (new elf-file%
