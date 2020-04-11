@@ -45,6 +45,7 @@
 (define OLD_DT_HIOS     #x6fffffff)
 (define DT_LOPROC	#x70000000)
 (define DT_HIPROC	#x7fffffff)
+(define DT_GNU_HASH #x6ffffef5)
 
 (define (elf-dynamic-tag->byte tag)
     (match tag
@@ -57,6 +58,7 @@
       ['symtab DT_SYMTAB]
       ['strsz DT_STRSZ]
       ['syment DT_SYMENT]
+      ['gnu-hash DT_GNU_HASH]
       ))
 
 (define elf-dyn% ;; typedef struct { } Elf64_Dyn;

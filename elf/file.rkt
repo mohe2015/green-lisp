@@ -85,6 +85,7 @@
                (.dynamic
                 (list
                  ;; TODO .gnu hash
+                 (new elf-dyn% [tag 'gnu-hash] [value (get-section-offset #".gnu.hash")])
                  (new elf-dyn% [tag 'strtab] [value (get-section-offset #".dynstr")]) ;; .dynstr offset
                  (new elf-dyn% [tag 'symtab] [value (get-section-offset #".dynsym")]) ;; .dynsym offset
                  (new elf-dyn% [tag 'strsz] [value (bytes-length (get-field content (get-section-by-name #".dynstr")))]) ;; size of .dynstr
