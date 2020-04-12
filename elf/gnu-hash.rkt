@@ -1,5 +1,5 @@
 #lang racket
-(require rackunit green-lisp/utils)
+(require rackunit green-lisp/utils green-lisp/elf/symbol)
 (provide gnu-hash)
 
 ;; https://flapenguin.me/elf-dt-gnu-hash
@@ -41,7 +41,7 @@
 
        ))))
 
-;; sort the symbols before based on their hash?
+;; symbol table is sorted by bucket
 ;; we have to skip the symbols which are not global etc.
 ;; symbol placed in hash % nbuckets bucket
 ;; last bit in chain set -> end of chain
@@ -49,11 +49,79 @@
 ;; Chains being contiguous sequences imply that symbols within the same bucket must be stored contiguously.
 ;; A bucket element will contain the index 0 if there is no symbol in the hash table for the given value of N. As index 0 of the dynsym is a reserved value, this index cannot occur for a valid symbol, and is therefore non-ambiguous.
 
+(define test-symbols
+  (list
+   (new elf-symbol%
+        [name "adfadf"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "aghjb"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "dhgfjc"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "jzkrd"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "dtzj5jdj"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "weradfsd"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "dilzgkh"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   (new elf-symbol%
+        [name "c"]
+        [type 'func]
+        [binding 'global]
+        [section #".text"]
+        [value 1337]
+        [size 0])
+   ))
 
-
-
-
-
+(let* ((nbuckets 4)
+       (symbols-with-hash
+        (map (lambda (s)
+               (cons s (list (gnu-hash (get-field name s))))) test-symbols))
+       (symbols-with-bucket-index
+        (map
+         (lambda (s)
+           (cons s (list (modulo (car (cdr s)) 4)))) symbols-with-hash))
+       (sorted (sort symbols-with-bucket-index < #:key (lambda (v) (car (cdr v)))))
+       (sorted2 (append '(null) sorted))
+       )
+  sorted2
+  )
 
 
 
