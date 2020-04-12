@@ -116,9 +116,15 @@
         (map (lambda (v) (fourth (first v))) grouped-without-null))
        (bucket (bytes-append*
                 (map (lambda (v) (unsigned 32 v)) bucket-indexes)))
-       )
-  ;; TODO set to 1 at end of chain
-  (map (lambda (v) (bitwise-and #xfffffffe (second v))) sorted)
+       (chain-elements
+        (map (lambda (l)
+               (let-values ([(left right) (split-at-right l 1)])
+                 (append 
+                  (map (lambda (v) (bitwise-and #xfffffffe (second v))) left)
+                  (list (bitwise-ior 1 (second (car right))))))) grouped-without-null))
+       (flattened-chain-elements (flatten chain-elements))
+       (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
+  (bytes-append bucket chain)
   )
 
 
