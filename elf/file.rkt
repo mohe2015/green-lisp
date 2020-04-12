@@ -1,5 +1,5 @@
 (module file racket
-  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/program-header green-lisp/elf/string-table green-lisp/elf/dynamic)
+  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/program-header green-lisp/elf/string-table green-lisp/elf/dynamic green-lisp/elf/gnu-hash)
   (provide elf-file%)
 
   (define ELFMAG0 #x7f) ;; /* EI_MAG */
@@ -85,6 +85,7 @@
                (.dynamic
                 (list
                  ;; TODO .gnu hash
+                 (new elf-dyn% [tag 'gnu-hash] [value (get-section-offset #".gnu.hash")])
                  (new elf-dyn% [tag 'strtab] [value (get-section-offset #".dynstr")]) ;; .dynstr offset
                  (new elf-dyn% [tag 'symtab] [value (get-section-offset #".dynsym")]) ;; .dynsym offset
                  (new elf-dyn% [tag 'strsz] [value (bytes-length (get-field content (get-section-by-name #".dynstr")))]) ;; size of .dynstr
@@ -96,7 +97,7 @@
                                       [name #".dynamic"]
                                       [type 'dynamic]
                                       [flags '(write alloc)]
-                                      [link (- (length sections) 1)] ;; TODO FIXME
+                                      [link (+ 1 (index-where sections (lambda (s) (equal? (get-field name s) #".dynstr"))))]
                                       [entry-size #x10]
                                       [alignment 3]
                                       [content .dynamic-bytes]))
@@ -118,17 +119,10 @@
                                           [alignment 8]
                                           ))
                
-               (.dynamic-program-header3 (new elf-program-header%
-                                          [type 'gnu-relro]
-                                          [flags '(read)]
-                                          [start-section .dynamic-section]
-                                          [end-section .dynamic-section]
-                                          [alignment 8]
-                                          ))
                
                (new-elf-file (merge (new elf-file%
                                          [sections (list .dynamic-section section-header-string-table-section)]
-                                         [program-headers (list .dynamic-program-header .dynamic-program-header2 .dynamic-program-header3)]))))
+                                         [program-headers (list .dynamic-program-header .dynamic-program-header2)]))))
           (send new-elf-file internal-get-bytes2 section-header-string-table)))
 
       (define (get-sections-content-bytes remaining-sections current-offset)
@@ -165,20 +159,11 @@
                                      (make-bytes 24) ;; NULL SYMBOL
                                      (map (lambda (symbol)
                                                           (send symbol get-bytes
-                                                                (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol))))
+                                                                (+ 1 (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol)))))
                                                                 (send symbols-string-table get-string-offset (get-field name symbol))
                                                                 ))
                                                         symbols)))
                
-               (symbols-table-section (new elf-section%
-                                           [name #".dynsym"]
-                                           [type 'dynsym]
-                                           [flags '(alloc)]
-                                           [link (+ (length sections) 1)] ;; TODO FIXME
-                                           [info 1] ;; TODO index of start of global symbols
-                                           [entry-size 24] ;; size of one symbol
-                                           [content symbols-table-bytes]))
-
                (.dynstr-program-header (new elf-program-header%
                                              [type 'load]
                                              [flags '(read)]
@@ -187,6 +172,19 @@
                                              [alignment #x1000]
                                              ))
 
+               (new-elf-file (merge (new elf-file%
+                                         [sections (list symbols-string-table-section)]
+                                         [program-headers (list .dynstr-program-header)])))
+               
+               (symbols-table-section (new elf-section%
+                                           [name #".dynsym"]
+                                           [type 'dynsym]
+                                           [flags '(alloc)]
+                                           [link (+ 1 (index-where (get-field sections new-elf-file) (lambda (s) (equal? (get-field name s) #".dynstr"))))]
+                                           [info 1] ;; TODO index of start of global symbols
+                                           [entry-size 24] ;; size of one symbol
+                                           [content symbols-table-bytes]))
+
                (.dynsym-program-header (new elf-program-header%
                                              [type 'load]
                                              [flags '(read)]
@@ -194,11 +192,39 @@
                                              [end-section symbols-table-section]
                                              [alignment #x1000]
                                              ))
+
+               (new-elf-file2 (send new-elf-file
+                                    merge
+                                    (new elf-file%
+                                         [sections (list symbols-table-section)]
+                                         [program-headers (list .dynsym-program-header)])))
+
+               (gnu-hash (new gnu-hash%))
+
+               (.gnu.hash-section (new elf-section%
+                                           [name #".gnu.hash"]
+                                           [type 'gnu-hash]
+                                           [flags '(alloc)]
+                                           [link (+ 1 (index-where (get-field sections new-elf-file2) (lambda (s) (equal? (get-field name s) #".dynsym"))))]
+                                           [alignment 12]
+                                           [content (send gnu-hash get-bytes symbols)]))
+
+               (.gnu.hash-program-header (new elf-program-header%
+                                             [type 'load]
+                                             [flags '(read)]
+                                             [start-section .gnu.hash-section]
+                                             [end-section .gnu.hash-section]
+                                             [alignment #x1000]
+                                             ))
+
                
-               (new-elf-file (merge (new elf-file%
-                                         [sections (list symbols-string-table-section symbols-table-section)]
-                                         [program-headers (list .dynstr-program-header .dynsym-program-header)]))))
-          (send new-elf-file internal-get-bytes)))
+               (new-elf-file3
+                (send new-elf-file2
+                      merge
+                      (new elf-file%
+                           [sections (list .gnu.hash-section)]
+                           [program-headers (list .gnu.hash-program-header)]))))
+          (send new-elf-file3 internal-get-bytes)))
 
       (define/public (get-section-by-name section-name)
         (findf (lambda (s) (equal? (get-field name s) section-name)) sections))
