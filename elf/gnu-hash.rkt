@@ -71,7 +71,7 @@
        (unsigned 32 symoffset)
        (unsigned 32 bloom-size)
        (unsigned 32 bloom-shift)
-       (make-bytes 16)
+       (make-bytes 16 #xff)
        ;; 64 bloom-filter length bloom-size
 
        (get-buckets-and-chain symbols)

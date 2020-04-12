@@ -54,7 +54,7 @@
          (unsigned 32 name-offset) ;; u32 Elf64_Word st_name;		/* Symbol name, index in string tbl */
          (bytes (elf-symbol-binding-and-type->byte binding type)) ;; unsigned char	st_info;	/* Type and binding attributes */
          (bytes 0) ;; unsigned char	st_other;	/* No defined meaning, 0 */
-         (unsigned 16 section-index) ;; u16 Elf64_Half st_shndx;		/* Associated section index */
+         (unsigned 16 section-index ) ;; u16 Elf64_Half st_shndx;		/* Associated section index */
          (unsigned 64 value) ;; u64 Elf64_Addr st_value;		/* Value of the symbol */
          (unsigned 64 size) ;; u64 Elf64_Xword st_size;		/* Associated symbol size */
          ))
