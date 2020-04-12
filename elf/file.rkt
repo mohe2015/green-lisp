@@ -213,6 +213,7 @@
                                            [type 'gnu-hash]
                                            [flags '(alloc)]
                                            [link (+ 1 (index-where (get-field sections new-elf-file2) (lambda (s) (equal? (get-field name s) #".dynsym"))))]
+                                           [alignment 12]
                                            [content (send gnu-hash get-bytes symbols)]))
 
                (.gnu.hash-program-header (new elf-program-header%
