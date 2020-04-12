@@ -31,6 +31,7 @@
                 (bloom-shift 0)) ;; 5
 
     (define (get-buckets-and-chain symbols)
+      (print symbols)
       (let* ((symbols-with-hash-and-bucket-index
               (map (lambda (s)
                      (list s (gnu-hash (get-field name s)) (modulo (gnu-hash (get-field name s)) nbuckets))) symbols))
@@ -44,18 +45,19 @@
               (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null))
              (bins-values
               (map sample-bin-values bins))
-             (grouped (group-by third sorted-with-index))
-             (grouped-without-null (cdr grouped))
+             (aa (print bins-values))
              (bucket-indexes
               (map (lambda (v) (if (empty? v) 0 (fourth (first v)))) bins-values))
              (bucket (bytes-append*
                       (map (lambda (v) (unsigned 32 v)) bucket-indexes)))
              (chain-elements
               (map (lambda (l)
-                     (let-values ([(left right) (split-at-right l 1)])
-                       (append 
-                        (map (lambda (v) (bitwise-and #xfffffffe (second v))) left)
-                        (list (bitwise-ior 1 (second (car right))))))) grouped-without-null))
+                     (if (empty? l)
+                         '()
+                         (let-values ([(left right) (split-at-right l 1)])
+                           (append 
+                            (map (lambda (v) (bitwise-and #xfffffffe (second v))) left)
+                            (list (bitwise-ior 1 (second (car right)))))))) bins-values))
              (flattened-chain-elements (flatten chain-elements))
              (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
         (bytes-append bucket chain)))
