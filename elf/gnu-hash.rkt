@@ -42,7 +42,7 @@
              (sorted-with-index-without-null (cdr sorted-with-index))
              (bins 
               ;; hack
-              (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null))
+              (bin-samples/key (stream->list (in-range 0 (+ 1 nbuckets))) < (lambda (v) (third v)) sorted-with-index-without-null))
              (bins-values
               (map sample-bin-values bins))
              (aa (print bins-values))
