@@ -39,6 +39,8 @@
   (define SHF_WRITE		#x1)
   (define SHF_ALLOC		#x2)
   (define SHF_EXECINSTR		#x4)
+  (define SHF_MERGE #x10)
+  (define SHF_STRINGS #x20)
   (define SHF_RELA_LIVEPATCH	#x00100000)
   (define SHF_RO_AFTER_INIT	#x00200000)
   (define SHF_MASKPROC		#xf0000000)
@@ -48,6 +50,7 @@
       ['() 0]
       ['(alloc exec) (+ SHF_ALLOC SHF_EXECINSTR)]
       ['(alloc) (+ SHF_ALLOC)]
+      ['(alloc merge strings) (+ SHF_ALLOC SHF_MERGE)]
       ['(alloc write) (+ SHF_ALLOC SHF_WRITE)]
       ['(write alloc) (+ SHF_ALLOC SHF_WRITE)]))
 
