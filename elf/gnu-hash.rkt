@@ -60,6 +60,9 @@
                             (list (bitwise-ior 1 (second (car right)))))))) bins-values))
              (flattened-chain-elements (flatten chain-elements))
              (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
+        (print bucket)
+        (print chain)
+        
         (bytes-append bucket chain)))
     
     (define/public (get-bytes symbols)

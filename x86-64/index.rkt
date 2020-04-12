@@ -287,7 +287,7 @@
    (push rcx)
    (pop rcx)
    ;; TODO overflow
-   (global-symbol +)
+   ;;(global-symbol +)
    (pop rax)
    (pop rcx)
    (add rax rcx)

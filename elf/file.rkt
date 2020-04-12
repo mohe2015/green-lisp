@@ -166,7 +166,7 @@
                                      (make-bytes 24) ;; NULL SYMBOL
                                      (map (lambda (symbol)
                                                           (send symbol get-bytes
-                                                                (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol))))
+                                                                (+ 1 (index-where sections (lambda (s) (equal? (get-field name s) (get-field section symbol)))))
                                                                 (send symbols-string-table get-string-offset (get-field name symbol))
                                                                 ))
                                                         symbols)))
