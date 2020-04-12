@@ -34,44 +34,33 @@
        (unsigned 32 symoffset)
        (unsigned 32 bloom-size)
        (unsigned 32 bloom-shift)
-       ;; bloom-filter length bloom-size
+       ;; 64 bloom-filter length bloom-size
 
-       ;; buckets length nbuckets
-       ;; values length symcount - symoffset
+       ;; 32 buckets length nbuckets
+       ;; 32 chain length symcount - symoffset
 
        ))))
 
-;; https://www.gabriel.urdhr.fr/2015/09/28/elf-file-format/#hash-tables
-;; struct Gnu_Hash_Header {
-;;  uint32_t nbuckets;
-;;  uint32_t symndx / symoffset;    /* Index of the first accessible symbol in .dynsym */
-;;  uint32_t maskwords / bloom_size; /* Nyumber of elements in the Bloom Filter */
-;;  uint32_t shift2 / bloom_shift;    /* Shift count for the Bloom Filter */
-;;  uintXX_t bloom_filter/bloom[maskwords/bloom_size]; // 64 / 32
-;;  uint32_t buckets[nbuckets];
-;;  uint32_t values[dynsymcount - symndx] / chain[];
-;;};
+;; sort the symbols before based on their hash?
+;; we have to skip the symbols which are not global etc.
+;; symbol placed in hash % nbuckets bucket
+;; last bit in chain set -> end of chain
+;; bucket array holds index for first symbol in chain (bucket[foobar] - symoffset])
+;; Chains being contiguous sequences imply that symbols within the same bucket must be stored contiguously.
+;; A bucket element will contain the index 0 if there is no symbol in the hash table for the given value of N. As index 0 of the dynsym is a reserved value, this index cannot occur for a valid symbol, and is therefore non-ambiguous.
+
+
+
+
+
+
+
 
 
 ;; bloom[(hash / ELFCLASS_BITS) % bloom_size]
 ;; TODO just set every bit so it is ignored first
 ;; if bit hash % ELFCLASS_BITS and bit (hash >> bloom_shift) % ELFCLASS_BITS
 ;; is set the symbol may be in the hash table, otherwise it isn't
-
-
-;; we have to skip the symbols which are not global etc.
-
-;; symbol placed in hash % nbuckets bucket
-
-;; last bit in chain set -> end of chain
-
-;; bucket array holds index for first symbol in chain (bucket[foobar] - symoffset])
-
-;; Chains being contiguous sequences imply that symbols within the same bucket must be stored contiguously.
-
-;; A bucket element will contain the index 0 if there is no symbol in the hash table for the given value of N. As index 0 of the dynsym is a reserved value, this index cannot occur for a valid symbol, and is therefore non-ambiguous.
-
-;; sort the symbols before based on their hash?
 
 ;; https://flapenguin.me/elf-dt-gnu-hash
 
