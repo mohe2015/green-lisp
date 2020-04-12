@@ -26,9 +26,9 @@
   (class object%
     (super-new)
     (init-field (nbuckets 4)
-                (symoffset 1)
-                (bloom-size 0) ;; 2
-                (bloom-shift 0)) ;; 5
+                (symoffset 0)
+                (bloom-size 2) ;; 2
+                (bloom-shift 5)) ;; 5
 
     (define (get-buckets-and-chain symbols)
       (print symbols)
@@ -68,6 +68,7 @@
        (unsigned 32 symoffset)
        (unsigned 32 bloom-size)
        (unsigned 32 bloom-shift)
+       (make-bytes 16)
        ;; 64 bloom-filter length bloom-size
 
        (get-buckets-and-chain symbols)
