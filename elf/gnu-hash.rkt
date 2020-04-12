@@ -1,5 +1,6 @@
 #lang racket
 (require rackunit green-lisp/utils green-lisp/elf/symbol)
+(require math/statistics)
 (provide gnu-hash)
 
 ;; https://flapenguin.me/elf-dt-gnu-hash
@@ -50,55 +51,6 @@
         [section #".text"]
         [value 1337]
         [size 0])
-   (new elf-symbol%
-        [name "aghjb"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   (new elf-symbol%
-        [name "dhgfjc"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   (new elf-symbol%
-        [name "jzkrd"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   (new elf-symbol%
-        [name "dtzj5jdj"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   (new elf-symbol%
-        [name "weradfsd"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   (new elf-symbol%
-        [name "dilzgkh"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   (new elf-symbol%
-        [name "c"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
    ))
 
 (let* ((nbuckets 4)
@@ -109,6 +61,7 @@
        (sorted2 (append (list (list 'null 0 -1)) sorted))
        (sorted-with-index (for/list ([y sorted2] [i (in-naturals)])
                             (append y (list i))))
+       (sorted-with-index-without-null (cdr sorted-with-index))
        (grouped (group-by third sorted-with-index))
        (grouped-without-null (cdr grouped))
        (bucket-indexes 
@@ -125,6 +78,9 @@
        (flattened-chain-elements (flatten chain-elements))
        (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
   (bytes-append bucket chain)
+
+  ;; hack
+  (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null)
   )
 
 
