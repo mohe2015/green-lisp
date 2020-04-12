@@ -1,5 +1,5 @@
 #lang racket
-(require rackunit)
+(require rackunit green-lisp/utils)
 (provide gnu-hash)
 
 ;; https://flapenguin.me/elf-dt-gnu-hash
@@ -25,16 +25,19 @@
   (class object%
     (init-field (nbuckets 4)
                 (symoffset 1)
-                (bloom_size 2)
-                (bloom_shift 5)
-                bloom_filter ;; length bloom-size
-                buckets ;; length nbuckets
-                chain) ;; length symcount - symoffset
+                (bloom-size 0) ;; 2
+                (bloom-shift 0)) ;; 5
     
-    (define/public (get-bytes)
+    (define/public (get-bytes symbols)
       (bytes-append
+       (unsigned 32 nbuckets)
+       (unsigned 32 symoffset)
+       (unsigned 32 bloom-size)
+       (unsigned 32 bloom-shift)
+       ;; bloom-filter length bloom-size
 
-
+       ;; buckets length nbuckets
+       ;; values length symcount - symoffset
 
        ))))
 
