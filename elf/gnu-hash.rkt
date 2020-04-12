@@ -27,7 +27,7 @@
     (super-new)
     (init-field (nbuckets 1)
                 (symoffset 1)
-                (bloom-size 0) ;; 2
+                (bloom-size 2) ;; 2
                 (bloom-shift 5)) ;; 5
 
     (define (get-buckets-and-chain symbols)
@@ -71,7 +71,7 @@
        (unsigned 32 symoffset)
        (unsigned 32 bloom-size)
        (unsigned 32 bloom-shift)
-      ;; (make-bytes 16 #xff)
+       (make-bytes 16 #xff)
        ;; 64 bloom-filter length bloom-size
 
        (get-buckets-and-chain symbols)
