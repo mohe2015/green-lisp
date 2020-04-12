@@ -110,14 +110,10 @@
    ))
 
 (let* ((nbuckets 4)
-       (symbols-with-hash
+       (symbols-with-hash-and-bucket-index
         (map (lambda (s)
-               (cons s (list (gnu-hash (get-field name s))))) test-symbols))
-       (symbols-with-bucket-index
-        (map
-         (lambda (s)
-           (cons s (list (modulo (car (cdr s)) 4)))) symbols-with-hash))
-       (sorted (sort symbols-with-bucket-index < #:key (lambda (v) (car (cdr v)))))
+               (list s (gnu-hash (get-field name s)) (modulo (gnu-hash (get-field name s)) nbuckets))) test-symbols))
+       (sorted (sort symbols-with-hash-and-bucket-index < #:key (lambda (v) (third v))))
        (sorted2 (append '(null) sorted))
        )
   sorted2
