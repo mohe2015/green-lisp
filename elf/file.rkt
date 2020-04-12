@@ -220,7 +220,7 @@
                                              [flags '(read)]
                                              [start-section .gnu.hash-section]
                                              [end-section .gnu.hash-section]
-                                             [alignment #x8]
+                                             [alignment #x1000]
                                              ))
 
                
