@@ -62,11 +62,15 @@
        (sorted-with-index (for/list ([y sorted2] [i (in-naturals)])
                             (append y (list i))))
        (sorted-with-index-without-null (cdr sorted-with-index))
+       (bins 
+        ;; hack
+        (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null))
+       (bins-values
+        (map sample-bin-values bins))
        (grouped (group-by third sorted-with-index))
        (grouped-without-null (cdr grouped))
-       (bucket-indexes 
-        ;; TODO FIXME bucket could be empty
-        (map (lambda (v) (fourth (first v))) grouped-without-null))
+       (bucket-indexes
+        (map (lambda (v) (if (empty? v) 0 (fourth (first v)))) bins-values))
        (bucket (bytes-append*
                 (map (lambda (v) (unsigned 32 v)) bucket-indexes)))
        (chain-elements
@@ -78,9 +82,6 @@
        (flattened-chain-elements (flatten chain-elements))
        (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
   (bytes-append bucket chain)
-
-  ;; hack
-  (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null)
   )
 
 
