@@ -41,14 +41,6 @@
 
        ))))
 
-;; symbol table is sorted by bucket
-;; we have to skip the symbols which are not global etc.
-;; symbol placed in hash % nbuckets bucket
-;; last bit in chain set -> end of chain
-;; bucket array holds index for first symbol in chain (bucket[foobar] - symoffset])
-;; Chains being contiguous sequences imply that symbols within the same bucket must be stored contiguously.
-;; A bucket element will contain the index 0 if there is no symbol in the hash table for the given value of N. As index 0 of the dynsym is a reserved value, this index cannot occur for a valid symbol, and is therefore non-ambiguous.
-
 (define test-symbols
   (list
    (new elf-symbol%
@@ -114,9 +106,19 @@
         (map (lambda (s)
                (list s (gnu-hash (get-field name s)) (modulo (gnu-hash (get-field name s)) nbuckets))) test-symbols))
        (sorted (sort symbols-with-hash-and-bucket-index < #:key (lambda (v) (third v))))
-       (sorted2 (append '(null) sorted))
+       (sorted2 (append (list (list 'null 0 -1)) sorted))
+       (sorted-with-index (for/list ([y sorted2] [i (in-naturals)])
+                            (append y (list i))))
+       (grouped (group-by third sorted-with-index))
+       (grouped-without-null (cdr grouped))
+       (bucket-indexes 
+        ;; TODO FIXME bucket could be empty
+        (map (lambda (v) (fourth (first v))) grouped-without-null))
+       (bucket (bytes-append*
+                (map (lambda (v) (unsigned 32 v)) bucket-indexes)))
        )
-  sorted2
+  ;; TODO set to 1 at end of chain
+  (map (lambda (v) (bitwise-and #xfffffffe (second v))) sorted)
   )
 
 
