@@ -21,6 +21,23 @@
 (check-equal? (number->string (gnu-hash "syscall") 16) "bac212a0")
 (check-equal? (number->string (gnu-hash "flapenguin.me") 16) "8ae9f18e")
 
+(define gnu-hash%
+  (class object%
+    (init-field (nbuckets 4)
+                (symoffset 1)
+                (bloom_size 2)
+                (bloom_shift 5)
+                bloom_filter ;; length bloom-size
+                buckets ;; length nbuckets
+                chain) ;; length symcount - symoffset
+    
+    (define/public (get-bytes)
+      (bytes-append
+
+
+
+       ))))
+
 ;; https://www.gabriel.urdhr.fr/2015/09/28/elf-file-format/#hash-tables
 ;; struct Gnu_Hash_Header {
 ;;  uint32_t nbuckets;
@@ -52,12 +69,6 @@
 ;; A bucket element will contain the index 0 if there is no symbol in the hash table for the given value of N. As index 0 of the dynsym is a reserved value, this index cannot occur for a valid symbol, and is therefore non-ambiguous.
 
 ;; sort the symbols before based on their hash?
-
-;; TODO these values need to be calculated somehow
-;; nbuckets = 4
-;; symoffset = 1 because of undefined symbol
-;; bloom_size 2
-;; bloom_shift 5
 
 ;; https://flapenguin.me/elf-dt-gnu-hash
 
