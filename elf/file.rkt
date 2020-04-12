@@ -1,5 +1,5 @@
 (module file racket
-  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/program-header green-lisp/elf/string-table green-lisp/elf/dynamic)
+  (require green-lisp/utils green-lisp/elf/section green-lisp/elf/program-header green-lisp/elf/string-table green-lisp/elf/dynamic green-lisp/elf/gnu-hash)
   (provide elf-file%)
 
   (define ELFMAG0 #x7f) ;; /* EI_MAG */
@@ -206,12 +206,14 @@
                                          [sections (list symbols-table-section)]
                                          [program-headers (list .dynsym-program-header)])))
 
+               (gnu-hash (new gnu-hash%))
+
                (.gnu.hash-section (new elf-section%
                                            [name #".gnu.hash"]
                                            [type 'gnu-hash]
                                            [flags '(alloc)]
                                            [link (+ 1 (index-where (get-field sections new-elf-file2) (lambda (s) (equal? (get-field name s) #".dynsym"))))]
-                                           [content #"THIS IS A TEST"]))
+                                           [content (send gnu-hash get-bytes symbols)]))
 
                (.gnu.hash-program-header (new elf-program-header%
                                              [type 'load]

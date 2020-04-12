@@ -1,7 +1,7 @@
 #lang racket
 (require rackunit green-lisp/utils green-lisp/elf/symbol)
 (require math/statistics)
-(provide gnu-hash)
+(provide gnu-hash%)
 
 ;; https://flapenguin.me/elf-dt-gnu-hash
 (define (gnu-hash-internal name h)
@@ -24,10 +24,41 @@
 
 (define gnu-hash%
   (class object%
+    (super-new)
     (init-field (nbuckets 4)
                 (symoffset 1)
                 (bloom-size 0) ;; 2
                 (bloom-shift 0)) ;; 5
+
+    (define (get-buckets-and-chain symbols)
+      (let* ((symbols-with-hash-and-bucket-index
+              (map (lambda (s)
+                     (list s (gnu-hash (get-field name s)) (modulo (gnu-hash (get-field name s)) nbuckets))) symbols))
+             (sorted (sort symbols-with-hash-and-bucket-index < #:key (lambda (v) (third v))))
+             (sorted2 (append (list (list 'null 0 -1)) sorted))
+             (sorted-with-index (for/list ([y sorted2] [i (in-naturals)])
+                                  (append y (list i))))
+             (sorted-with-index-without-null (cdr sorted-with-index))
+             (bins 
+              ;; hack
+              (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null))
+             (bins-values
+              (map sample-bin-values bins))
+             (grouped (group-by third sorted-with-index))
+             (grouped-without-null (cdr grouped))
+             (bucket-indexes
+              (map (lambda (v) (if (empty? v) 0 (fourth (first v)))) bins-values))
+             (bucket (bytes-append*
+                      (map (lambda (v) (unsigned 32 v)) bucket-indexes)))
+             (chain-elements
+              (map (lambda (l)
+                     (let-values ([(left right) (split-at-right l 1)])
+                       (append 
+                        (map (lambda (v) (bitwise-and #xfffffffe (second v))) left)
+                        (list (bitwise-ior 1 (second (car right))))))) grouped-without-null))
+             (flattened-chain-elements (flatten chain-elements))
+             (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
+        (bytes-append bucket chain)))
     
     (define/public (get-bytes symbols)
       (bytes-append
@@ -37,54 +68,11 @@
        (unsigned 32 bloom-shift)
        ;; 64 bloom-filter length bloom-size
 
+       (get-buckets-and-chain symbols)
        ;; 32 buckets length nbuckets
        ;; 32 chain length symcount - symoffset
 
        ))))
-
-(define test-symbols
-  (list
-   (new elf-symbol%
-        [name "adfadf"]
-        [type 'func]
-        [binding 'global]
-        [section #".text"]
-        [value 1337]
-        [size 0])
-   ))
-
-(let* ((nbuckets 4)
-       (symbols-with-hash-and-bucket-index
-        (map (lambda (s)
-               (list s (gnu-hash (get-field name s)) (modulo (gnu-hash (get-field name s)) nbuckets))) test-symbols))
-       (sorted (sort symbols-with-hash-and-bucket-index < #:key (lambda (v) (third v))))
-       (sorted2 (append (list (list 'null 0 -1)) sorted))
-       (sorted-with-index (for/list ([y sorted2] [i (in-naturals)])
-                            (append y (list i))))
-       (sorted-with-index-without-null (cdr sorted-with-index))
-       (bins 
-        ;; hack
-        (bin-samples/key '(0 1 2 3 4) < (lambda (v) (third v)) sorted-with-index-without-null))
-       (bins-values
-        (map sample-bin-values bins))
-       (grouped (group-by third sorted-with-index))
-       (grouped-without-null (cdr grouped))
-       (bucket-indexes
-        (map (lambda (v) (if (empty? v) 0 (fourth (first v)))) bins-values))
-       (bucket (bytes-append*
-                (map (lambda (v) (unsigned 32 v)) bucket-indexes)))
-       (chain-elements
-        (map (lambda (l)
-               (let-values ([(left right) (split-at-right l 1)])
-                 (append 
-                  (map (lambda (v) (bitwise-and #xfffffffe (second v))) left)
-                  (list (bitwise-ior 1 (second (car right))))))) grouped-without-null))
-       (flattened-chain-elements (flatten chain-elements))
-       (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
-  (bytes-append bucket chain)
-  )
-
-
 
 ;; bloom[(hash / ELFCLASS_BITS) % bloom_size]
 ;; TODO just set every bit so it is ignored first
