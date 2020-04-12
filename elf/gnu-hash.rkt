@@ -26,7 +26,7 @@
   (class object%
     (super-new)
     (init-field (nbuckets 4)
-                (symoffset 0)
+                (symoffset 1)
                 (bloom-size 2) ;; 2
                 (bloom-shift 5)) ;; 5
 
