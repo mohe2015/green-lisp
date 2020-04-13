@@ -264,19 +264,18 @@
             
             )))]))
 
-;(lambda (_) 0) ;; code size
-;symbol ;; local symbol(s) ;; TODO convert this to a list
-;(lambda (current-address rodata-addresses) (bytes)) ;; code
-;(list) ;; rodata-list
-;(lambda (current-address)
-;  (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size #xc7]))) ;; TODO FIXME
-;)])) ;; elf-symbols
-
 (define get-the-code
   (data-list
    (global-symbol green_lisp_demo)
    
    (let-string rsi rdx #"What is your name?\n\0")
+   (call write)
+
+   ;; TODO FIXME THIS IS READ ONLY
+   (let-string rsi rdx #"EEEE\n\0")
+   (call read)
+
+   ;; mov rdx, rax
    (call write)
 
    (mov-imm64 rdi 0)
@@ -291,11 +290,19 @@
    ;; TODO check return value
    (ret)
 
+   ;; rsi buffer, rdx buffer-length
+   (global-symbol read)
+   (mov-imm64 rdi 1) ;; rdi: stdin?
+   (mov-imm64 rax 0) ;; rax: read syscall
+   (syscall) ;; read(stdin, buffer, 1024)
+   (ret)
+
    ;; rdi exit-code
    (global-symbol exit)
    (mov-imm64 rax 60) ;; rax: exit syscall
    (syscall) ;; exit(0) -> this should quit the process
    ;; check return value anyways?
+   (ret)
    
    ))
 
