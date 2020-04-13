@@ -1,0 +1,36 @@
+every expression has an environment (root environment is empty)
+
+when compiling we go from outside to inside
+
+(use one outer macro that converts to syntax object and then calls functions as macros can only return syntax objects)
+
+(begin function) (NOT FUNCTIONAL!!!) -> will be replaced by functions only
+loops over children and calls them with empty env
+
+(mov function) -> returns object with necessary attributes of class move
+
+(syscall) -> same
+(ret) -> same
+(push) -> same
+(pop) -> same
+
+;; TODO provide, require
+
+(define-function name args body) -> in the future only allowed element in root
+
+calls children with environment with args
+
+returns function object (special) -> will produce global symbol etc.
+
+(let (...) body) -> push and pops place for value, adds it to env (may also add a register later instead)
+
+
+TODO how to handle .rodata and .data and .rss
+;; objects contain attribute with required memory
+;; will be passed up
+;; addresses will be passed back down?
+
+;; code can be optimized by going over it and checking things (eg. if variables are used etc.)
+;; try source based optimizations first
+
+;; after that convert it

@@ -295,7 +295,12 @@
    (ret)
 
    (global-symbol print-number)
-   ;; I don't want to choose registers any more      
+   ;; I don't want to choose registers any more
+   ;; maybe add an env and use push and pop
+   ;; convert the shit above from macro to function
+   ;; before test whether functions can throw errors with source code info
+   ;; maybe there is a way between
+   ;; maybe implement custom macros???
 
    ;; rsi string, rdx string-length
    (global-symbol write) ;; TODO these need a size
