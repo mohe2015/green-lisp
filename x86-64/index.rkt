@@ -141,6 +141,12 @@
         (lambda (_) (list))
         ))
 
+(define-syntax (let-string stx)
+  (syntax-case stx ()
+    [(let-string string-register string-size-register string)
+     #`(begin (lea-string string-register string)
+              (mov-imm64 string-size-register (length string)))]))
+
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
 (define-syntax-rule (push register)
   (list (lambda (_) 1)
@@ -256,6 +262,12 @@
 
 (define get-the-code
   (data-list
+
+   (let-string rsi rdx #"What is your name?\n\0")
+   (call write)
+
+   (mov-imm64 rdi 0)
+   (call exit)
    (ret)
 
    ;; rsi string, rdx string-length
