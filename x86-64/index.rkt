@@ -277,7 +277,7 @@
 (define get-the-code
   (data-list
 
-   (let-string rsi rdx #"What is your name?\n\0")
+   ;;(let-string rsi rdx #"What is your name?\n\0")
    (call write)
 
    (mov-imm64 rdi 0)
