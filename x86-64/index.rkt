@@ -279,7 +279,7 @@
 
 (define get-the-code
   (data-list
-   (global-symbol green_lisp_demo)
+   (global-symbol main)
    
    (let-string rsi rdx #"What is your name?\n\0")
    (call write)
@@ -293,6 +293,9 @@
    (mov-imm64 rdi 0)
    (call exit)
    (ret)
+
+   (global-symbol print-number)
+   ;; I don't want to choose registers any more      
 
    ;; rsi string, rdx string-length
    (global-symbol write) ;; TODO these need a size
