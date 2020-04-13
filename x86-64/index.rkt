@@ -274,7 +274,8 @@
 
 (define get-the-code
   (data-list
-
+   (global-symbol green_lisp_demo)
+   
    (let-string rsi rdx #"What is your name?\n\0")
    (call write)
 
