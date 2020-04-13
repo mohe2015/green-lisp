@@ -241,24 +241,22 @@
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
             (rodatas (map (lambda (c) (fifth c)) expanded)) ;; syntax list of .rodata
             (real-symbols (map (lambda (c) (sixth c)) expanded)) ;; syntax list of elf symbol lambdas
-            (tainted (map (lambda (c) (syntax-tainted? c)) sizes))
             (.code-base-symbol (car (generate-temporaries '(.code-base))))
             (.rodata-base-symbol (car (generate-temporaries '(.rodata-base))))
             )
        (let-values ([(code-labels rodata-labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
          #`(list
             ;; FIRST IS BASICALLY THIRD'S LENGTH (TODO MAYBE OPTIMIZE AWAY)
-            (lambda (code-address) 1337)
+            (lambda (code-address) (+ #,@(map (lambda (size) #`(#,size 0)) sizes))) ;; TODO FIXME the zero is wrong and doesn't work with aligned things
 
             ;; SECOND JUST null as no symbols are returned to parent?
             null
             
-            (lambda ()
-              (list #,@rodata)) ;; returns rodata as bytes instead of list -> could be changed? [FOURTH]
-            
             (lambda (#,.code-base-symbol #,.rodata-base-symbol)
               (let* (#,@code-labels #,@rodata-labels)
                 (bytes-append #,@code))) ;; exactly like the [THIRD]
+
+            (list #,@rodata) ;; returns rodata as bytes instead of list -> could be changed? [FOURTH]
             
             (lambda (#,.code-base-symbol)
               (let* #,code-labels
@@ -277,7 +275,7 @@
 (define get-the-code
   (data-list
 
-   ;;(let-string rsi rdx #"What is your name?\n\0")
+   (let-string rsi rdx #"What is your name?\n\0")
    (call write)
 
    (mov-imm64 rdi 0)
