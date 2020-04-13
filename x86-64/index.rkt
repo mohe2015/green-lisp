@@ -91,6 +91,14 @@
         (lambda (_) (list))
         ))
 
+(define-syntax-rule (ret)
+  (list (lambda (_) 1)
+        null
+        (lambda (_ rodata-addresses) (bytes #xc3))
+        (list)
+        (lambda (_) (list))
+        ))
+
 (define-syntax-rule (mov-imm8 register value)
   (list (lambda (_) (if (= register 7) 3 2))
         null
@@ -248,53 +256,22 @@
 
 (define get-the-code
   (data-list
-   (global-symbol green_lisp_demo)
-
+   (ret)
+   
+   (global-symbol write)
    (mov-imm64 rdx 19)  ; dl / rdx: length of string
-   (lea-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
-   (mov-imm64 rax 1)  ; al / rax: set write to command
-   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-   (syscall) ;; write(stdout, "Hello\n")
-   ;; TODO check return value?
-
-   (mov-imm64 rdx 32) ;; rdx: buffer length?
-   (lea-string rsi #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
-   (mov-imm64 rdi 1) ;; rdi: stdin?
-   (mov-imm64 rax 0) ;; rax: read syscall
-   (syscall) ;; read(stdin, buffer, 1024)
-   ;; CHECK RETURN VALUE!
-
-   ;; write "Hello "
-   (mov-imm64 rdx 6)  ; dl / rdx: length of string
-   (lea-string rsi #"Hello \0") ;; rsi load string
    (mov-imm64 rax 1)  ; al / rax: set write to command
    (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
    (syscall)
+   ;; TODO check return value
+   (ret)
 
-   ;; echo
-   ;; TODO mov rdx, rax
-   (mov-imm64 rdx 1024)  ; dl / rdx: length of string
-
-   (mov-imm64 rsi green_lisp_demo) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
-   (mov-imm64 rax 1)  ; al / rax: set write to command
-   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-   (syscall)
-
+   (global-symbol exit)
    (mov-imm64 rax 60) ;; rax: exit syscall
    (mov-imm64 rdi 0)  ;; rdi: exit code
-   (syscall) ;; exit(0)
-
-   (push rcx)
-   (pop rcx)
-   ;; TODO overflow
-   ;;(global-symbol +)
-   (pop rax)
-   (pop rcx)
-   (add rax rcx)
-   (push rax)
-
-   (call green_lisp_demo)
-   (jmp green_lisp_demo) ;; size of jmp instruction
+   (syscall) ;; exit(0) -> this should quit the process
+   ;; check return value anyways?
+   
    ))
 
 ;; alternative proposal
