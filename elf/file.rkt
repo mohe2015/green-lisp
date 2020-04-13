@@ -153,6 +153,7 @@
                                           [name #".dynstr"]
                                           [type 'strtab]
                                           [flags '(alloc)]
+                                          [alignment 12]
                                           [content symbols-string-table-bytes]))
 
                (symbols-table-bytes (bytes-append*
