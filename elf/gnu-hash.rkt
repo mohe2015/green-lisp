@@ -14,9 +14,6 @@
       h))
 
 (define (gnu-hash name)
-  (println name) ;; FIXME TODO null terminator?
-  (println (gnu-hash-internal name 5381))
-  (println (number->string (gnu-hash-internal name 5381) 16))
   (gnu-hash-internal name 5381))
 
 ;(check-equal? (number->string (gnu-hash "") 16) "1505")
@@ -64,9 +61,6 @@
                             (list (bitwise-ior 1 (second (car right)))))))) bins-values))
              (flattened-chain-elements (flatten chain-elements))
              (chain (bytes-append* (map (lambda (v) (unsigned 32 v)) flattened-chain-elements))))
-        (print bucket)
-        (print chain)
-        
         (bytes-append bucket chain)))
     
     (define/public (get-bytes symbols)
