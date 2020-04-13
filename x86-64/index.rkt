@@ -57,13 +57,13 @@
 (define-syntax (global-symbol stx)
   (syntax-case stx ()
     [(global-symbol symbol)
-     #`(list (lambda (_) 0)
-             symbol
-             (lambda (current-address rodata-addresses) (bytes))
-             (list)
+     #`(list (lambda (_) 0) ;; size
+             symbol ;; local symbol(s)
+             (lambda (current-address rodata-addresses) (bytes)) ;; code
+             (list) ;; rodata-list
              (lambda (current-address)
                (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size #xc7]))) ;; TODO FIXME
-             )]))
+             )])) ;; elf-symbols
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=224&zoom=100,28,726
 (define-syntax-rule (call target)
@@ -87,6 +87,14 @@
   (list (lambda (_) 2)
         null
         (lambda (_ rodata-addresses) (bytes #x0f #x05))
+        (list)
+        (lambda (_) (list))
+        ))
+
+(define-syntax-rule (ret)
+  (list (lambda (_) 1)
+        null
+        (lambda (_ rodata-addresses) (bytes #xc3))
         (list)
         (lambda (_) (list))
         ))
@@ -132,6 +140,12 @@
         (list value) ;; .rodata
         (lambda (_) (list))
         ))
+
+(define-syntax (let-string stx)
+  (syntax-case stx ()
+    [(let-string string-register string-size-register string)
+     #`(data-list (lea-string string-register string)
+                  (mov-imm64 string-size-register (bytes-length string)))]))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
 (define-syntax-rule (push register)
@@ -227,74 +241,62 @@
             (codes (map (lambda (c) (fourth c)) expanded)) ;; syntax list of all codes
             (rodatas (map (lambda (c) (fifth c)) expanded)) ;; syntax list of .rodata
             (real-symbols (map (lambda (c) (sixth c)) expanded)) ;; syntax list of elf symbol lambdas
-            (tainted (map (lambda (c) (syntax-tainted? c)) sizes))
             (.code-base-symbol (car (generate-temporaries '(.code-base))))
             (.rodata-base-symbol (car (generate-temporaries '(.rodata-base))))
             )
        (let-values ([(code-labels rodata-labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
          #`(list
-            (lambda ()
-              (bytes-append #,@rodata))
+            ;; FIRST IS BASICALLY THIRD'S LENGTH (TODO MAYBE OPTIMIZE AWAY)
+            (lambda (code-address) (+ #,@(map (lambda (size) #`(#,size 0)) sizes))) ;; TODO FIXME the zero is wrong and doesn't work with aligned things
+
+            ;; SECOND JUST null as no symbols are returned to parent?
+            null
             
             (lambda (#,.code-base-symbol #,.rodata-base-symbol)
               (let* (#,@code-labels #,@rodata-labels)
-                (bytes-append #,@code)))
+                (bytes-append #,@code))) ;; exactly like the [THIRD]
+
+            (list #,@rodata) ;; returns rodata as bytes instead of list -> could be changed? [FOURTH]
             
             (lambda (#,.code-base-symbol)
               (let* #,code-labels
-                (append #,@real-symbols)))
+                (append #,@real-symbols))) ;; elf-symbols [FIFTH]
             
             )))]))
+
+;(lambda (_) 0) ;; code size
+;symbol ;; local symbol(s) ;; TODO convert this to a list
+;(lambda (current-address rodata-addresses) (bytes)) ;; code
+;(list) ;; rodata-list
+;(lambda (current-address)
+;  (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size #xc7]))) ;; TODO FIXME
+;)])) ;; elf-symbols
 
 (define get-the-code
   (data-list
    (global-symbol green_lisp_demo)
+   
+   (let-string rsi rdx #"What is your name?\n\0")
+   (call write)
 
-   (mov-imm64 rdx 19)  ; dl / rdx: length of string
-   (lea-string rsi #"What is your name?\n\0") ;; rsi load string -> should be able to return .data data -> maybe gets passed the address later
+   (mov-imm64 rdi 0)
+   (call exit)
+   (ret)
+
+   ;; rsi string, rdx string-length
+   (global-symbol write) ;; TODO these need a size
    (mov-imm64 rax 1)  ; al / rax: set write to command
-   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-   (syscall) ;; write(stdout, "Hello\n")
-   ;; TODO check return value?
-
-   (mov-imm64 rdx 32) ;; rdx: buffer length?
-   (lea-string rsi #"THIS IS A BUFFER FOR YOUR NAME\0") ;; rsi: buffer?
-   (mov-imm64 rdi 1) ;; rdi: stdin?
-   (mov-imm64 rax 0) ;; rax: read syscall
-   (syscall) ;; read(stdin, buffer, 1024)
-   ;; CHECK RETURN VALUE!
-
-   ;; write "Hello "
-   (mov-imm64 rdx 6)  ; dl / rdx: length of string
-   (lea-string rsi #"Hello \0") ;; rsi load string
-   (mov-imm64 rax 1)  ; al / rax: set write to command
-   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to 1 (stdout)
    (syscall)
+   ;; TODO check return value
+   (ret)
 
-   ;; echo
-   ;; TODO mov rdx, rax
-   (mov-imm64 rdx 1024)  ; dl / rdx: length of string
-
-   (mov-imm64 rsi green_lisp_demo) ;; rsi load string ;; TODO FOR THIS WE NEED AN (let implementation
-   (mov-imm64 rax 1)  ; al / rax: set write to command
-   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
-   (syscall)
-
+   ;; rdi exit-code
+   (global-symbol exit)
    (mov-imm64 rax 60) ;; rax: exit syscall
-   (mov-imm64 rdi 0)  ;; rdi: exit code
-   (syscall) ;; exit(0)
-
-   (push rcx)
-   (pop rcx)
-   ;; TODO overflow
-   ;;(global-symbol +)
-   (pop rax)
-   (pop rcx)
-   (add rax rcx)
-   (push rax)
-
-   (call green_lisp_demo)
-   (jmp green_lisp_demo) ;; size of jmp instruction
+   (syscall) ;; exit(0) -> this should quit the process
+   ;; check return value anyways?
+   
    ))
 
 ;; alternative proposal
