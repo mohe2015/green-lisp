@@ -145,7 +145,7 @@
   (syntax-case stx ()
     [(let-string string-register string-size-register string)
      #`(data-list (lea-string string-register string)
-                  (mov-imm64 string-size-register (length string)))]))
+                  (mov-imm64 string-size-register (bytes-length string)))]))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
 (define-syntax-rule (push register)
