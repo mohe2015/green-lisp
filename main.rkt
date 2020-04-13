@@ -34,7 +34,7 @@
              (.rodata-section (new elf-section%
                                    [name #".rodata"]
                                    [type 'progbits]
-                                   [flags '(alloc merge strings)]
+                                   [flags '(alloc write)]
                                    [alignment 12]
                                    [content .rodata]))
              (.text-program-header (new elf-program-header%
@@ -46,7 +46,7 @@
                                         ))
              (.rodata-program-header (new elf-program-header%
                                           [type 'load]
-                                          [flags '(read)]
+                                          [flags '(read write)]
                                           [start-section .rodata-section]
                                           [end-section .rodata-section]
                                           [alignment 4096]

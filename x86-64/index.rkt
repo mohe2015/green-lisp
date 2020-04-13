@@ -271,7 +271,6 @@
    (let-string rsi rdx #"What is your name?\n\0")
    (call write)
 
-   ;; TODO FIXME THIS IS READ ONLY
    (let-string rsi rdx #"EEEE\n\0")
    (call read)
 
