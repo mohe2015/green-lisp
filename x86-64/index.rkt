@@ -248,11 +248,13 @@
        (let-values ([(code-labels rodata-labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
          #`(list
             ;; FIRST IS BASICALLY THIRD'S LENGTH (TODO MAYBE OPTIMIZE AWAY)
+            (lambda (code-address) 1337)
 
             ;; SECOND JUST null as no symbols are returned to parent?
+            null
             
             (lambda ()
-              (bytes-append #,@rodata)) ;; returns rodata as bytes instead of list -> could be changed? [FOURTH]
+              (list #,@rodata)) ;; returns rodata as bytes instead of list -> could be changed? [FOURTH]
             
             (lambda (#,.code-base-symbol #,.rodata-base-symbol)
               (let* (#,@code-labels #,@rodata-labels)
