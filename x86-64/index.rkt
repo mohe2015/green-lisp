@@ -257,18 +257,18 @@
 (define get-the-code
   (data-list
    (ret)
-   
-   (global-symbol write)
-   (mov-imm64 rdx 19)  ; dl / rdx: length of string
+
+   ;; rsi string, rdx string-length
+   (global-symbol write) ;; TODO these need a size
    (mov-imm64 rax 1)  ; al / rax: set write to command
-   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to rax (stdout)
+   (mov-imm64 rdi 1)  ; bh / dil / rdi: set destination index to 1 (stdout)
    (syscall)
    ;; TODO check return value
    (ret)
 
+   ;; rdi exit-code
    (global-symbol exit)
    (mov-imm64 rax 60) ;; rax: exit syscall
-   (mov-imm64 rdi 0)  ;; rdi: exit code
    (syscall) ;; exit(0) -> this should quit the process
    ;; check return value anyways?
    
