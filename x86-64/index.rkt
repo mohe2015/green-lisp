@@ -57,13 +57,13 @@
 (define-syntax (global-symbol stx)
   (syntax-case stx ()
     [(global-symbol symbol)
-     #`(list (lambda (_) 0)
-             symbol
-             (lambda (current-address rodata-addresses) (bytes))
-             (list)
+     #`(list (lambda (_) 0) ;; size
+             symbol ;; local symbol(s)
+             (lambda (current-address rodata-addresses) (bytes)) ;; code
+             (list) ;; rodata-list
              (lambda (current-address)
                (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size #xc7]))) ;; TODO FIXME
-             )]))
+             )])) ;; elf-symbols
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=224&zoom=100,28,726
 (define-syntax-rule (call target)
@@ -144,8 +144,8 @@
 (define-syntax (let-string stx)
   (syntax-case stx ()
     [(let-string string-register string-size-register string)
-     #`(begin (lea-string string-register string)
-              (mov-imm64 string-size-register (length string)))]))
+     #`(data-list (lea-string string-register string)
+                  (mov-imm64 string-size-register (length string)))]))
 
 ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=1163&zoom=100,-7,754
 (define-syntax-rule (push register)
@@ -247,18 +247,30 @@
             )
        (let-values ([(code-labels rodata-labels code rodata real-symbols) (list->label-addresses symbols sizes codes rodatas real-symbols .code-base-symbol .rodata-base-symbol)]) ;; TODO calculate this shit
          #`(list
+            ;; FIRST IS BASICALLY THIRD'S LENGTH (TODO MAYBE OPTIMIZE AWAY)
+
+            ;; SECOND JUST null as no symbols are returned to parent?
+            
             (lambda ()
-              (bytes-append #,@rodata))
+              (bytes-append #,@rodata)) ;; returns rodata as bytes instead of list -> could be changed? [FOURTH]
             
             (lambda (#,.code-base-symbol #,.rodata-base-symbol)
               (let* (#,@code-labels #,@rodata-labels)
-                (bytes-append #,@code)))
+                (bytes-append #,@code))) ;; exactly like the [THIRD]
             
             (lambda (#,.code-base-symbol)
               (let* #,code-labels
-                (append #,@real-symbols)))
+                (append #,@real-symbols))) ;; elf-symbols [FIFTH]
             
             )))]))
+
+;(lambda (_) 0) ;; code size
+;symbol ;; local symbol(s) ;; TODO convert this to a list
+;(lambda (current-address rodata-addresses) (bytes)) ;; code
+;(list) ;; rodata-list
+;(lambda (current-address)
+;  (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size #xc7]))) ;; TODO FIXME
+;)])) ;; elf-symbols
 
 (define get-the-code
   (data-list
