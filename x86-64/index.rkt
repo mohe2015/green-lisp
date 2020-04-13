@@ -124,6 +124,19 @@
         (lambda (_) (list))
         )) ;; value
 
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=686&zoom=auto,-16,19
+(define-syntax-rule (mov destination source)
+  (list (lambda (_) 3)
+        null
+        (lambda (current-address rodata-addresses)
+          (bytes-append
+           (unsigned 8 REX.W)
+           (unsigned 8 #x89)
+           (unsigned 8 (mod11-to-binary 'destination 'source))))
+        (list)
+        (lambda (_) (list))
+        ))
+
 (define-syntax-rule (lea-string register value)
   (list (lambda (_) 7)
         null
@@ -271,10 +284,10 @@
    (let-string rsi rdx #"What is your name?\n\0")
    (call write)
 
-   (let-string rsi rdx #"EEEE\n\0")
+   (let-string rsi rdx #"EEEEEEEEE\0")
    (call read)
 
-   ;; mov rdx, rax
+   (mov rdx rax)
    (call write)
 
    (mov-imm64 rdi 0)
