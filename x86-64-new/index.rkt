@@ -2,6 +2,7 @@
   (provide #%datum)
   (provide #%top)
   (provide #%app)
+  (provide #%top-interaction)
   (provide (rename-out [module-begin #%module-begin]))
 
   ;; https://docs.racket-lang.org/guide/module-languages.html
