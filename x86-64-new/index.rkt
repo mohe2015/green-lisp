@@ -16,7 +16,7 @@
   (begin-for-syntax
     (define environment-lookup
       (lambda (environment expression)
-        #`1))
+        #`1337))
     
     (define evaluate
       (lambda (expression environment)
@@ -25,7 +25,7 @@
                   [(symbol? (syntax-e #'x))
                    (environment-lookup environment expression)]
                   [(number? (syntax-e #'x))
-                   #`(push #,#'x)]
+                   #`2]
 
 
                   )
@@ -35,5 +35,7 @@
       )
     )
   
-  (define-syntax (module-begin stx)
-    #`(#%module-begin #,(evaluate #`stx `()))))
+  (define-syntax module-begin
+    (lambda (stx)
+      (syntax-case stx ()
+        [(_ body) #`(#%module-begin (quote #,(evaluate #`body `())))]))))
