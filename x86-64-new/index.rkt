@@ -14,7 +14,7 @@
     (define evaluate
       (lambda (expression environment)
         (syntax-parse expression
-          [x:id #`literal]
+          [x:id #`1]
 
           )
         )
