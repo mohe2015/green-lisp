@@ -14,12 +14,12 @@
     (define evaluate
       (lambda (expression environment)
         (syntax-parse expression
-          [x:id #`1]
+          [x:id #`(quote 1)]
 
           )
         )
       )
     )
-  
+  ;; #,(evaluate #`stx `())
   (define-syntax (module-begin stx)
-    #`(#%module-begin #,(evaluate #`stx `()))))
+    #`(#%module-begin 1)))
