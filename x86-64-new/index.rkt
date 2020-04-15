@@ -6,6 +6,7 @@
   (provide (rename-out [module-begin #%module-begin]))
   (require (for-syntax syntax/parse))
   (require syntax/parse)
+  (require green-lisp/language/ast)
   
   ;; https://docs.racket-lang.org/guide/module-languages.html
 
@@ -26,7 +27,7 @@
                   [(symbol? (syntax-e #'x))
                    (environment-lookup environment expression)]
                   [(number? (syntax-e #'x))
-                   #`(push #,#'x)]
+                   #`(new number% [value #,#'x])]
                   [else (raise-syntax-error #f "unknown syntax" #'x)]
                   
                   )
@@ -39,4 +40,4 @@
   (define-syntax module-begin
     (lambda (stx)
       (syntax-case stx ()
-        [(_ body) #`(#%module-begin (quote #,(evaluate #`body `())))]))))
+        [(_ body) #`(#%module-begin #,(evaluate #`body `()))]))))
