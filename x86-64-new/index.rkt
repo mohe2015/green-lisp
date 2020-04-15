@@ -21,14 +21,12 @@
     
     (define evaluate
       (lambda (expression environment)
-        (println expression)
         (syntax-parse expression
           [x (cond
                   [(symbol? (syntax-e #'x))
                    (environment-lookup environment expression)]
                   [(number? (syntax-e #'x))
-                   (println #`1337)
-                   #`1337]
+                   #`(push #,#'x)]
                   [else (raise-syntax-error #f "unknown syntax" #'x)]
                   
                   )
