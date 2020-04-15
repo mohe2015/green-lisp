@@ -4,15 +4,22 @@
   (provide #%app)
   (provide #%top-interaction)
   (provide (rename-out [module-begin #%module-begin]))
+  (require (for-syntax syntax/parse))
 
   ;; https://docs.racket-lang.org/guide/module-languages.html
+
+  ;; (raise-syntax-error #f "no" test)
   
   (begin-for-syntax
-    (define abc
-      (lambda (test)
-        3)))
+    (define evaluate
+      (lambda (expression environment)
+        (syntax-parse expression
+          [x:id #`literal]
+
+          )
+        )
+      )
+    )
   
   (define-syntax (module-begin stx)
-    ;(raise-syntax-error #f "no" stx)))
-    (abc stx)
-    #'(#%module-begin 2)))
+    #`(#%module-begin #,(evaluate #`stx `()))))
