@@ -25,7 +25,7 @@
         (syntax-parse expression
           [x (cond
                   [(symbol? (syntax-e #'x))
-                   (environment-lookup environment expression)]
+                   #`(new symbol% [value #,#'x])]
                   [(number? (syntax-e #'x))
                    #`(new number% [value #,#'x])]
                   [else (raise-syntax-error #f "unknown syntax" #'x)]
