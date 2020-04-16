@@ -3,6 +3,7 @@
 
   (define (compile expression environment)
     (match expression
+      [(? symbol?) (environment-lookup environment expression)]
       [(? number?) `((push ,expression))]
       [`(let ,bindings ,body) (compile-let bindings body environment)]
       ))
@@ -14,7 +15,8 @@
     (let* ((variables (map car bindings))
            (expressions (map cadr bindings))
            (values (map (compile-with environment) expressions))
-           (environment* (env-extend* environment variables values)))
+           (locations (map (lambda (offset) (+ (cell-location (hash-ref environment 'base-pointer-offset)) offset)) (stream->list (in-range 0 (* 8 (length values)) 8))))
+           (environment* (env-extend* environment variables locations)))
       `(,@(append* values)
         ,@(compile body environment*) ;; should return value at current position in stack
         (set! r1 (pop))
@@ -22,7 +24,7 @@
         (push r1)
         )))
 
-  (define (env-empty) (hash))
+  (define (env-empty) (hash 'base-pointer-offset (make-cell 0)))
 
   (define (env-extend* env vars values)
     (match `(,vars ,values)
@@ -34,8 +36,11 @@
        ; =>
        env]))
 
+  (define (environment-lookup env var)
+    `((- rbp ,(cell-location (hash-ref env var)))))
+
   (define-struct cell ([location #:mutable]))
   
-  (compile '(let ((a 1)) 2) (env-empty))
+  (compile '(let ((a 1)) a) (env-empty))
 
   )
