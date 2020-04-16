@@ -1,5 +1,6 @@
 (module stack-machine/index racket
   (require racket/match)
+  (provide compile env-initial)
 
   (define (compile expression environment)
     (match expression
@@ -16,7 +17,7 @@
                             ,@(compile ef environment)
                             (:end))]
       [`(let ,bindings ,body) (compile-let bindings body environment)]
-      [`(lambda ,parameters ,body) (compile-lambda parameters body)] ;; TODO this may capture variables
+      [`(lambda ,parameters ,body) (compile-lambda parameters body)] ;; TODO make this an objects as lambdas are first class objects
 
       [`(,f . ,args) `(
                        ,@(append* (map (compile-with environment) args))
@@ -76,9 +77,6 @@
     `(- rbp ,(cell-location (hash-ref env var))))
 
   (define-struct cell ([location #:mutable]))
-  
-  (compile '((lambda (a) a) 1) (env-initial 0))
-
   )
 
 ;; push
