@@ -3,9 +3,21 @@
 
   (define (compile expression environment)
     (match expression
-      [(? symbol?) `((push ,(environment-lookup environment expression)))]
-      [(? number?) `((push ,expression))]
+      [(? symbol?)  `((push ,(environment-lookup environment expression)))]
+      [(? number?)  `((push ,expression))]
+      [(? boolean?) `((push ,expression))]
+      [`(if ,ec ,et ,ef) `(,@(compile ec environment)
+                            (pop r1 r1)
+                            (test r1 r1)
+                            (jne :false)
+                            ,@(compile et environment)
+                            (jmp :end)
+                            (:false)
+                            ,@(compile ef environment)
+                            (:end))]
       [`(let ,bindings ,body) (compile-let bindings body environment)]
+
+      
       ))
 
   (define (compile-with environment) 
@@ -26,6 +38,13 @@
 
   (define (env-empty) (hash 'base-pointer-offset (make-cell 0)))
 
+  (define (env-initial)
+    (env-extend* 
+     (env-empty)
+     '(+  -  /  *  <=  void  display  newline)
+     (map (lambda (s) (list 'primitive s))
+          `(,+ ,- ,/ ,* ,<= ,void ,display ,newline))))
+
   (define (env-extend* env vars values)
     (match `(,vars ,values)
       [`((,v . ,vars) (,val . ,values))
@@ -41,7 +60,7 @@
 
   (define-struct cell ([location #:mutable]))
   
-  (compile '(let ((a 1)) a) (env-empty))
+  (compile '(let ((a 1)) (if a 1 2)) (env-initial))
 
   )
 
