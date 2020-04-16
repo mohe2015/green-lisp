@@ -21,6 +21,7 @@
 
       [`(,f . ,args) `(
                        ,@(append* (map (compile-with environment) args))
+                       ;; TODO call instruction
                        ,@(compile f environment)
 
                         )]
@@ -78,6 +79,9 @@
     `(- rbp ,(cell-location (hash-ref env var))))
 
   (define-struct cell ([location #:mutable]))
+
+  ;; currently make a difference between lambdas/closures and functions
+  ;; because this makes implementation easier (at first)
 
   (compile '((lambda (a) a) 1) (env-initial 0))
   )
