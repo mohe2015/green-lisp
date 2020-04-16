@@ -36,10 +36,11 @@
                            (stream->list (in-range 0 (* 8 (length parameters)) 8))))
            (environment* (env-extend* environment parameters locations)))
       `((push rbp)
-        (mov rbp rsp)
+        (set! rbp rsp)
         ,@(compile body environment*) ;; should return value at current position
         (set! r1 (pop))
         (pop rbp)
+        ,@(build-list (length parameters) (const '(pop)))
         (push r1)
         (ret))))
   
@@ -52,7 +53,7 @@
       `(,@(append* values)
         ,@(compile body environment*) ;; should return value at current position in stack
         (set! r1 (pop))
-        (popn ,(length values))
+        ,@(build-list (length values) (const '(pop)))
         (push r1)
         )))
   
@@ -77,6 +78,8 @@
     `(- rbp ,(cell-location (hash-ref env var))))
 
   (define-struct cell ([location #:mutable]))
+
+  (compile '((lambda (a) a) 1) (env-initial 0))
   )
 
 ;; push
