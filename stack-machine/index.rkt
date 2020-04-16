@@ -3,7 +3,7 @@
 
   (define (compile expression environment)
     (match expression
-      [(? symbol?) (environment-lookup environment expression)]
+      [(? symbol?) `((push ,(environment-lookup environment expression)))]
       [(? number?) `((push ,expression))]
       [`(let ,bindings ,body) (compile-let bindings body environment)]
       ))
@@ -15,7 +15,7 @@
     (let* ((variables (map car bindings))
            (expressions (map cadr bindings))
            (values (map (compile-with environment) expressions))
-           (locations (map (lambda (offset) (+ (cell-location (hash-ref environment 'base-pointer-offset)) offset)) (stream->list (in-range 0 (* 8 (length values)) 8))))
+           (locations (map (lambda (offset) (+ (cell-location (hash-ref environment 'base-pointer-offset)) offset 8)) (stream->list (in-range 0 (* 8 (length values)) 8))))
            (environment* (env-extend* environment variables locations)))
       `(,@(append* values)
         ,@(compile body environment*) ;; should return value at current position in stack
@@ -37,10 +37,20 @@
        env]))
 
   (define (environment-lookup env var)
-    `((- rbp ,(cell-location (hash-ref env var)))))
+    `(- rbp ,(cell-location (hash-ref env var))))
 
   (define-struct cell ([location #:mutable]))
   
   (compile '(let ((a 1)) a) (env-empty))
 
   )
+
+;; push
+;; Decrements the stack pointer and then stores the source operand on the top
+;; of the stack. Address and operand sizes are determined and used as follows:
+
+;; pop
+;; Loads the value from the top of the stack to the location specified with
+;; the destination operand (or explicit opcode) and then increments the stack
+;; pointer. The destination operand can be a general-purpose register, memory
+;; loca-tion, or segment register.
