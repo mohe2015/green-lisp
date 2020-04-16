@@ -24,7 +24,7 @@
     (lambda (expression) (compile expression environment)))
 
   (define (compile-lambda parameters body)
-    (let* ((environment (env-initial))
+    (let* ((environment (env-initial 8))
            (locations (map (lambda (offset) (+ (cell-location (hash-ref environment 'base-pointer-offset)) offset 8))
                            (stream->list (in-range 0 (* 8 (length parameters)) 8))))
            (environment* (env-extend* environment parameters locations)))
@@ -48,12 +48,10 @@
         (popn ,(length values))
         (push r1)
         )))
-
-  (define (env-empty) (hash 'base-pointer-offset (make-cell 0)))
-
-  (define (env-initial)
+  
+  (define (env-initial base-offset)
     (env-extend* 
-     (env-empty)
+     (hash 'base-pointer-offset (make-cell base-offset))
      '(+  -  /  *  <=  void  display  newline)
      (map (lambda (s) (list 'primitive s))
           `(,+ ,- ,/ ,* ,<= ,void ,display ,newline))))
@@ -73,7 +71,7 @@
 
   (define-struct cell ([location #:mutable]))
   
-  (compile '(lambda () 1) (env-initial))
+  (compile '(lambda (a) a) (env-initial 0))
 
   )
 
