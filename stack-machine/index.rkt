@@ -16,13 +16,26 @@
                             ,@(compile ef environment)
                             (:end))]
       [`(let ,bindings ,body) (compile-let bindings body environment)]
-
+      [`(lambda ,parameters ,body) (compile-lambda parameters body)] ;; TODO this may capture variables
       
       ))
 
   (define (compile-with environment) 
     (lambda (expression) (compile expression environment)))
 
+  (define (compile-lambda parameters body)
+    (let* ((environment (env-initial))
+           (locations (map (lambda (offset) (+ (cell-location (hash-ref environment 'base-pointer-offset)) offset 8))
+                           (stream->list (in-range 0 (* 8 (length parameters)) 8))))
+           (environment* (env-extend* environment parameters locations)))
+      `((push rbp)
+        (mov rbp rsp)
+        ,@(compile body environment*) ;; should return value at current position
+        (set! r1 (pop))
+        (pop rbp)
+        (push r1)
+        (ret))))
+  
   (define (compile-let bindings body environment)
     (let* ((variables (map car bindings))
            (expressions (map cadr bindings))
@@ -60,7 +73,7 @@
 
   (define-struct cell ([location #:mutable]))
   
-  (compile '(let ((a 1)) (if a 1 2)) (env-initial))
+  (compile '(lambda () 1) (env-initial))
 
   )
 
