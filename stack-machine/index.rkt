@@ -17,6 +17,12 @@
                             (:end))]
       [`(let ,bindings ,body) (compile-let bindings body environment)]
       [`(lambda ,parameters ,body) (compile-lambda parameters body)] ;; TODO this may capture variables
+
+      [`(,f . ,args) `(
+                       ,@(append* (map (compile-with environment) args))
+                       ,@(compile f environment)
+
+                        )]
       
       ))
 
@@ -71,7 +77,7 @@
 
   (define-struct cell ([location #:mutable]))
   
-  (compile '(lambda (a) a) (env-initial 0))
+  (compile '((lambda (a) a) 1) (env-initial 0))
 
   )
 
