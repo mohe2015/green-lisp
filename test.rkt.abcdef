@@ -1,0 +1,30 @@
+#lang racket
+
+(define test
+  (lambda (b)
+    (let ((a 1))
+      (+ a b))))
+
+================
+function% extends definition%
+
+(function% test (arguments (b stack)) ;; convert to let
+           (let% (variables (a 1 stack))
+                 (addition% a b)))
+
+================
+
+(function% test
+           (set! base-pointer stack-pointer)
+           (let-location% (b base-pointer)
+                          (push 1) ;; a
+                          (let-location% (a (- base-pointer 8))
+                                         (add% a b))
+                          (ret)))
+
+===============
+
+(global-symbol% test)
+(set% rbp rsp)
+(push 1)
+(push (add (pop) (pop)))

@@ -124,6 +124,19 @@
         (lambda (_) (list))
         )) ;; value
 
+;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=686&zoom=auto,-16,19
+(define-syntax-rule (mov destination source)
+  (list (lambda (_) 3)
+        null
+        (lambda (current-address rodata-addresses)
+          (bytes-append
+           (unsigned 8 REX.W)
+           (unsigned 8 #x89)
+           (unsigned 8 (mod11-to-binary 'destination 'source))))
+        (list)
+        (lambda (_) (list))
+        ))
+
 (define-syntax-rule (lea-string register value)
   (list (lambda (_) 7)
         null
@@ -264,24 +277,30 @@
             
             )))]))
 
-;(lambda (_) 0) ;; code size
-;symbol ;; local symbol(s) ;; TODO convert this to a list
-;(lambda (current-address rodata-addresses) (bytes)) ;; code
-;(list) ;; rodata-list
-;(lambda (current-address)
-;  (list (new elf-symbol% [name #,(string->bytes/utf-8 (symbol->string (syntax-e #'symbol)))] [type 'func] [binding 'global] [section #".text"] [value current-address] [size #xc7]))) ;; TODO FIXME
-;)])) ;; elf-symbols
-
 (define get-the-code
   (data-list
-   (global-symbol green_lisp_demo)
+   (global-symbol main)
    
    (let-string rsi rdx #"What is your name?\n\0")
+   (call write)
+
+   (let-string rsi rdx #"EEEEEEEEE\0")
+   (call read)
+
+   (mov rdx rax)
    (call write)
 
    (mov-imm64 rdi 0)
    (call exit)
    (ret)
+
+   (global-symbol print-number)
+   ;; I don't want to choose registers any more
+   ;; maybe add an env and use push and pop
+   ;; convert the shit above from macro to function
+   ;; before test whether functions can throw errors with source code info
+   ;; maybe there is a way between
+   ;; maybe implement custom macros???
 
    ;; rsi string, rdx string-length
    (global-symbol write) ;; TODO these need a size
@@ -291,11 +310,19 @@
    ;; TODO check return value
    (ret)
 
+   ;; rsi buffer, rdx buffer-length
+   (global-symbol read)
+   (mov-imm64 rdi 1) ;; rdi: stdin?
+   (mov-imm64 rax 0) ;; rax: read syscall
+   (syscall) ;; read(stdin, buffer, 1024)
+   (ret)
+
    ;; rdi exit-code
    (global-symbol exit)
    (mov-imm64 rax 60) ;; rax: exit syscall
    (syscall) ;; exit(0) -> this should quit the process
    ;; check return value anyways?
+   (ret)
    
    ))
 
