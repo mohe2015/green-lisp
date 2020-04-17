@@ -21,9 +21,14 @@
           (if (bitwise-bit-set? byte 0) 1 0)))
 
   (define (bits->byte bits)
-    (cond [(empty? bits) 0]
-          [(empty? (rest bits)) (car bits)]
-          [else (+ (arithmetic-shift (car bits) (length (cdr bits))) (bits->byte (cdr bits)))]))
+    (bitwise-ior (arithmetic-shift (first bits) 0)
+                 (arithmetic-shift (second bits) 1)
+                 (arithmetic-shift (third bits) 2)
+                 (arithmetic-shift (fourth bits) 3)
+                 (arithmetic-shift (fifth bits) 4)
+                 (arithmetic-shift (sixth bits) 5)
+                 (arithmetic-shift (seventh bits) 6)
+                 (arithmetic-shift (eighth bits) 7)))
   
   (define (write-bit bit-port bit)
     (set-bit-port-pending-bits! bit-port
@@ -39,8 +44,11 @@
     (get-output-bytes (bit-port-port bit-port))
     )
 
-  (let* ((original-in (open-input-bytes #"Aidffs"))
+  (let* ((original-in (open-input-bytes #"A"))
          (in (bit-port original-in '())))
+    (println (read-bit in))
+    (println (read-bit in))
+    (println (read-bit in))
     (println (read-bit in))
     (println (read-bit in))
     (println (read-bit in))
@@ -49,15 +57,14 @@
 
   (let* ((original-out (open-output-bytes))
          (out (bit-port original-out '())))
+    (write-bit out 0)
     (write-bit out 1)
+    (write-bit out 0)
+    (write-bit out 0)
+    (write-bit out 0)
+    (write-bit out 0)
+    (write-bit out 0)
     (write-bit out 1)
-    (write-bit out 1)
-    (write-bit out 1)
-    (write-bit out 1)
-    (write-bit out 1)
-    (write-bit out 1)
-    (write-bit out 1)
-    (get-bytes out)
-    )
+    (get-bytes out))
   
   )
