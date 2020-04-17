@@ -69,7 +69,8 @@
 (define-syntax-rule (call target)
   (list (lambda (_) 5)
         null
-        (lambda (current-address rodata-addresses) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
+        (lambda (current-address rodata-addresses)
+          (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
         (list)
         (lambda (_) (list))
         ))
