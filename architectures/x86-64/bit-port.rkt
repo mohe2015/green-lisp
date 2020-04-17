@@ -4,9 +4,21 @@
     #:transparent #:mutable)
 
   (define (read-bit bit-port)
-    null
+    (when (empty? (bit-port-pending-bits bit-port))
+      (set-bit-port-pending-bits! bit-port (byte->bits (read-byte (bit-port-port bit-port)))))
+    (let ((bits (bit-port-pending-bits bit-port)))
+      (set-bit-port-pending-bits! bit-port (cdr bits)) 
+      (car bits)))
 
-    )
+  (define (byte->bits byte)
+    (list (if (bitwise-bit-set? byte 7) 1 0)
+          (if (bitwise-bit-set? byte 6) 1 0)
+          (if (bitwise-bit-set? byte 5) 1 0)
+          (if (bitwise-bit-set? byte 4) 1 0)
+          (if (bitwise-bit-set? byte 3) 1 0)
+          (if (bitwise-bit-set? byte 2) 1 0)
+          (if (bitwise-bit-set? byte 1) 1 0)
+          (if (bitwise-bit-set? byte 0) 1 0)))
 
   (define (bits->byte bits)
     (cond [(empty? bits) 0]
@@ -27,9 +39,13 @@
     (get-output-bytes (bit-port-port bit-port))
     )
 
-  (let ((in (open-input-bytes #"Hidffs")))
-
-    null)
+  (let* ((original-in (open-input-bytes #"Aidffs"))
+         (in (bit-port original-in '())))
+    (println (read-bit in))
+    (println (read-bit in))
+    (println (read-bit in))
+    (println (read-bit in))
+    (println (read-bit in)))
 
   (let* ((original-out (open-output-bytes))
          (out (bit-port original-out '())))
