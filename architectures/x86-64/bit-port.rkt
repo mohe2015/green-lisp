@@ -1,5 +1,12 @@
 (module bit-port racket
-  (provide bit-port write-bit read-bit get-bytes bit-port-read-byte bit-port-read-bytes bit-port-write-bytes)
+  (provide bit-port
+           write-bit
+           read-bit
+           get-bytes
+           bit-port-read-byte
+           bit-port-write-byte
+           bit-port-read-bytes
+           bit-port-write-bytes)
 
   (struct bit-port (port pending-bits)
     #:transparent #:mutable)
@@ -14,6 +21,11 @@
   (define (bit-port-read-byte bit-port)
     (if (empty? (bit-port-pending-bits bit-port))
         (read-byte (bit-port-port bit-port))
+        (error "not at byte boundary!")))
+
+  (define (bit-port-write-byte bit-port byte)
+    (if (empty? (bit-port-pending-bits bit-port))
+        (write-byte byte (bit-port-port bit-port))
         (error "not at byte boundary!")))
 
   (define (bit-port-read-bytes bit-port amount)

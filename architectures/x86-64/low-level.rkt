@@ -1,5 +1,11 @@
 (module low-level racket
   (require green-lisp/architectures/x86-64/bit-port)
+
+  ;; important pages:
+  ;; interpreting the instruction reference pages:
+  ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=103&zoom=auto,-17,575
+  ;; introduction
+  ;; https://software.intel.com/en-us/articles/introduction-to-x64-assembly
   
   ;(define-instruction x86-64-call
   ;  (_                (constant-bits '(1 1 1 0 1 0 0 0)))
@@ -25,6 +31,24 @@
                        [else (write-bit out (car constant-bits))
                              (write-constant-bits out (cdr constant-bits))]))))
        write-constant-bits)))
+
+  (define constant-bytes
+    (binary
+     (letrec ((read-constant-bytes
+               (lambda (in constant-bytes)
+                 (cond [(empty? constant-bytes) #t]
+                       [else
+                        (if (= (bit-port-read-byte in) (car constant-bytes))
+                            (read-constant-bytes in (cdr constant-bytes))
+                            (error "invalid constant bytes"))]))))
+       read-constant-bytes)
+     (letrec ((write-constant-bytes
+               (lambda (out constant-bytes)
+                 (cond [(empty? constant-bytes) #t]
+                       [else
+                        (bit-port-write-byte out (car constant-bytes))
+                        (write-constant-bytes out (cdr constant-bytes))]))))
+       write-constant-bytes)))
 
   (define signed-integer
     (binary
