@@ -67,10 +67,10 @@
 
   (let* ((original-out (open-output-bytes))
          (out (bit-port original-out '())))
-    ((binary-write constant-bits) out '(0 1 0 0 0 0 0 1))
+    ((binary-write constant-bytes) out '(#xe8))
     ((binary-write signed-integer) out 32 1337)
 
     (let* ((original-in (open-input-bytes (get-bytes out)))
            (in (bit-port original-in '())))
-      ((binary-read constant-bits) in '(0 1 0 0 0 0 0 1))
+      ((binary-read constant-bytes) in '(#xe8))
       ((binary-read signed-integer) in 32))))
