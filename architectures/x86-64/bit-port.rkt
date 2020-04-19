@@ -1,4 +1,5 @@
 (module bit-port racket
+  (provide bit-port write-bit read-bit)
 
   (struct bit-port (port pending-bits)
     #:transparent #:mutable)
@@ -11,14 +12,16 @@
       (car bits)))
 
   (define (byte->bits byte)
-    (list (if (bitwise-bit-set? byte 7) 1 0)
-          (if (bitwise-bit-set? byte 6) 1 0)
-          (if (bitwise-bit-set? byte 5) 1 0)
-          (if (bitwise-bit-set? byte 4) 1 0)
-          (if (bitwise-bit-set? byte 3) 1 0)
-          (if (bitwise-bit-set? byte 2) 1 0)
-          (if (bitwise-bit-set? byte 1) 1 0)
-          (if (bitwise-bit-set? byte 0) 1 0)))
+    (if (eof-object? byte)
+        (list byte)
+        (list (if (bitwise-bit-set? byte 7) 1 0)
+              (if (bitwise-bit-set? byte 6) 1 0)
+              (if (bitwise-bit-set? byte 5) 1 0)
+              (if (bitwise-bit-set? byte 4) 1 0)
+              (if (bitwise-bit-set? byte 3) 1 0)
+              (if (bitwise-bit-set? byte 2) 1 0)
+              (if (bitwise-bit-set? byte 1) 1 0)
+              (if (bitwise-bit-set? byte 0) 1 0))))
 
   (define (bits->byte bits)
     (bitwise-ior (arithmetic-shift (first bits) 0)
@@ -53,6 +56,7 @@
     (println (read-bit in))
     (println (read-bit in))
     (println (read-bit in))
+    (println (read-bit in))
     (println (read-bit in)))
 
   (let* ((original-out (open-output-bytes))
@@ -63,8 +67,8 @@
     (write-bit out 0)
     (write-bit out 0)
     (write-bit out 0)
-    (write-bit out 0)
     (write-bit out 1)
+    (write-bit out 0)
     (get-bytes out))
   
   )
