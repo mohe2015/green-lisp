@@ -1,5 +1,5 @@
 (module bit-port racket
-  (provide bit-port write-bit read-bit)
+  (provide bit-port write-bit read-bit get-bytes)
 
   (struct bit-port (port pending-bits)
     #:transparent #:mutable)

@@ -19,10 +19,19 @@
                             (read-constant-bits in (cdr constant-bits))
                             (error "invalid constant bits"))]))))
        read-constant-bits)
-     (lambda (out constant-bits)
-       null)))
+     (letrec ((write-constant-bits
+               (lambda (out constant-bits)
+                 (cond [(empty? constant-bits) #t]
+                       [else (write-bit out (car constant-bits))
+                             (write-constant-bits out (cdr constant-bits))]))))
+       write-constant-bits)))
      
   (let* ((original-in (open-input-bytes #"A"))
          (in (bit-port original-in '())))
     ((binary-read constant-bits) in '(0 1 0 0 0 0 0 1)))
+
+   (let* ((original-out (open-output-bytes))
+          (out (bit-port original-out '())))
+     ((binary-write constant-bits) out '(0 1 0 0 0 0 0 1))
+     (get-bytes out))
   )
