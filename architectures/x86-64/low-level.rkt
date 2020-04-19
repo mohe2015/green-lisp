@@ -7,10 +7,6 @@
   ;; introduction
   ;; https://software.intel.com/en-us/articles/introduction-to-x64-assembly
   
-  ;(define-instruction x86-64-call
-  ;  (_                (constant-bits '(1 1 1 0 1 0 0 0)))
-  ;  (relative-address (signed-integer 32)))
-
   ;; https://docs.racket-lang.org/binary-class/index.html
   
   (struct binary (read write))
@@ -65,12 +61,26 @@
                  (bit-port-write-bytes out (integer->integer-bytes integer (/ bits 8) #t)))))
        write-signed-integer)))
 
+  ;(define-instruction x86-64-call
+  ;  (_                (constant-bytes '(#xe8)))
+  ;  (relative-address (signed-integer 32)))
+
+  (struct x86-64-call-data (relative-address) #:transparent)
+  
+  (define x86-64-call
+    (binary
+     (lambda (in)
+       (let* ((_ ((binary-read constant-bytes) in '(#xe8)))
+              (relative-address ((binary-read signed-integer) in 32)))
+         (x86-64-call-data relative-address)))
+     (lambda (out data)
+       ((binary-write constant-bytes) out '(#xe8))
+       ((binary-write signed-integer) out 32 (x86-64-call-data-relative-address data)))))
+
   (let* ((original-out (open-output-bytes))
          (out (bit-port original-out '())))
-    ((binary-write constant-bytes) out '(#xe8))
-    ((binary-write signed-integer) out 32 1337)
-
+    ((binary-write x86-64-call) out (x86-64-call-data 1337))
+    
     (let* ((original-in (open-input-bytes (get-bytes out)))
            (in (bit-port original-in '())))
-      ((binary-read constant-bytes) in '(#xe8))
-      ((binary-read signed-integer) in 32))))
+      ((binary-read x86-64-call) in))))
