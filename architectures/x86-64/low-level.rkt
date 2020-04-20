@@ -1,6 +1,7 @@
 (module low-level racket
   (require green-lisp/architectures/x86-64/bit-port)
-
+  (require
+    (for-syntax racket syntax/parse racket/syntax syntax/id-table))
   ;; important pages:
   ;; interpreting the instruction reference pages:
   ;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=103&zoom=auto,-17,575
@@ -65,6 +66,19 @@
   ;  (_                (constant-bytes '(#xe8)))
   ;  (relative-address (signed-integer 32)))
 
+
+  (begin-for-syntax 
+    (define-syntax-class ids
+      (pattern (id* ...+) #:attr ids #'(id* ...))
+      (pattern id #:attr ids #'(id))))
+  
+  (define-syntax (define-binary stx)
+    (syntax-parse stx
+      [(_ NAME:id ((FNAME:ids FTYPE:expr ARG:expr ...) ...)
+          BODY ...)
+       #'null]))
+       
+  
   (struct x86-64-call-data (relative-address) #:transparent)
   
   (define x86-64-call
