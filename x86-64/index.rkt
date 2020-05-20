@@ -3,12 +3,6 @@
 (require (for-syntax racket/list))
 (provide get-the-code data-list data-align label mov-imm64 syscall push pop call add)
 
-;; important pages:
-;; interpreting the instruction reference pages:
-;; https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-instruction-set-reference-manual-325383.pdf#page=103&zoom=auto,-17,575
-;; introduction
-;; https://software.intel.com/en-us/articles/introduction-to-x64-assembly
-
 (define REX.W #b01001000)
 
 (define-syntax-rule (data-unsigned bytes value)
@@ -69,7 +63,8 @@
 (define-syntax-rule (call target)
   (list (lambda (_) 5)
         null
-        (lambda (current-address rodata-addresses) (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
+        (lambda (current-address rodata-addresses)
+          (bytes-append (bytes #xe8) (integer->integer-bytes (- target current-address 5) 4 #t)))
         (list)
         (lambda (_) (list))
         ))
